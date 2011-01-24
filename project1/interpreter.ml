@@ -47,7 +47,12 @@ let mem_bot : int32 =               (* First addressable memory location *)
    does not map or if the address is unaligned. 
 *)
 let map_addr (addr:int32) : int =
-failwith "unimplemented"
+  if (addr >=@ mem_bot) && (addr <=@ mem_top) &&
+      (Int32.logand addr 3l = 0l) then (
+    Int32.to_int ((addr -@ mem_bot) /@ 4l)
+  ) else (
+    raise (X86_segmentation_fault "unaligned/unmapped memory")
+      )
 
 type x86_state = {
     s_mem : int32 array;    (* 1024 32-bit words -- the heap *)
