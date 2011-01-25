@@ -49,7 +49,7 @@ let mem_bot : int32 =               (* First addressable memory location *)
 let map_addr (addr:int32) : int =
   if (addr >=@ mem_bot) && (addr <=@ mem_top) &&
       (Int32.logand addr 3l = 0l)
-		then ( Int32.to_int ((addr -@ mem_bot) /@ 4l))
+      then ( Int32.to_int ((addr -@ mem_bot) /@ 4l))
   else ( raise (X86_segmentation_fault "memory not mapped or aligned"))
 
 type x86_state = {
