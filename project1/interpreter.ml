@@ -80,7 +80,16 @@ let print_state (xs:x86_state) : unit =
   
   
 let condition_matches (xs:x86_state) (c:X86.cnd) : bool =
-failwith "unimplemented"
+  begin match c with
+    | Sgt -> (xs.s_SF = xs.s_OF)
+    | Sge -> (xs.s_SF = xs.s_OF)
+    | Slt -> (xs.s_SF != xs.s_OF)
+    | Sle -> (xs.s_SF != xs.s_OF)
+    | Eq -> xs.s_ZF
+    | NotEq -> (not xs.s_ZF)
+    | Zero -> xs.s_ZF
+    | NotZero -> (not xs.s_ZF)
+  end
 
 (* Returns the bit at a given index in a 32-bit word as a boolean *)
 let get_bit bitidx n =
