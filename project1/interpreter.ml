@@ -81,10 +81,10 @@ let print_state (xs:x86_state) : unit =
   
 let condition_matches (xs:x86_state) (c:X86.cnd) : bool =
   begin match c with
-    | Sgt -> (xs.s_SF = xs.s_OF)
-    | Sge -> (xs.s_SF = xs.s_OF)
     | Slt -> (xs.s_SF != xs.s_OF)
-    | Sle -> (xs.s_SF != xs.s_OF)
+    | Sge -> (xs.s_SF = xs.s_OF)
+    | Sle -> ((xs.s_SF != xs.s_OF) || xs.s_ZF)
+    | Sgt -> (not ((xs.s_SF != xs.s_OF) || xs.s_ZF))
     | Eq -> xs.s_ZF
     | NotEq -> (not xs.s_ZF)
     | Zero -> xs.s_ZF
