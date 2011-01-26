@@ -97,9 +97,67 @@ let get_bit bitidx n =
   Int32.logand shb n = shb  
 
 
-
 let interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
-failwith "unimplemented"
+  begin match code with
+    | Neg (dest) -> dest=Int32.neg(dest);
+      if dest <@ 0 then begin 
+        xs.s_SF=true;
+        xs.s_ZF=false;
+      end
+      else
+        if dest>0 then begin
+          xs.s_SF=false;
+          xs.s_ZF=false;
+        end
+        else
+          xs.s_ZF=true;
+      if dest=MIN_INT then xs.s_OF=true else xs.s_OF=false;
+	  | Add (dest, src) -> dest = dest+@src;
+        if dest < 0 then begin 
+          xs.s_SF=true;
+          xs.s_ZF=false;
+        end
+        else
+          if dest>0 then begin
+            xs.s_SF=false;
+            xs.s_ZF=false;
+          end
+          else
+          xs.s_ZF=true;
+      if dest=MIN_INT then xs.s_OF=true else xs.s_OF=false;
+	  | Sub (dest,src) -> dest=dest-@src;
+        if dest < 0 then begin 
+          xs.s_SF=true;
+          xs.s_ZF=false;
+        end
+        else
+          if dest>0 then begin
+            xs.s_SF=false;
+            xs.s_ZF=false;
+          end
+          else
+          xs.s_ZF=true;
+      if dest=MIN_INT then xs.s_OF=true else xs.s_OF=false;      
+    | Imul(reg,src) -> reg=reg*@src
+	  | Lea (dest,ind) -> dest=ind.base+(ind.index * ind.scale ) + ind.disp;      
+	  | Mov (dest,src) -> dest=src      
+	  | Shl (dest,amt) -> dest=dest<<amt    
+	  | Sar (dest,amt) -> dest = dest >> amt 
+	  | Shr (dest,amt) -> dest=dest>>>amt;      
+	  | Not dest -> dest = not dest;          
+	  | And (dest,src) -> dest=dest && src     
+	  | Or (dest,src) -> dest = dest || src     
+	  | Xor (dest,src) -> dest = dest lxor src    
+	  | Push src -> src
+	  | Pop dest -> dest    
+	  | Cmp (src1,src2) -> src1   
+	  | Setb (dest,cc) -> dest      
+	  | Jmp (src) -> src 
+	  | Call src -> src          
+	  | Ret  -> true                 
+	  | J (cc, clbl) -> cc       
+  end
+      
 
       
 let run (code:insn_block list) : int32 =
