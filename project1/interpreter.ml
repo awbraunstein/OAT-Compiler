@@ -394,13 +394,16 @@ let do_command(i:insn) (xs:x86_state) : unit =
     | Push o ->
       begin match o with
         | Reg x -> xs.s_reg.(get_register_id Esp) <-
-          Int32.of_int(get_register_id Esp) -@ 4l;
-          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp))) <- 
+          xs.s_reg.(get_register_id Esp) -@ 4l;
+          xs.s_mem.(map_addr(xs.s_reg.(get_register_id Esp))) <- 
           xs.s_reg.(get_register_id x)
-        | Imm x -> xs.s_reg.(get_register_id Esp) <-
-          Int32.of_int(get_register_id Esp) -@ 4l;
-          xs.s_mem.(map_addr(Int32.of_int(get_register_id Esp))) <- 
-          x
+        | Imm x ->
+          xs.s_reg.(get_register_id Esp) <-
+          xs.s_reg.(get_register_id Esp) -@ 4l;
+          print_state xs;
+          xs.s_mem.(map_addr(xs.s_reg.(get_register_id Esp))) <- 
+          x;
+          print_state xs;
         | Lbl x -> ()
         | Ind x -> xs.s_reg.(get_register_id Esp) <-
           xs.s_reg.(get_register_id Esp) -@ 4l;
@@ -411,22 +414,23 @@ let do_command(i:insn) (xs:x86_state) : unit =
       begin match o with
         | Reg x -> 
           xs.s_reg.(get_register_id x) <-
-          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp)));
+          xs.s_mem.(map_addr(xs.s_reg.(get_register_id Esp)));
           xs.s_reg.(get_register_id Esp) <-
-          Int32.of_int(get_register_id Esp) +@ 4l;
+          xs.s_reg.(get_register_id Esp) +@ 4l;
         | Imm x -> ()
         | Lbl x -> ()
         | Ind x -> 
           xs.s_mem.(map_addr(get_ind x xs)) <-
-          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp)));
+          xs.s_mem.(map_addr(xs.s_reg.(get_register_id Esp)));
           xs.s_reg.(get_register_id Esp) <-
-          Int32.of_int(get_register_id Esp) +@ 4l;
+          xs.s_reg.(get_register_id Esp) +@ 4l;
       end
     | Cmp (c1,c2)    -> ()
     | Setb (dest,cc) -> ()
     | Jmp o     -> ()
     | Call o    -> ()
-    | Ret -> ()
+    | Ret -> xs.s_reg.(get_register_id Esp) <-
+      xs.s_reg.(get_register_id Esp) +@ 4l;
     | J (cond,lbl) -> ()
     | Imul (d,s) ->
       begin match s with
