@@ -99,18 +99,20 @@ let get_bit bitidx n =
 let rec get_block(code:insn_block list)(l:lbl): insn_block = 
   begin match code with
     | [] -> raise (X86_segmentation_fault "FAIL!")
-    | h::tl -> if h.label = l then h else getBlock tl l
+    | h::tl -> if h.label = l then h else get_block tl l
+  end
+  
+let do_command(i:insn) (xs:x86_state) : unit =
+  begin match i with
+    | Add (dest,src) -> dest
   end
   
 let interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
-     let block = getBlock code l in 
+     let block = get_block code l in 
   begin match block.insns with
     | [] -> []
-    | h::tl -> do_command h; get_insns(tl)
+    | h::tl -> do_command h xs; get_insns(tl)
   end
-
-let do_command(i:insn) : unit =
-  
 
 
 let run (code:insn_block list) : int32 =
