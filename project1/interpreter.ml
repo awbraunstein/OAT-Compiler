@@ -12,6 +12,7 @@ let (<=@) a b = (Int32.compare a b) <= 0
 let (>@) a b = (Int32.compare a b) > 0
 let (>=@) a b = (Int32.compare a b) >= 0
 let (<@@) a b = (Int64.compare a b) < 0
+let (>@@) a b = (Int64.compare a b) > 0
 let (>=@@) a b = (Int64.compare a b) >= 0
 
 exception X86_segmentation_fault of string
@@ -170,6 +171,15 @@ let set_sar_codes (d:int32) (a:int32) (xs:x86_state) : unit =
     if a = 1l then xs.s_OF<-false
   else ()
   
+
+let set_mul_OF(d:int32) (s:int32) (xs:x86_state) : unit =
+  let s64=Int64.of_int32 s in
+    let d64=Int64.of_int32 d in
+      let r64=Int64.mul s64 d64 in
+      if r64 >@@ Int64.of_int32 Int32.max_int || r64 <@@ Int64.of_int32 Int32.min_int then xs.s_OF<-true
+        else xs.s_OF<-false
+  
+
 let set_shl_codes (d:int32) (a:int32) (xs:x86_state) : unit =
   if a = 1l then
     set_add_codes d xs;
@@ -182,6 +192,7 @@ let set_shr_codes (d:int32) (a:int32) (xs:x86_state) : unit =
     set_add_codes d xs;
     if a = 1l then xs.s_OF<-(get_bit 31 d)
   else ()
+
 
 
 let do_command(i:insn) (xs:x86_state) : unit =
@@ -665,11 +676,17 @@ let do_command(i:insn) (xs:x86_state) : unit =
       eip.lbl <- lbl
     | Imul (d,s) ->
       begin match s with
-        | Reg x -> xs.s_reg.(get_register_id d) <- 
+        | Reg x -> 
+          set_mul_OF xs.s_reg.(get_register_id d) xs.s_reg.(get_register_id x) xs;
+          xs.s_reg.(get_register_id d) <- 
           xs.s_reg.(get_register_id d) *@ xs.s_reg.(get_register_id x)
-        | Imm y -> xs.s_reg.(get_register_id d) <- 
+        | Imm y -> 
+          set_mul_OF xs.s_reg.(get_register_id d) y xs;
+          xs.s_reg.(get_register_id d) <- 
           xs.s_reg.(get_register_id d) *@ y
-        | Ind y -> xs.s_reg.(get_register_id d) <- 
+        | Ind y -> 
+          set_mul_OF xs.s_reg.(get_register_id d) xs.s_mem.(map_addr (get_ind y xs)) xs;
+          xs.s_reg.(get_register_id d) <- 
           xs.s_reg.(get_register_id d) *@ xs.s_mem.(map_addr (get_ind y xs))
         | Lbl y -> raise (X86_segmentation_fault "FAIL!")
       end
