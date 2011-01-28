@@ -110,7 +110,7 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
           xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
         | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
-          xs.s_reg.(get_register_id x) +@ y;
+          xs.s_reg.(get_register_id x) +@ y
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Ind x, Imm y) -> ()
@@ -143,17 +143,42 @@ let do_command(i:insn) (xs:x86_state) : unit =
     | Shl (d,s) -> ()
     | Sar (d,s) -> ()
     | Shr (d,s) -> ()
-    | Not o     -> ()
+    | Not o     -> 
+      begin match o with
+        | Reg x -> xs.s_mem.(get_register_id x) <- 
+          not xs.s_mem.(get_register_id x)
+        | Imm x -> ()
+        | Lbl x -> ()
+        | Ind x -> ()
+      end
     | And (d,s) -> ()
     | Or (d,s)  -> ()
     | Xor (d,s) -> ()
-    | Push o    -> ()
-    | Pop o     -> ()
+    | Push o    ->
+      begin match o with
+        | Reg x -> xs.s_reg.(get_register_id Esp) <-
+          xs.s_reg.(get_register_id Esp) -@ 4l;
+          xs.s_mem.(get_register_id Esp) <- 
+          xs.s_reg.(get_register_id x)
+        | Imm x -> ()
+        | Lbl x -> ()
+        | Ind x -> ()
+      end
+    | Pop o     ->
+      begin match o with
+        | Reg x -> xs.s_mem.(get_register_id x) <- 
+          xs.s_mem.(get_register_id Esp);
+          xs.s_reg.(get_register_id Esp) <-
+          xs.s_reg.(get_register_id Esp) +@ 4l;
+        | Imm x -> ()
+        | Lbl x -> ()
+        | Ind x -> ()
+      end
     | Cmp (c1,c2)    -> ()
     | Setb (dest,cc) -> ()
     | Jmp o     -> ()
     | Call o    -> ()
-    | Ret       -> ()
+    | Ret -> ()
     | J (cond,lbl) -> ()
     | Imul (d,s) -> ()
   end
