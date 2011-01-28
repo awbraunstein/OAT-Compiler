@@ -101,14 +101,21 @@ let rec get_block(code:insn_block list)(l:lbl): insn_block =
     | [] -> raise (X86_segmentation_fault "FAIL!")
     | h::tl -> if h.label = l then h else get_block tl l
   end
-   
+
+let get_val(o:opnd) (xs:x86_state) : int32 =
+  begin match o with
+    | Reg x -> xs.s_reg.(get_register_id x)
+    | Imm x -> x
+    | Ind x -> 0l
+    | Lbl x -> raise (X86_segmentation_fault "FAIL!")
+  end
   
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
     | Add (d,s) -> 
       begin match (d,s) with
         | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
-          xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
+          xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y)
         | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
           xs.s_reg.(get_register_id x) +@ y
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
@@ -132,29 +139,23 @@ let do_command(i:insn) (xs:x86_state) : unit =
     | Mov (d,s) ->
       begin match (d,s) with
         | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
-          xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
-        | (Reg x, Imm y) -> raise (X86_segmentation_fault "FAIL!")
+          xs.s_reg.(get_register_id y)
+        | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
+          y
+        | (Reg x, Ind y) -> ()
+        | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Ind x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Ind y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
       end
     | Shl (d,s) -> ()
     | Sar (d,s) -> ()
     | Shr (d,s) -> ()
-    | Not o     -> 
-      begin match o with
-        | Reg x -> xs.s_mem.(get_register_id x) <- 
-          not xs.s_mem.(get_register_id x)
-        | Imm x -> ()
-        | Lbl x -> ()
-        | Ind x -> ()
-      end
+    | Not o     -> ()
     | And (d,s) -> ()
     | Or (d,s)  -> ()
     | Xor (d,s) -> ()
-    | Push o    ->
+    | Push o ->
       begin match o with
         | Reg x -> xs.s_reg.(get_register_id Esp) <-
           xs.s_reg.(get_register_id Esp) -@ 4l;
