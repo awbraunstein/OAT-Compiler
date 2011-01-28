@@ -343,22 +343,33 @@ let do_command(i:insn) (xs:x86_state) : unit =
     | Push o ->
       begin match o with
         | Reg x -> xs.s_reg.(get_register_id Esp) <-
+          Int32.of_int(get_register_id Esp) -@ 4l;
+          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp))) <- 
+          xs.s_reg.(get_register_id x)
+        | Imm x -> xs.s_reg.(get_register_id Esp) <-
           xs.s_reg.(get_register_id Esp) -@ 4l;
           xs.s_mem.(get_register_id Esp) <- 
-          xs.s_reg.(get_register_id x)
-        | Imm x -> ()
+          x
         | Lbl x -> ()
-        | Ind x -> ()
+        | Ind x -> xs.s_reg.(get_register_id Esp) <-
+          xs.s_reg.(get_register_id Esp) -@ 4l;
+          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp))) <- 
+          xs.s_mem.(map_addr(get_ind x xs))
       end
-    | Pop o     ->
+    | Pop o ->
       begin match o with
-        | Reg x -> xs.s_mem.(get_register_id x) <- 
-          xs.s_mem.(get_register_id Esp);
+        | Reg x -> 
+          xs.s_reg.(get_register_id x) <-
+          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp)));
           xs.s_reg.(get_register_id Esp) <-
-          xs.s_reg.(get_register_id Esp) +@ 4l;
+          Int32.of_int(get_register_id Esp) +@ 4l;
         | Imm x -> ()
         | Lbl x -> ()
-        | Ind x -> ()
+        | Ind x -> 
+          xs.s_mem.(map_addr(get_ind x xs)) <-
+          xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp)));
+          xs.s_reg.(get_register_id Esp) <-
+          Int32.of_int(get_register_id Esp) +@ 4l;
       end
     | Cmp (c1,c2)    -> ()
     | Setb (dest,cc) -> ()
