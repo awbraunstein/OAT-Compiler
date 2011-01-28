@@ -163,7 +163,27 @@ let set_logic_flags(i:int32) (xs:x86_state) : unit =
   if i=0l then (xs.s_ZF<-true;xs.s_SF<-false;xs.s_OF<-false)
   else if i>@0l then (xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false)
   else if i<@0l then (xs.s_OF<-false;xs.s_ZF<-false;xs.s_SF<-true)
+
+let set_sar_codes (d:int32) (a:int32) (xs:x86_state) : unit =
+  if a = 1l then
+    set_add_codes d xs;
+    if a = 1l then xs.s_OF<-false
+  else ()
   
+let set_shl_codes (d:int32) (a:int32) (xs:x86_state) : unit =
+  if a = 1l then
+    set_add_codes d xs;
+    if (a = 1l && not(get_bit 1 d =
+      get_bit 0 d)) then xs.s_OF<-true
+  else ()
+  
+let set_shr_codes (d:int32) (a:int32) (xs:x86_state) : unit =
+  if a = 1l then
+    set_add_codes d xs;
+    if a = 1l then xs.s_OF<-(get_bit 31 d)
+  else ()
+
+
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
     | Add (d,s) -> 
@@ -304,71 +324,123 @@ let do_command(i:insn) (xs:x86_state) : unit =
       end
     | Shl (d,s) ->
       begin match (d,s) with
-        | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
+        | (Reg x, Reg y) ->
+           set_shl_codes xs.s_reg.(get_register_id x)
+             xs.s_reg.(get_register_id y) xs;
+           xs.s_reg.(get_register_id x) <- 
            Int32.shift_left xs.s_reg.(get_register_id y)
            (Int32.to_int xs.s_reg.(get_register_id x))
-        | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
-           Int32.shift_left y (Int32.to_int xs.s_reg.(get_register_id x))
+        | (Reg x, Imm y) ->
+           set_shl_codes xs.s_reg.(get_register_id x) y xs;
+           xs.s_reg.(get_register_id x) <- 
+           Int32.shift_left y
+           (Int32.to_int xs.s_reg.(get_register_id x));
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
-           Int32.shift_left y (Int32.to_int xs.s_mem.(map_addr(get_ind x xs)))
-        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Imm y) ->
+          set_shl_codes xs.s_mem.(map_addr (get_ind x xs)) y xs;
+           xs.s_mem.(map_addr (get_ind x xs)) <-
+           Int32.shift_left y
+           (Int32.to_int xs.s_mem.(map_addr(get_ind x xs)))
+        | (Ind x, Reg y) ->
+          set_shl_codes xs.s_mem.(map_addr (get_ind x xs))
+            xs.s_reg.(get_register_id y) xs;
+          xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_left xs.s_mem.(map_addr(get_ind x xs))
-          (Int32.to_int xs.s_reg.(get_register_id y))
-        | (Ind x, Ind y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+           (Int32.to_int xs.s_reg.(get_register_id y))
+        | (Ind x, Ind y) ->
+           set_shl_codes xs.s_mem.(map_addr (get_ind x xs))
+           xs.s_mem.(map_addr (get_ind y xs)) xs;
+           xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_left xs.s_mem.(map_addr(get_ind x xs))
-          (Int32.to_int xs.s_mem.(map_addr(get_ind y xs)))
+           (Int32.to_int xs.s_mem.(map_addr(get_ind y xs)))
         | (Ind x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
+        | (Reg x, Ind y) ->
+          set_shl_codes xs.s_reg.(get_register_id x)
+          xs.s_mem.(map_addr (get_ind y xs)) xs;
+          xs.s_reg.(get_register_id x) <- 
           Int32.shift_left xs.s_mem.(map_addr (get_ind y xs))
           (Int32.to_int xs.s_reg.(get_register_id x))
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
       end
     | Sar (d,s) ->
       begin match (d,s) with
-        | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
+         | (Reg x, Reg y) ->
+           set_sar_codes xs.s_reg.(get_register_id x)
+             xs.s_reg.(get_register_id y) xs;
+           xs.s_reg.(get_register_id x) <- 
            Int32.shift_right xs.s_reg.(get_register_id y)
-          (Int32.to_int xs.s_reg.(get_register_id x))
-        | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
-           Int32.shift_right y (Int32.to_int xs.s_reg.(get_register_id x))
+           (Int32.to_int xs.s_reg.(get_register_id x))
+        | (Reg x, Imm y) ->
+           set_sar_codes xs.s_reg.(get_register_id x) y xs;
+           xs.s_reg.(get_register_id x) <- 
+           Int32.shift_right y
+           (Int32.to_int xs.s_reg.(get_register_id x));
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
-           Int32.shift_right y (Int32.to_int xs.s_mem.(map_addr(get_ind x xs)))
-        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Imm y) ->
+          set_sar_codes xs.s_mem.(map_addr (get_ind x xs)) y xs;
+           xs.s_mem.(map_addr (get_ind x xs)) <-
+           Int32.shift_right y
+           (Int32.to_int xs.s_mem.(map_addr(get_ind x xs)))
+        | (Ind x, Reg y) ->
+          set_sar_codes xs.s_mem.(map_addr (get_ind x xs))
+            xs.s_reg.(get_register_id y) xs;
+          xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_right xs.s_mem.(map_addr(get_ind x xs))
            (Int32.to_int xs.s_reg.(get_register_id y))
-        | (Ind x, Ind y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Ind y) ->
+           set_sar_codes xs.s_mem.(map_addr (get_ind x xs))
+           xs.s_mem.(map_addr (get_ind y xs)) xs;
+           xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_right xs.s_mem.(map_addr(get_ind x xs))
            (Int32.to_int xs.s_mem.(map_addr(get_ind y xs)))
         | (Ind x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
+        | (Reg x, Ind y) ->
+          set_sar_codes xs.s_reg.(get_register_id x)
+          xs.s_mem.(map_addr (get_ind y xs)) xs;
+          xs.s_reg.(get_register_id x) <- 
           Int32.shift_right xs.s_mem.(map_addr (get_ind y xs))
           (Int32.to_int xs.s_reg.(get_register_id x))
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
       end 
     | Shr (d,s) ->
       begin match (d,s) with
-        | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
+        | (Reg x, Reg y) ->
+           set_shr_codes xs.s_reg.(get_register_id x)
+             xs.s_reg.(get_register_id y) xs;
+           xs.s_reg.(get_register_id x) <- 
            Int32.shift_right_logical xs.s_reg.(get_register_id y)
-          (Int32.to_int xs.s_reg.(get_register_id x))
-        | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
-           Int32.shift_right_logical y
            (Int32.to_int xs.s_reg.(get_register_id x))
+        | (Reg x, Imm y) ->
+           set_shr_codes xs.s_reg.(get_register_id x) y xs;
+           xs.s_reg.(get_register_id x) <- 
+           Int32.shift_right_logical y
+           (Int32.to_int xs.s_reg.(get_register_id x));
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Imm y) ->
+          set_shr_codes xs.s_mem.(map_addr (get_ind x xs)) y xs;
+           xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_right_logical y
            (Int32.to_int xs.s_mem.(map_addr(get_ind x xs)))
-        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Reg y) ->
+          set_shr_codes xs.s_mem.(map_addr (get_ind x xs))
+            xs.s_reg.(get_register_id y) xs;
+          xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_right_logical xs.s_mem.(map_addr(get_ind x xs))
            (Int32.to_int xs.s_reg.(get_register_id y))
-        | (Ind x, Ind y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Ind y) ->
+           set_shr_codes xs.s_mem.(map_addr (get_ind x xs))
+           xs.s_mem.(map_addr (get_ind y xs)) xs;
+           xs.s_mem.(map_addr (get_ind x xs)) <-
            Int32.shift_right_logical xs.s_mem.(map_addr(get_ind x xs))
            (Int32.to_int xs.s_mem.(map_addr(get_ind y xs)))
         | (Ind x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
+        | (Reg x, Ind y) ->
+          set_shr_codes xs.s_reg.(get_register_id x)
+          xs.s_mem.(map_addr (get_ind y xs)) xs;
+          xs.s_reg.(get_register_id x) <- 
           Int32.shift_right_logical xs.s_mem.(map_addr (get_ind y xs))
           (Int32.to_int xs.s_reg.(get_register_id x))
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
