@@ -163,11 +163,12 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | (Reg x, Lbl y) -> ()
         | (Imm x, _) -> ()
         | (Lbl x, _) -> ()
-        | (Ind x, Reg y) -> xs.s_reg.(map_addr (get_ind x xs)) <-
+        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
           xs.s_reg.(get_register_id y)
-        | (Ind x, Imm y) -> xs.s_reg.(map_addr (get_ind x xs)) <- y
+        | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <- y
         | (Ind x, Lbl y) -> ()
-        | (Ind x, Ind y) -> ()
+        | (Ind x, Ind y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+          xs.s_mem.(map_addr (get_ind y xs))
       end
     | Shl (d,s) -> ()
     | Sar (d,s) -> ()
