@@ -98,17 +98,14 @@ let get_bit bitidx n =
 
 let rec getBlock(code:insn_block list)(l:lbl): insn_block = 
   begin match code with
-    | [] -> raise (X86_segmentation_fault "memory not mapped or aligned")
+    | [] -> raise (X86_segmentation_fault "FAIL!")
     | h::tl -> if h.label = l then h else getBlock tl l
   end
 
 let interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
   let block = getBlock code l in 
   ()
-  
-      
 
-      
 let run (code:insn_block list) : int32 =
   let main = X86.mk_lbl_named "main" in
   let xs = mk_init_state () in
