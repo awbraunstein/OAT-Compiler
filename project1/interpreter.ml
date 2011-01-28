@@ -148,11 +148,16 @@ let set_add_OF(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
       if Int64.mul s64 d64 >=@@ 0L && Int64.mul (Int64.of_int32 r) s64 <@@ 0L
       then xs.s_OF<-true else xs.s_OF<-false
        
-let set_sub_codes(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
-  if r=0l then (xs.s_ZF<-true;xs.s_SF<-false;xs.s_OF<-false)
-  else if r>@0l then (xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false)
-  else if r<@0l then (xs.s_OF<-false;xs.s_ZF<-false;xs.s_SF<-true)
-  (* SPECIAL CASE NEEDED*)
+let set_sub_codes(r:int32) (xs:x86_state) : unit =
+  if r=0l then (xs.s_ZF<-true;xs.s_SF<-false)
+    else if r>@0l then (xs.s_ZF<-false;xs.s_SF<-false)
+      else (xs.s_ZF<-false;xs.s_SF<-true)
+
+let set_sub_OF(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
+  let s64=Int64.of_int32 s in
+    let d64=Int64.of_int32 d in
+      if (((Int64.mul (Int64.neg s64) d64) >=@@ 0L && (Int64.mul (Int64.of_int32 r) (Int64.neg s64)) <@@ 0L) || s = Int32.min_int)
+      then xs.s_OF<-true else xs.s_OF<-false
 
 let set_logic_flags(i:int32) (xs:x86_state) : unit =
   if i=0l then (xs.s_ZF<-true;xs.s_SF<-false;xs.s_OF<-false)
