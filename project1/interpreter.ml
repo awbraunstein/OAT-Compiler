@@ -120,6 +120,13 @@ let get_ind(i:ind) (xs:x86_state) : int32 =
     | None -> 0l
   end
   
+let set_neg_codes(i:int32) (xs:x86_state) : unit =
+  if i=0l then begin xs.s_ZF<-true;xs.s_OF<-false end
+    else if i>0l then begin xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false end
+      else if i=Int32.min_int then begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-true end
+        else begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-false end
+  
+  
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
     | Add (d,s) -> 
@@ -145,11 +152,13 @@ let do_command(i:insn) (xs:x86_state) : unit =
     | Neg o ->
       begin match o with
         | Reg x -> xs.s_reg.(get_register_id x) <-
-          Int32.neg(xs.s_reg.(get_register_id x))
+          Int32.neg(xs.s_reg.(get_register_id x));
+          set_neg_codes (Int32.neg(xs.s_reg.(get_register_id x))) xs
         | Imm x -> ()
         | Lbl x -> raise (X86_segmentation_fault "FAIL!")
         | Ind x -> xs.s_mem.(map_addr (get_ind x xs)) <-
-          Int32.neg(xs.s_mem.(map_addr (get_ind x xs)))
+          Int32.neg(xs.s_mem.(map_addr (get_ind x xs)));
+          set_neg_codes (Int32.neg(xs.s_mem.(map_addr (get_ind x xs)))) xs
       end
     | Sub (d,s) ->
       begin match (d,s) with
