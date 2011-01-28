@@ -347,8 +347,8 @@ let do_command(i:insn) (xs:x86_state) : unit =
           xs.s_mem.(Int32.to_int(xs.s_reg.(get_register_id Esp))) <- 
           xs.s_reg.(get_register_id x)
         | Imm x -> xs.s_reg.(get_register_id Esp) <-
-          xs.s_reg.(get_register_id Esp) -@ 4l;
-          xs.s_mem.(get_register_id Esp) <- 
+          Int32.of_int(get_register_id Esp) -@ 4l;
+          xs.s_mem.(map_addr(Int32.of_int(get_register_id Esp))) <- 
           x
         | Lbl x -> ()
         | Ind x -> xs.s_reg.(get_register_id Esp) <-
