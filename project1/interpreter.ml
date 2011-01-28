@@ -104,16 +104,46 @@ let rec get_block(code:insn_block list)(l:lbl): insn_block =
   
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
-    | Add (dest,src) -> dest
+    | Add (d,s) -> 
+      begin match (d,s) with
+        | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
+        | (Ind x, _) -> raise (X86_segmentation_fault "FAIL!")
+        | (Reg x, Reg y) -> x.reg = xs.s_reg[x] + xs.s_reg[x]
+        | (Reg x, Imm y) -> xs.s_reg[x] = xs.s_reg[x] + y
+        | (Imm x, Reg y) -> raise (X86_segmentation_fault "FAIL!")
+        | (Imm x, Imm y) -> raise (X86_segmentation_fault "FAIL!")
+      end
+    | Neg o     -> 1
+    | Sub (d,s) -> 1
+    | Lea (d,s) -> 1
+    | Mov (d,s) -> 1
+    | Shl (d,s) -> 1
+    | Sar (d,s) -> 1
+    | Shr (d,s) -> 1
+    | Not o     -> 1
+    | And (d,s) -> 1
+    | Or (d,s)  -> 1
+    | Xor (d,s) -> 1
+    | Push o    -> 1
+    | Pop o     -> 1
+    | Cmp (c1,c2)    -> 1
+    | Setb (dest,cc) -> 1
+    | Jmp o     -> 1
+    | Call o    -> 1
+    | Ret       -> 1
+    | J (cond,lbl) -> 1
+    | Imul (d,s) -> 1
+  end
+
+let rec get_insns(i:insns)(xs:x86_state):unit =
+  begin match i with
+    | [] -> []
+    | h::tl -> do_command h xs; get_insns tl xs
   end
   
 let interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
-     let block = get_block code l in 
-  begin match block.insns with
-    | [] -> []
-    | h::tl -> do_command h xs; get_insns(tl)
-  end
-
+ let block = get_block code l in
+     get_insns block.insns xs
 
 let run (code:insn_block list) : int32 =
   let main = X86.mk_lbl_named "main" in
