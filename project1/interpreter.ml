@@ -124,8 +124,7 @@ let set_neg_codes(i:int32) (xs:x86_state) : unit =
   if i=0l then begin xs.s_ZF<-true;xs.s_OF<-false end
     else if i>@0l then begin xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false end
       else if i=Int32.min_int then begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-true end
-        else if i<@0l then begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-false end
-        else ()
+        else xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-false
   
   
 let do_command(i:insn) (xs:x86_state) : unit =
