@@ -122,7 +122,7 @@ let fun_tests =
      [(mk_block "main" [
 	 Add (eax, Imm 1l);
 	 Add (ebx, eax);
-	 Add (stack_offset 0l, ebx);
+   Add (stack_offset 0l, ebx);
 	 Ret;
        ])] 
      (fun state -> 
