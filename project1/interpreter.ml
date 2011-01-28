@@ -131,9 +131,9 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
-          get_ind x xs +@ y
+          xs.s_mem.(map_addr(get_ind x xs)) +@ y
         | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
-          xs.s_reg.(get_register_id y) +@ get_ind x xs
+          xs.s_reg.(get_register_id y) +@ xs.s_mem.(map_addr(get_ind x xs))
         | (Ind x, Ind y) -> ()
         | (Ind x, Lbl y) -> ()
         | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
