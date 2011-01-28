@@ -668,7 +668,7 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | Reg x -> eip.num <- xs.s_reg.(get_register_id x)
         | Imm x -> eip.num <- x
         | Ind x -> eip.num <- xs.s_mem.(map_addr(get_ind x xs))
-        | Lbl x -> ()
+        | Lbl x -> eip.lbl <- x
       end
     | Ret -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) +@ 4l;
