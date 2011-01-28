@@ -101,6 +101,24 @@ let rec get_block(code:insn_block list)(l:lbl): insn_block =
     | [] -> raise (X86_segmentation_fault "FAIL!")
     | h::tl -> if h.label = l then h else get_block tl l
   end
+
+let get_ind(i:ind) (xs:x86_state) : int32 =
+  begin match i.i_base with
+    | Some n -> xs.s_reg.(get_register_id n)
+    | None -> 0l
+  end +@
+  begin match i.i_iscl with
+    | Some(a,b) -> xs.s_reg.(get_register_id a) *@ b
+    | None -> 0l
+  end +@
+  begin match i.i_disp with
+    | Some n -> 
+      begin match n with
+        | DImm x -> x
+        | DLbl p -> raise (X86_segmentation_fault "FAIL!")
+      end
+    | None -> 0l
+  end
   
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
