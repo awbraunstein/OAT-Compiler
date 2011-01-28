@@ -122,9 +122,10 @@ let get_ind(i:ind) (xs:x86_state) : int32 =
   
 let set_neg_codes(i:int32) (xs:x86_state) : unit =
   if i=0l then begin xs.s_ZF<-true;xs.s_OF<-false end
-    else if i>0l then begin xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false end
+    else if i>@0l then begin xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false end
       else if i=Int32.min_int then begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-true end
-        else begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-false end
+        else if i<@0l then begin xs.s_ZF<-false;xs.s_SF<-true;xs.s_OF<-false end
+        else ()
   
   
 let do_command(i:insn) (xs:x86_state) : unit =
