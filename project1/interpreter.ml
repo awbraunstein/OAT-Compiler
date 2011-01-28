@@ -12,6 +12,7 @@ let (<=@) a b = (Int32.compare a b) <= 0
 let (>@) a b = (Int32.compare a b) > 0
 let (>=@) a b = (Int32.compare a b) >= 0
 let (<@@) a b = (Int64.compare a b) < 0
+let (>=@@) a b = (Int64.compare a b) >= 0
 
 exception X86_segmentation_fault of string
 
@@ -136,18 +137,17 @@ let set_neg_codes(i:int32) (xs:x86_state) : unit =
   else if i=Int32.min_int then (xs.s_OF<-true;xs.s_ZF<-false;xs.s_SF<-true)
   else if i<@0l then (xs.s_OF<-false;xs.s_ZF<-false;xs.s_SF<-true)
 
-let set_add_codes(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
-  if r=0l then (xs.s_ZF<-true;xs.s_SF<-false;xs.s_OF<-false)
-  else if r>@0l then (xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false)
-  else if r<@0l then (xs.s_OF<-false;xs.s_ZF<-false;xs.s_SF<-true)
-  else if ((Int64.of_int32 s < 0L && Int64.of_int32 d < 0L) ||
-          (Int64.of_int32 s >0L && Int64.of_int32 d >0L) ||
-           Int64.of_int32 s=0L && Int64.of_int32 d=0L) &&
-           not((Int64.of_int32 s < 0L && (d +@ s) < 0l) ||
-           (Int64.of_int32 s >0L && (d +@ s) >@0l) ||
-           Int64.of_int32 s = 0L && (d +@ s)=0l) then
-      xs.s_OF<-true
-  
+let set_add_codes(r:int32) (xs:x86_state) : unit =
+  if r=0l then (xs.s_ZF<-true;xs.s_SF<-false)
+    else if r>@0l then (xs.s_ZF<-false;xs.s_SF<-false)
+      else (xs.s_ZF<-false;xs.s_SF<-true)
+      
+let set_add_OF(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
+  let s64=Int64.of_int32 s in
+    let d64=Int64.of_int32 d in
+      if Int64.mul s64 d64 >=@@ 0L && Int64.mul (Int64.of_int32 r) s64 <@@ 0L
+      then xs.s_OF<-true else xs.s_OF<-false
+       
 let set_sub_codes(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
   if r=0l then (xs.s_ZF<-true;xs.s_SF<-false;xs.s_OF<-false)
   else if r>@0l then (xs.s_ZF<-false;xs.s_SF<-false;xs.s_OF<-false)
@@ -163,23 +163,47 @@ let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
     | Add (d,s) -> 
       begin match (d,s) with
-        | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
-          xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
+        | (Reg x, Reg y) -> 
+          set_add_OF xs.s_reg.(get_register_id x) xs.s_reg.(get_register_id y) 
+            (xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y)) xs;
+          xs.s_reg.(get_register_id x) <- xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
+          set_add_codes (xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y)) xs
         | (Reg x, Imm y) ->
+          set_add_OF xs.s_reg.(get_register_id x) y 
+            (xs.s_reg.(get_register_id x) +@ y) xs;
           xs.s_reg.(get_register_id x) <- 
-          xs.s_reg.(get_register_id x) +@ y
+          xs.s_reg.(get_register_id x) +@ y;
+          set_add_codes (xs.s_reg.(get_register_id x) +@ y) xs
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Imm y) -> 
+          set_add_OF xs.s_mem.(map_addr(get_ind x xs)) y 
+            (xs.s_mem.(map_addr(get_ind x xs)) +@ y) xs;
+          xs.s_mem.(map_addr (get_ind x xs)) <-
           xs.s_mem.(map_addr(get_ind x xs)) +@ y;
-        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+          set_add_codes (xs.s_mem.(map_addr(get_ind x xs)) +@ y) xs
+        | (Ind x, Reg y) -> 
+          xs.s_mem.(map_addr (get_ind x xs)) <-
           xs.s_mem.(map_addr(get_ind x xs)) +@ xs.s_reg.(get_register_id y);
-        | (Ind x, Ind y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+        | (Ind x, Ind y) -> 
+          set_add_OF xs.s_mem.(map_addr(get_ind x xs)) 
+            xs.s_mem.(map_addr(get_ind y xs)) 
+            (xs.s_mem.(map_addr(get_ind x xs)) +@ 
+            xs.s_mem.(map_addr(get_ind y xs))) xs;          
+          xs.s_mem.(map_addr (get_ind x xs)) <-
           xs.s_mem.(map_addr(get_ind x xs)) +@
           xs.s_mem.(map_addr(get_ind y xs));
+          set_add_codes (xs.s_mem.(map_addr(get_ind x xs)) +@
+          xs.s_mem.(map_addr(get_ind y xs))) xs
         | (Ind x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
+        | (Reg x, Ind y) -> 
+          set_add_OF xs.s_reg.(get_register_id x) 
+            xs.s_mem.(map_addr (get_ind y xs))
+            (xs.s_reg.(get_register_id x) +@ xs.s_mem.(map_addr (get_ind y xs))) xs;
+          xs.s_reg.(get_register_id x) <- 
           xs.s_reg.(get_register_id x) +@ xs.s_mem.(map_addr (get_ind y xs));
+          set_add_codes (xs.s_reg.(get_register_id x) +@ 
+            xs.s_mem.(map_addr (get_ind y xs))) xs
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
       end
     | Neg o ->
