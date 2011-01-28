@@ -131,18 +131,21 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Ind x, Imm y) -> ()
-        | (Ind x, Reg y) -> ()
+        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <- xs.s_reg.(get_register_id y)
+           +@ get_ind x xs
         | (Ind x, Ind y) -> ()
         | (Ind x, Lbl y) -> ()
-        | (Reg x, Ind y) -> raise (X86_segmentation_fault "FAIL!")
+        | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
+          xs.s_reg.(get_register_id x) +@ get_ind y xs
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
       end
     | Neg o ->
       begin match o with
-        | Reg x -> xs.s_reg.(get_register_id x) <-  Int32.neg(xs.s_reg.(get_register_id x))
-        | Imm x -> raise (X86_segmentation_fault "FAIL!")
+        | Reg x -> xs.s_reg.(get_register_id x) <-
+          Int32.neg(xs.s_reg.(get_register_id x))
+        | Imm x -> ()
         | Lbl x -> raise (X86_segmentation_fault "FAIL!")
-        | Ind x -> raise (X86_segmentation_fault "FAIL!")
+        | Ind x -> ()
       end
     | Sub (d,s) -> raise (X86_segmentation_fault "unimplemented")
     | Lea (d,s) -> raise (X86_segmentation_fault "unimplemented")
