@@ -60,12 +60,16 @@ type x86_state = {
     mutable s_ZF : bool;    (* zero flag *)
 }
 
-type eip = {
-  lbl : string;
-  num : int32;
+type eip_r = {
+  mutable lbl : lbl;
+  mutable num : int32;
 }
-
-
+  
+let eip = {
+  lbl = mk_lbl ();
+  num = 0l;
+}
+  
 let mk_init_state () : x86_state = 
   let xs = {
   s_mem = Array.make mem_size 0l;
@@ -211,7 +215,7 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
       end
     | Lea (d,s) -> xs.s_reg.(get_register_id d) <-
-          xs.s_mem.(map_addr (get_ind s xs))
+          (get_ind s xs)
     | Mov (d,s) ->
       begin match (d,s) with
         | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
@@ -406,10 +410,7 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | Imm x ->
           xs.s_reg.(get_register_id Esp) <-
           xs.s_reg.(get_register_id Esp) -@ 4l;
-          print_state xs;
-          xs.s_mem.(map_addr(xs.s_reg.(get_register_id Esp))) <- 
-          x;
-          print_state xs;
+          xs.s_mem.(map_addr(xs.s_reg.(get_register_id Esp))) <- x
         | Lbl x -> ()
         | Ind x -> xs.s_reg.(get_register_id Esp) <-
           xs.s_reg.(get_register_id Esp) -@ 4l;
@@ -432,12 +433,46 @@ let do_command(i:insn) (xs:x86_state) : unit =
           xs.s_reg.(get_register_id Esp) +@ 4l;
       end
     | Cmp (c1,c2)    -> ()
-    | Setb (dest,cc) -> ()
-    | Jmp o     -> ()
-    | Call o    -> ()
+    | Setb (dest,cc) ->
+      begin match dest with
+        | Reg x ->
+      if condition_matches xs cc then
+        if (get_bit 0 xs.s_reg.(get_register_id x)) = true
+          then xs.s_reg.(get_register_id x) <-
+          xs.s_reg.(get_register_id x);
+        if get_bit 0 xs.s_reg.(get_register_id x) = false
+          then xs.s_reg.(get_register_id x) <-
+          xs.s_reg.(get_register_id x) +@ 1l;
+      if (not (condition_matches xs cc)) then
+        if get_bit 0 xs.s_reg.(get_register_id x) = true
+          then xs.s_reg.(get_register_id x) <-
+          xs.s_reg.(get_register_id x) -@ 1l else ();
+        if get_bit 0 xs.s_reg.(get_register_id x) = false
+          then xs.s_reg.(get_register_id x) <-
+          xs.s_reg.(get_register_id x)
+        | Imm x -> ()
+        | Ind x -> ()
+        | Lbl x -> ()
+      end
+    | Jmp o     ->
+      begin match o with
+        | Reg x -> eip.num <- xs.s_reg.(get_register_id x)
+        | Imm x -> eip.num <- x
+        | Ind x -> eip.num <- xs.s_mem.(map_addr(get_ind x xs))
+        | Lbl x -> ()
+      end
+    | Call o    -> xs.s_reg.(get_register_id Esp) <-
+      xs.s_reg.(get_register_id Esp) -@ 4l;
+      begin match o with
+        | Reg x -> eip.num <- xs.s_reg.(get_register_id x)
+        | Imm x -> eip.num <- x
+        | Ind x -> eip.num <- xs.s_mem.(map_addr(get_ind x xs))
+        | Lbl x -> ()
+      end
     | Ret -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) +@ 4l;
-    | J (cond,lbl) -> ()
+    | J (cond,lbl) -> if condition_matches xs cond then
+      eip.lbl <- lbl
     | Imul (d,s) ->
       begin match s with
         | Reg x -> xs.s_reg.(get_register_id d) <- 
