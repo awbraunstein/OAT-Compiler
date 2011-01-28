@@ -60,6 +60,12 @@ type x86_state = {
     mutable s_ZF : bool;    (* zero flag *)
 }
 
+type eip = {
+  lbl : string;
+  num : int32;
+}
+
+
 let mk_init_state () : x86_state = 
   let xs = {
   s_mem = Array.make mem_size 0l;
