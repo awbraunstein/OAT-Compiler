@@ -500,7 +500,57 @@ let do_command(i:insn) (xs:x86_state) : unit =
           xs.s_reg.(get_register_id Esp) <-
           xs.s_reg.(get_register_id Esp) +@ 4l;
       end
-    | Cmp (c1,c2)    -> ()
+    | Cmp (c1,c2)    ->
+      begin match (c1,c2) with
+        | (Reg x, Reg y) -> 
+          set_sub_OF xs.s_reg.(get_register_id x) xs.s_reg.(get_register_id y) 
+            (xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y)) xs;
+          set_sub_codes (xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y)) xs;
+        | (Reg x, Imm y) ->
+          set_sub_OF xs.s_reg.(get_register_id x) y 
+            (xs.s_reg.(get_register_id x) -@ y) xs;
+          set_sub_codes (xs.s_reg.(get_register_id x) -@ y) xs;
+        | (Imm x, Reg y) -> 
+          set_sub_OF  x xs.s_reg.(get_register_id y)
+            (x -@ xs.s_reg.(get_register_id y)) xs;
+          set_sub_codes (x -@ xs.s_reg.(get_register_id y)) xs;
+        | (Imm x, Imm y) -> 
+          set_sub_OF  x y
+            (x -@ y) xs;
+          set_sub_codes (x -@ y) xs;
+        | (Imm x, Ind y) -> 
+          set_sub_OF  x xs.s_mem.(map_addr(get_ind y xs))
+            (x -@ xs.s_mem.(map_addr(get_ind y xs))) xs;
+          set_sub_codes (x -@ xs.s_mem.(map_addr(get_ind y xs))) xs;
+        | (Imm x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
+        | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
+        | (Ind x, Imm y) -> 
+          set_sub_OF xs.s_mem.(map_addr(get_ind x xs)) y 
+            (xs.s_mem.(map_addr(get_ind x xs)) -@ y) xs;
+          set_sub_codes (xs.s_mem.(map_addr(get_ind x xs)) -@ y) xs;
+        | (Ind x, Reg y) -> 
+          set_sub_OF xs.s_mem.(map_addr(get_ind x xs)) 
+            xs.s_reg.(get_register_id y) 
+            (xs.s_mem.(map_addr(get_ind x xs)) -@ 
+            xs.s_reg.(get_register_id y)) xs; 
+          set_sub_codes (xs.s_mem.(map_addr(get_ind x xs)) -@
+           xs.s_reg.(get_register_id y)) xs;
+        | (Ind x, Ind y) -> 
+          set_sub_OF xs.s_mem.(map_addr(get_ind x xs)) 
+            xs.s_mem.(map_addr(get_ind y xs)) 
+            (xs.s_mem.(map_addr(get_ind x xs)) -@ 
+            xs.s_mem.(map_addr(get_ind y xs))) xs;     
+          set_sub_codes (xs.s_mem.(map_addr(get_ind x xs)) -@
+          xs.s_mem.(map_addr(get_ind y xs))) xs;     
+        | (Ind x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
+        | (Reg x, Ind y) -> 
+          set_sub_OF xs.s_reg.(get_register_id x) 
+            xs.s_mem.(map_addr (get_ind y xs))
+            (xs.s_reg.(get_register_id x) -@ xs.s_mem.(map_addr (get_ind y xs))) xs;
+          set_sub_codes (xs.s_reg.(get_register_id x) -@ 
+            xs.s_mem.(map_addr (get_ind y xs))) xs;
+        | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
+      end
     | Setb (dest,cc) ->
       begin match dest with
         | Reg x ->
