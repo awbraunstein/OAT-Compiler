@@ -62,15 +62,12 @@ type x86_state = {
     mutable s_ZF : bool;    (* zero flag *)
 }
 
-type eip_r = {
-  mutable lbl : lbl;
-  mutable num : int32;
-}
-  
-let eip = {
-  lbl = mk_lbl ();
-  num = 0l;
-}
+
+let stack : lbl Stack.t = Stack.create ()
+
+
+Stack.push (mk_lbl_named "") eip_stack
+
   
 let mk_init_state () : x86_state = 
   let xs = {
@@ -195,7 +192,7 @@ let set_shr_codes (d:int32) (a:int32) (xs:x86_state) : unit =
 
 
 
-let do_command(i:insn) (xs:x86_state) : unit =
+let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
   begin match i with
     | Add (d,s) -> 
       begin match (d,s) with
@@ -657,23 +654,24 @@ let do_command(i:insn) (xs:x86_state) : unit =
       end
     | Jmp o     ->
       begin match o with
-        | Reg x -> eip.num <- xs.s_reg.(get_register_id x)
-        | Imm x -> eip.num <- x
-        | Ind x -> eip.num <- xs.s_mem.(map_addr(get_ind x xs))
-        | Lbl x -> ()
+        | Reg x -> raise (X86_segmentation_fault "FAIL!")
+        | Imm x -> raise (X86_segmentation_fault "FAIL!")
+        | Ind x -> raise (X86_segmentation_fault "FAIL!")
+        | Lbl x -> eip.lbl <-x
       end
     | Call o    -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) -@ 4l;
       begin match o with
-        | Reg x -> eip.num <- xs.s_reg.(get_register_id x)
-        | Imm x -> eip.num <- x
-        | Ind x -> eip.num <- xs.s_mem.(map_addr(get_ind x xs))
-        | Lbl x -> eip.lbl <- x
+        | Reg x -> raise (X86_segmentation_fault "FAIL!")
+        | Imm x -> raise (X86_segmentation_fault "FAIL!")
+        | Ind x -> raise (X86_segmentation_fault "FAIL!")
+        | Lbl x -> eip.lbl <-x;
+          interpret code xs x;
       end
     | Ret -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) +@ 4l;
     | J (cond,lbl) -> if condition_matches xs cond then
-      eip.lbl <- lbl
+      (eip.lbl <- lbl;interpret code xs lbl)
     | Imul (d,s) ->
       begin match s with
         | Reg x -> 
@@ -691,16 +689,18 @@ let do_command(i:insn) (xs:x86_state) : unit =
         | Lbl y -> raise (X86_segmentation_fault "FAIL!")
       end
   end
+  
+and interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
+ let block = get_block code l in
+     get_insns code block.insns xs
 
-let rec get_insns(i:insn list)(xs:x86_state):unit =
+and get_insns(code:insn_block list)(i:insn list)(xs:x86_state):unit =
   begin match i with
     | [] -> ()
-    | h::tl -> do_command h xs; get_insns tl xs
+    | h::tl -> do_command code h xs; get_insns code tl xs
   end
   
-let interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
- let block = get_block code l in
-     get_insns block.insns xs
+
 
 let run (code:insn_block list) : int32 =
   let main = X86.mk_lbl_named "main" in
