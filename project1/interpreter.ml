@@ -101,14 +101,6 @@ let rec get_block(code:insn_block list)(l:lbl): insn_block =
     | [] -> raise (X86_segmentation_fault "FAIL!")
     | h::tl -> if h.label = l then h else get_block tl l
   end
-
-let get_val(o:opnd) (xs:x86_state) : int32 =
-  begin match o with
-    | Reg x -> xs.s_reg.(get_register_id x)
-    | Imm x -> x
-    | Ind x -> 0l
-    | Lbl x -> raise (X86_segmentation_fault "FAIL!")
-  end
   
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
