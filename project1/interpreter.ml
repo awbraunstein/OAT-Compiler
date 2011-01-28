@@ -101,38 +101,38 @@ let rec get_block(code:insn_block list)(l:lbl): insn_block =
     | [] -> raise (X86_segmentation_fault "FAIL!")
     | h::tl -> if h.label = l then h else get_block tl l
   end
+   
   
 let do_command(i:insn) (xs:x86_state) : unit =
   begin match i with
     | Add (d,s) -> 
       begin match (d,s) with
-        | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Reg x, Reg y) -> x.reg = xs.s_reg[x] + xs.s_reg[x]
-        | (Reg x, Imm y) -> xs.s_reg[x] = xs.s_reg[x] + y
-        | (Imm x, Reg y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Imm x, Imm y) -> raise (X86_segmentation_fault "FAIL!")
+        | (_, _) -> raise (X86_segmentation_fault "FAIL!")
+        | (Reg x, Reg y) -> xs.s_reg.(get_register_id x) <- 
+          xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
+        | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
+          xs.s_reg.(get_register_id x) +@ y;
       end
-    | Neg o     -> 1
-    | Sub (d,s) -> 1
-    | Lea (d,s) -> 1
-    | Mov (d,s) -> 1
-    | Shl (d,s) -> 1
-    | Sar (d,s) -> 1
-    | Shr (d,s) -> 1
-    | Not o     -> 1
-    | And (d,s) -> 1
-    | Or (d,s)  -> 1
-    | Xor (d,s) -> 1
-    | Push o    -> 1
-    | Pop o     -> 1
-    | Cmp (c1,c2)    -> 1
-    | Setb (dest,cc) -> 1
-    | Jmp o     -> 1
-    | Call o    -> 1
-    | Ret       -> 1
-    | J (cond,lbl) -> 1
-    | Imul (d,s) -> 1
+    | Neg o     -> raise (X86_segmentation_fault "unimplemented")
+    | Sub (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Lea (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Mov (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Shl (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Sar (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Shr (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Not o     -> raise (X86_segmentation_fault "unimplemented")
+    | And (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Or (d,s)  -> raise (X86_segmentation_fault "unimplemented")
+    | Xor (d,s) -> raise (X86_segmentation_fault "unimplemented")
+    | Push o    -> raise (X86_segmentation_fault "unimplemented")
+    | Pop o     -> raise (X86_segmentation_fault "unimplemented")
+    | Cmp (c1,c2)    -> raise (X86_segmentation_fault "unimplemented")
+    | Setb (dest,cc) -> raise (X86_segmentation_fault "unimplemented")
+    | Jmp o     -> raise (X86_segmentation_fault "unimplemented")
+    | Call o    -> raise (X86_segmentation_fault "unimplemented")
+    | Ret       -> raise (X86_segmentation_fault "unimplemented")
+    | J (cond,lbl) -> raise (X86_segmentation_fault "unimplemented")
+    | Imul (d,s) -> raise (X86_segmentation_fault "unimplemented")
   end
 
 let rec get_insns(i:insns)(xs:x86_state):unit =
@@ -141,7 +141,14 @@ let rec get_insns(i:insns)(xs:x86_state):unit =
     | h::tl -> do_command h xs; get_insns tl xs
   end
   
+let rec get_insns (i:insns)(xs:x86_state):unit =
+  begin match i with
+    | [] -> []
+    | h::tl -> do_command h xs; get_insns tl xs
+  end 
+  
 let interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
+
  let block = get_block code l in
      get_insns block.insns xs
 
