@@ -130,9 +130,10 @@ let do_command(i:insn) (xs:x86_state) : unit =
           xs.s_reg.(get_register_id x) +@ y
         | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
         | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, Imm y) -> ()
-        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <- xs.s_reg.(get_register_id y)
-           +@ get_ind x xs
+        | (Ind x, Imm y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+          get_ind x xs +@ y
+        | (Ind x, Reg y) -> xs.s_mem.(map_addr (get_ind x xs)) <-
+          xs.s_reg.(get_register_id y) +@ get_ind x xs
         | (Ind x, Ind y) -> ()
         | (Ind x, Lbl y) -> ()
         | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
@@ -145,7 +146,8 @@ let do_command(i:insn) (xs:x86_state) : unit =
           Int32.neg(xs.s_reg.(get_register_id x))
         | Imm x -> ()
         | Lbl x -> raise (X86_segmentation_fault "FAIL!")
-        | Ind x -> ()
+        | Ind x -> xs.s_reg.(map_addr (get_ind x xs)) <-
+          Int32.neg(get_ind x xs)
       end
     | Sub (d,s) -> raise (X86_segmentation_fault "unimplemented")
     | Lea (d,s) -> raise (X86_segmentation_fault "unimplemented")
@@ -155,11 +157,16 @@ let do_command(i:insn) (xs:x86_state) : unit =
           xs.s_reg.(get_register_id y)
         | (Reg x, Imm y) -> xs.s_reg.(get_register_id x) <- 
           y
-        | (Reg x, Ind y) -> ()
-        | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
-        | (Imm x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Lbl x, _) -> raise (X86_segmentation_fault "FAIL!")
-        | (Ind x, _) -> raise (X86_segmentation_fault "FAIL!")
+        | (Reg x, Ind y) -> xs.s_reg.(get_register_id x) <- 
+          get_ind y xs
+        | (Reg x, Lbl y) -> ()
+        | (Imm x, _) -> ()
+        | (Lbl x, _) -> ()
+        | (Ind x, Reg y) -> xs.s_reg.(map_addr (get_ind x xs)) <-
+          xs.s_reg.(get_register_id y)
+        | (Ind x, Imm y) -> xs.s_reg.(map_addr (get_ind x xs)) <- y
+        | (Ind x, Lbl y) -> ()
+        | (Ind x, Ind y) -> ()
       end
     | Shl (d,s) -> ()
     | Sar (d,s) -> ()
