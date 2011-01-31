@@ -17,19 +17,20 @@ let provided_tests : suite = [
     ]); 
      (mk_insn_block (mk_lbl_named "main") [
       Add (eax, Imm 4l);
-      Call (Lbl (mk_lbl_named "j"));
+      Call (Lbl (mk_lbl_named "call"));
       Add (eax, Imm 4l);
       Ret
     ]);]
    );
-  ("test-j", run_test 7l
+  ("test-j", run_test 0l
     [(mk_insn_block (mk_lbl_named "j") [
       Sub (eax, Imm 1l);
+      J (Sgt, (mk_lbl_named "j"));
       Ret
     ]); 
      (mk_insn_block (mk_lbl_named "main") [
       Add (eax, Imm 4l);
-      Call (Lbl (mk_lbl_named "j"));
+      J (Sgt, (mk_lbl_named "j"));
       Add (eax, Imm 4l);
       Ret
     ]);]
