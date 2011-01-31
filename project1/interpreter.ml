@@ -674,7 +674,7 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
     | Ret -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) +@ 4l; ()
     | J (cond,lbl) -> if condition_matches xs cond then
-      interpret code xs lbl
+      interpret code xs lbl else ()
     | Imul (d,s) ->
       begin match s with
         | Reg x -> 
@@ -706,7 +706,8 @@ and get_insns(code:insn_block list)(i:insn list)(xs:x86_state):unit =
       begin match h with
         | Ret -> do_command code h xs
         | Jmp x -> do_command code h xs
-        | J (cond,lbl) -> do_command code h xs
+        | J (cond,lbl) -> if condition_matches xs cond then
+      do_command code h xs else (do_command code h xs; get_insns code tl xs)
         | _ -> do_command code h xs; get_insns code tl xs
       end   
   end
