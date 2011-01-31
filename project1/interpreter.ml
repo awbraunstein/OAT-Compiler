@@ -63,8 +63,6 @@ type x86_state = {
 }
 
 
-let stack : lbl Stack.t = Stack.create ()
-
   
 let mk_init_state () : x86_state = 
   let xs = {
@@ -654,7 +652,7 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | Reg x -> raise (X86_segmentation_fault "FAIL!")
         | Imm x -> raise (X86_segmentation_fault "FAIL!")
         | Ind x -> raise (X86_segmentation_fault "FAIL!")
-        | Lbl x -> eip.lbl <-x
+        | Lbl x -> interpret code xs x
       end
     | Call o    -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) -@ 4l;
@@ -662,13 +660,12 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | Reg x -> raise (X86_segmentation_fault "FAIL!")
         | Imm x -> raise (X86_segmentation_fault "FAIL!")
         | Ind x -> raise (X86_segmentation_fault "FAIL!")
-        | Lbl x -> eip.lbl <-x;
-          interpret code xs x;
+        | Lbl x -> interpret code xs x
       end
     | Ret -> xs.s_reg.(get_register_id Esp) <-
-      xs.s_reg.(get_register_id Esp) +@ 4l;
+      xs.s_reg.(get_register_id Esp) +@ 4l; ()
     | J (cond,lbl) -> if condition_matches xs cond then
-      (eip.lbl <- lbl;interpret code xs lbl)
+      interpret code xs lbl
     | Imul (d,s) ->
       begin match s with
         | Reg x -> 
@@ -694,7 +691,13 @@ and interpret (code:insn_block list) (xs:x86_state) (l:lbl) : unit =
 and get_insns(code:insn_block list)(i:insn list)(xs:x86_state):unit =
   begin match i with
     | [] -> ()
-    | h::tl -> do_command code h xs; get_insns code tl xs
+    | h::tl -> 
+      begin match h with
+        | Ret -> do_command code h xs
+        | Jmp x -> do_command code h xs
+        | J (cond,lbl) -> do_command code h xs
+        | _ -> do_command code h xs; get_insns code tl xs
+      end   
   end
   
 
