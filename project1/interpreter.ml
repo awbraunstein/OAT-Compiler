@@ -65,9 +65,6 @@ type x86_state = {
 
 let stack : lbl Stack.t = Stack.create ()
 
-
-Stack.push (mk_lbl_named "") eip_stack
-
   
 let mk_init_state () : x86_state = 
   let xs = {
