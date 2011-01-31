@@ -61,8 +61,6 @@ type x86_state = {
     mutable s_SF : bool;    (* sign bit flag *)
     mutable s_ZF : bool;    (* zero flag *)
 }
-
-
   
 let mk_init_state () : x86_state = 
   let xs = {
@@ -654,7 +652,7 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | Ind x -> raise (X86_segmentation_fault "FAIL!")
         | Lbl x -> interpret code xs x
       end
-    | Call o    -> xs.s_reg.(get_register_id Esp) <-
+    | Call o -> xs.s_reg.(get_register_id Esp) <-
       xs.s_reg.(get_register_id Esp) -@ 4l;
       begin match o with
         | Reg x -> raise (X86_segmentation_fault "FAIL!")
