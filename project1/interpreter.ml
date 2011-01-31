@@ -147,7 +147,9 @@ let set_sub_codes(r:int32) (xs:x86_state) : unit =
 let set_sub_OF(d:int32) (s:int32) (r:int32) (xs:x86_state) : unit =
   let s64=Int64.of_int32 s in
     let d64=Int64.of_int32 d in
-      if (((Int64.mul (Int64.neg s64) d64) >=@@ 0L && (Int64.mul (Int64.of_int32 r) (Int64.neg s64)) <@@ 0L) || s = Int32.min_int)
+      if (((Int64.mul (Int64.neg s64) d64) >=@@ 0L &&
+       (Int64.mul (Int64.of_int32 r) (Int64.neg s64)) <@@ 0L) ||
+       s = Int32.min_int)
       then xs.s_OF<-true else xs.s_OF<-false
 
 let set_logic_flags(i:int32) (xs:x86_state) : unit =
@@ -166,7 +168,8 @@ let set_mul_OF(d:int32) (s:int32) (xs:x86_state) : unit =
   let s64=Int64.of_int32 s in
     let d64=Int64.of_int32 d in
       let r64=Int64.mul s64 d64 in
-      if r64 >@@ Int64.of_int32 Int32.max_int || r64 <@@ Int64.of_int32 Int32.min_int then xs.s_OF<-true
+      if r64 >@@ Int64.of_int32 Int32.max_int || r64 <@@ 
+        Int64.of_int32 Int32.min_int then xs.s_OF<-true
         else xs.s_OF<-false
   
 
@@ -191,9 +194,12 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
       begin match (d,s) with
         | (Reg x, Reg y) -> 
           set_add_OF xs.s_reg.(get_register_id x) xs.s_reg.(get_register_id y) 
-            (xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y)) xs;
-          set_add_codes (xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y)) xs;
-          xs.s_reg.(get_register_id x) <- xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
+            (xs.s_reg.(get_register_id x) 
+            +@ xs.s_reg.(get_register_id y)) xs;
+          set_add_codes (xs.s_reg.(get_register_id x)
+           +@ xs.s_reg.(get_register_id y)) xs;
+          xs.s_reg.(get_register_id x) <-
+           xs.s_reg.(get_register_id x) +@ xs.s_reg.(get_register_id y);
         | (Reg x, Imm y) ->
           set_add_OF xs.s_reg.(get_register_id x) y 
             (xs.s_reg.(get_register_id x) +@ y) xs;
@@ -232,7 +238,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | (Reg x, Ind y) -> 
           set_add_OF xs.s_reg.(get_register_id x) 
             xs.s_mem.(map_addr (get_ind y xs))
-            (xs.s_reg.(get_register_id x) +@ xs.s_mem.(map_addr (get_ind y xs))) xs;
+            (xs.s_reg.(get_register_id x) +@ 
+            xs.s_mem.(map_addr (get_ind y xs))) xs;
           set_add_codes (xs.s_reg.(get_register_id x) +@ 
             xs.s_mem.(map_addr (get_ind y xs))) xs;
           xs.s_reg.(get_register_id x) <- 
@@ -256,8 +263,10 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | (Reg x, Reg y) -> 
           set_sub_OF xs.s_reg.(get_register_id x) xs.s_reg.(get_register_id y) 
             (xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y)) xs;
-          set_sub_codes (xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y)) xs;
-          xs.s_reg.(get_register_id x) <- xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y);
+          set_sub_codes (xs.s_reg.(get_register_id x) -@ 
+          xs.s_reg.(get_register_id y)) xs;
+          xs.s_reg.(get_register_id x) <- xs.s_reg.(get_register_id x) -@ 
+          xs.s_reg.(get_register_id y);
         | (Reg x, Imm y) ->
           set_sub_OF xs.s_reg.(get_register_id x) y 
             (xs.s_reg.(get_register_id x) -@ y) xs;
@@ -296,7 +305,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | (Reg x, Ind y) -> 
           set_sub_OF xs.s_reg.(get_register_id x) 
             xs.s_mem.(map_addr (get_ind y xs))
-            (xs.s_reg.(get_register_id x) -@ xs.s_mem.(map_addr (get_ind y xs))) xs;
+            (xs.s_reg.(get_register_id x) -@ 
+            xs.s_mem.(map_addr (get_ind y xs))) xs;
           set_sub_codes (xs.s_reg.(get_register_id x) -@ 
             xs.s_mem.(map_addr (get_ind y xs))) xs;
           xs.s_reg.(get_register_id x) <- 
@@ -619,7 +629,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | (Reg x, Ind y) -> 
           set_sub_OF xs.s_reg.(get_register_id x) 
             xs.s_mem.(map_addr (get_ind y xs))
-            (xs.s_reg.(get_register_id x) -@ xs.s_mem.(map_addr (get_ind y xs))) xs;
+            (xs.s_reg.(get_register_id x) -@ 
+            xs.s_mem.(map_addr (get_ind y xs))) xs;
           set_sub_codes (xs.s_reg.(get_register_id x) -@ 
             xs.s_mem.(map_addr (get_ind y xs))) xs;
         | (Reg x, Lbl y) -> raise (X86_segmentation_fault "FAIL!")
@@ -667,7 +678,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
     | Imul (d,s) ->
       begin match s with
         | Reg x -> 
-          set_mul_OF xs.s_reg.(get_register_id d) xs.s_reg.(get_register_id x) xs;
+          set_mul_OF xs.s_reg.(get_register_id d) 
+          xs.s_reg.(get_register_id x) xs;
           xs.s_reg.(get_register_id d) <- 
           xs.s_reg.(get_register_id d) *@ xs.s_reg.(get_register_id x)
         | Imm y -> 
@@ -675,7 +687,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
           xs.s_reg.(get_register_id d) <- 
           xs.s_reg.(get_register_id d) *@ y
         | Ind y -> 
-          set_mul_OF xs.s_reg.(get_register_id d) xs.s_mem.(map_addr (get_ind y xs)) xs;
+          set_mul_OF xs.s_reg.(get_register_id d) 
+          xs.s_mem.(map_addr (get_ind y xs)) xs;
           xs.s_reg.(get_register_id d) <- 
           xs.s_reg.(get_register_id d) *@ xs.s_mem.(map_addr (get_ind y xs))
         | Lbl y -> raise (X86_segmentation_fault "FAIL!")
