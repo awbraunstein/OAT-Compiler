@@ -36,7 +36,7 @@ let provided_tests : suite = [
     ]);]
    );
   
-   ("fib 7", run_test 8l
+   ("fib 7", run_test 5l
     [(mk_insn_block (mk_lbl_named "fib") [
       Add (ebx, eax);
       Neg (ebx);
@@ -58,8 +58,61 @@ let provided_tests : suite = [
       Ret
     ]);
     ]);
-    
-    
+    ("lea", st_test "mem(eax) = 1021" [(mk_block "main"  [
+           Push (Imm 6l);
+           Push (Imm 12l);
+           Push (Imm 1l);
+     Lea (Eax, { i_base = Some Esp; i_iscl = None; i_disp = Some (DImm 4l)});
+     Ret
+   ])] 
+    (fun state -> map_addr (state.s_reg.(0)) = 1021));
+       
+   ("setb", st_test "eax = 1; ebx = 12; ecx = -6" [(mk_block "main"  [
+           Push (Imm 6l);
+           Mov (eax, stack_offset 0l);
+           Push (Imm 12l);
+           Mov (ebx, stack_offset 0l);
+           Mov (ecx, eax);
+           Sub (ecx, ebx);
+           Setb (eax, Slt);
+     Ret
+   ])] 
+    (fun state -> state.s_reg.(0) = 1l && 
+                   state.s_reg.(1) = 12l && 
+                   state.s_reg.(2) = 0xfffffffal));
+   
+   ("sar", st_test "eax = 1, ebx = 9, ecx = 0" [(mk_block "main"  [
+           Push (Imm 6l);
+           Mov (eax, stack_offset 0l);
+           Sar (eax, Imm 2l);
+           Push (Imm 77l);
+           Mov (ebx, stack_offset 0l);
+           Sar (ebx, Imm 3l);
+           Push (Imm (-1l));
+           Mov (ecx, stack_offset 0l);
+           Sub (ecx, Imm 0xffffffffl);
+     Ret
+   ])] 
+    (fun state -> state.s_reg.(0) = 1l && 
+                   state.s_reg.(1) = 9l && 
+                   state.s_reg.(2) = 0l));
+       
+       ("shr", st_test "eax = 1, ebx = 9, ecx = 1" [(mk_block "main"  [
+           Push (Imm 6l);
+           Mov (eax, stack_offset 0l);
+           Shr (eax, Imm 2l);
+           Push (Imm 77l);
+           Mov (ebx, stack_offset 0l);
+           Shr (ebx, Imm 3l);
+           Push (Imm (-1l));
+           Mov (ecx, stack_offset 0l);
+           Shr (ecx, Imm 31l);
+     Ret
+   ])] 
+    (fun state -> state.s_reg.(0) = 1l && 
+                   state.s_reg.(1) = 9l && 
+                   state.s_reg.(2) = 1l));
+                   
     ("test-push/pop", run_test 1l
     [(mk_insn_block (mk_lbl_named "main") [
       Add (eax, Imm 4l);
