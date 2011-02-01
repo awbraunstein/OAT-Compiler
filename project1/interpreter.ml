@@ -632,23 +632,14 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
     | Setb (dest,cc) ->
       begin match dest with
         | Reg x ->
-      if condition_matches xs cc then
-        if (get_bit 0 xs.s_reg.(get_register_id x)) = true
-          then xs.s_reg.(get_register_id x) <-
-          xs.s_reg.(get_register_id x);
-        if get_bit 0 xs.s_reg.(get_register_id x) = false
-          then xs.s_reg.(get_register_id x) <-
-          xs.s_reg.(get_register_id x) +@ 1l;
-      if (not (condition_matches xs cc)) then
-        if get_bit 0 xs.s_reg.(get_register_id x) = true
-          then xs.s_reg.(get_register_id x) <-
-          xs.s_reg.(get_register_id x) -@ 1l else ();
-        if get_bit 0 xs.s_reg.(get_register_id x) = false
-          then xs.s_reg.(get_register_id x) <-
-          xs.s_reg.(get_register_id x)
-        | Imm x -> ()
-        | Ind x -> ()
-        | Lbl x -> ()
+      if condition_matches xs cc then ( xs.s_reg.(get_register_id x)
+        <- Int32.logor xs.s_reg.(get_register_id x) 63l)
+      else if (not (condition_matches xs cc)) then (
+        xs.s_reg.(get_register_id x) <-
+        Int32.logand xs.s_reg.(get_register_id x) 0l)
+        | Imm x -> raise (X86_segmentation_fault "FAIL!")
+        | Ind x -> raise (X86_segmentation_fault "FAIL!")
+        | Lbl x -> raise (X86_segmentation_fault "FAIL!")
       end
     | Jmp o     ->
       begin match o with
