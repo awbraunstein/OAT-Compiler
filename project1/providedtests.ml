@@ -36,34 +36,25 @@ let provided_tests : suite = [
     ]);]
    );
   
-   ("fib 6", run_test 8l
+   ("fib 7", run_test 8l
     [(mk_insn_block (mk_lbl_named "fib") [
-      Push (ebp);
-      Mov (ebp, esp);
-      Mov (eax, (stack_offset 8l));
-      Mov (ebx, (stack_offset 8l));
-	    Mov (ecx, (stack_offset 8l));
-      Cmp (eax, Imm 2l);
-	    J (Sge, (mk_lbl_named "fib_recursive"));
-      Pop (ebp);
+      Add (ebx, eax);
+      Neg (ebx);
+      Add (eax, ebx);
+      Sub (ecx, Imm 1l);
+      Cmp (ecx, Imm 0l);
+      J (Sgt, mk_lbl_named "fib");
       Ret
 ]);
-    (mk_insn_block (mk_lbl_named "fib_recursive") [
-	   Sub (ebx, Imm 1l);
-     Sub (ecx, Imm 2l);
-	   Call (Lbl (mk_lbl_named "fib"));
-     Add(eax, ebx);
-     Mov (eax, ecx);
-     Call (Lbl (mk_lbl_named "fib"));
-     Add(ecx, eax);
-     Pop (ebp);
-     Ret
-]);
      (mk_insn_block (mk_lbl_named "main") [
-      Push (Imm 6l);
-      Call (Lbl (mk_lbl_named "fib"));
-      Mov (eax, ecx);
-      Add (esp, (Imm 4l));
+      Push ebp;
+      Mov (ebp, esp);
+      Push ebx; 
+      Push ecx;
+      Mov (ecx, Imm 6l);
+      Mov (ebx, Imm 0l); 
+      Mov (eax, Imm 1l); 
+      Jmp (Lbl (mk_lbl_named "fib"));
       Ret
     ]);
     ]);
