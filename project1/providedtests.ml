@@ -1,13 +1,15 @@
 open Assert
 open Interpreter
 open X86
-open Gradedtests
+
 
 (* These tests are provided by you -- they will be graded manually *)
 
 (* You should also add additional test cases here to help you   *)
 (* debug your program.                                          *)
-
+let run_test (ans:int32) (code:X86.insn_block list) () =
+  let res = Interpreter.run code in
+    if res = ans then () else failwith (Printf.sprintf("Expected %lx got %lx") ans res)
 (*Computes the nth fib number*)
 let provided_tests : suite = [
   Test("Student-Provided Big Test for Part II", 

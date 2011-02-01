@@ -633,13 +633,10 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
       end
     | Setb (dest,cc) ->
       begin match dest with
-        | Reg x ->
-      if condition_matches xs cc then (
-        xs.s_reg.(get_register_id x)
-        <- (Int32.logand xs.s_reg.(get_register_id x) 0x1l))
-      else if (not (condition_matches xs cc)) then (
-        xs.s_reg.(get_register_id x) <-
-        (Int32.logand xs.s_reg.(get_register_id x) 0l))
+        | Reg x -> 
+      if condition_matches xs cc then xs.s_reg.(get_register_id x)
+        <- Int32.logor(Int32.logand xs.s_reg.(get_register_id x) 0xFFFFFF00l) 1l
+      else  xs.s_reg.(get_register_id x) <- Int32.logand xs.s_reg.(get_register_id x) 0xFFFFFF00l
         | Imm x -> raise (X86_segmentation_fault "FAIL!")
         | Ind x -> raise (X86_segmentation_fault "FAIL!")
         | Lbl x -> raise (X86_segmentation_fault "FAIL!")
