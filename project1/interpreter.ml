@@ -350,7 +350,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | (Ind x, Imm y) ->
           set_sar_codes xs.s_mem.(map_addr (get_ind x xs)) y xs;
            xs.s_mem.(map_addr (get_ind x xs)) <-
-           Int32.shift_left xs.s_mem.(map_addr(get_ind x xs)) (Int32.to_int y);
+           Int32.shift_left xs.s_mem.(map_addr(get_ind x xs))
+             (Int32.to_int y);
         | (Ind x, Reg y) ->
           set_sar_codes xs.s_mem.(map_addr (get_ind x xs))
             xs.s_reg.(get_register_id y) xs;
@@ -582,7 +583,8 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
         | (Reg x, Reg y) -> 
           set_sub_OF xs.s_reg.(get_register_id x) xs.s_reg.(get_register_id y) 
             (xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y)) xs;
-          set_sub_codes (xs.s_reg.(get_register_id x) -@ xs.s_reg.(get_register_id y)) xs;
+          set_sub_codes (xs.s_reg.(get_register_id x)
+            -@ xs.s_reg.(get_register_id y)) xs;
         | (Reg x, Imm y) ->
           set_sub_OF xs.s_reg.(get_register_id x) y 
             (xs.s_reg.(get_register_id x) -@ y) xs;
@@ -632,11 +634,12 @@ let rec do_command(code:insn_block list)(i:insn) (xs:x86_state) : unit =
     | Setb (dest,cc) ->
       begin match dest with
         | Reg x ->
-      if condition_matches xs cc then ( xs.s_reg.(get_register_id x)
-        <- Int32.logor xs.s_reg.(get_register_id x) 63l)
+      if condition_matches xs cc then (
+        xs.s_reg.(get_register_id x)
+        <- (Int32.logand xs.s_reg.(get_register_id x) 0x1l))
       else if (not (condition_matches xs cc)) then (
         xs.s_reg.(get_register_id x) <-
-        Int32.logand xs.s_reg.(get_register_id x) 0l)
+        (Int32.logand xs.s_reg.(get_register_id x) 0l))
         | Imm x -> raise (X86_segmentation_fault "FAIL!")
         | Ind x -> raise (X86_segmentation_fault "FAIL!")
         | Lbl x -> raise (X86_segmentation_fault "FAIL!")
