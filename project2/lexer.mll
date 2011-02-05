@@ -37,7 +37,9 @@ let whitespace = [' ' '\t' '\n' '\r']
 
 rule token = parse
   | eof { EOF }
+  | digit+ {INT (lex_range lexbuf, (Int32.of_string(lexeme lexbuf)))}
   | whitespace+ { token lexbuf }
   | "X" { X (lex_range lexbuf) }
   | "+" {PLUS (lex_range lexbuf) }
+  | "*" {TIMES (lex_range lexbuf) }
   | _ as c { unexpected_char lexbuf c }

@@ -6,7 +6,9 @@ open Ast;;
 %token EOF
 %token <Range.t * int32> INT
 %token <Range.t> X        /* X */
-%token <Range.t> PLUS
+%token <Range.t> PLUS     /* + */
+%token <Range.t> TIMES    /* '*' */
+%token <Range.t> DIGIT
 
 
 /* ---------------------------------------------------------------------- */
@@ -21,11 +23,14 @@ toplevel:
 /* Declare your productions here, starting with 'exp'. */
 
 exp:
-| X   { Arg }
+  |A1 { $1 }
 
-B1:
-  |B2 PLUS B2 {Binop (Plus, $1, $3)}
-  |B2 { $1 }
-B2:
-  |INT {Cint (snd $1)}
-  |X {Arg}
+A1:
+  |A3 PLUS A3 {Binop (Plus, $1, $3)}
+  |A3 { $1 }
+A2:
+  |A3 TIMES A3 {Binop (Times, $1, $3)}
+  |A2 { $1 }
+A3:
+  |INT {Cint (snd $1) }
+  |X   { Arg }
