@@ -24,7 +24,8 @@ exp:
 | X   { Arg }
 
 B1:
-  |B2 PLUS B2
+  |B2 PLUS B2 {Binop (Plus, $1, $3)}
+  |B2 { $1 }
 B2:
-  |INT {Int (snd $1) }
+  |INT {Cint (snd $1)}
   |X {Arg}

@@ -3,7 +3,7 @@
 
 (* Do NOT modify this file -- we will overwrite it with our *)
 (* own version when we test your homework.                  *)
-
+(* ocamlbuild -libs unix,str main.native && ./_build/main.native --test *)
 open Assert
 open Arg
 
