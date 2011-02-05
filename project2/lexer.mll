@@ -54,4 +54,7 @@ rule token = parse
   | "!=" {NEQ (lex_range lexbuf)}
   | "&" {AND (lex_range lexbuf)}
   | "|" {OR (lex_range lexbuf)}
+  | "-" {NEG (lex_range lexbuf)}
+  | "!" {LOGNOT (lex_range lexbuf)}
+  | "~" {NOT (lex_range lexbuf)}
   | _ as c { unexpected_char lexbuf c }
