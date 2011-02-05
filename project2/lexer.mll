@@ -30,10 +30,31 @@
 }
 
 (* Declare your aliases (let foo = regex) and rules here. *)
+let char = ['a' -'z' 'A'-'W' 'Y' 'Z']
+let digit = ['0' -'9']
+let whitespace = [' ' '\t' '\n' '\r']
 
 
 rule token = parse
   | eof { EOF }
   | 'X' { X (lex_range lexbuf) }
+  | '+' {Plus}
+  | '-' {Minus}
+  | '*' 
+  | "=="
+  | "<<"
+  | ">>"
+  | ">>>"
+  | "!="
+  | '<'
+  | "<="
+  | '>'
+  | ">="
+  | '!'
+  | '~'
+  | '&'
+  | '|'
+  | '('
+  | ')'
 
   | _ as c { unexpected_char lexbuf c }

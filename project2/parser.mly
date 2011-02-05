@@ -16,6 +16,7 @@ open Ast;;
 
 toplevel:
   | exp EOF { $1 }
+  | exp Plus {exp + exp}
 
 /* Declare your productions here, starting with 'exp'. */
 
