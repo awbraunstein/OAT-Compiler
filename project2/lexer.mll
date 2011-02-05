@@ -43,5 +43,15 @@ rule token = parse
   | "+" {PLUS (lex_range lexbuf) }
   | "*" {TIMES (lex_range lexbuf) }
   | "-" {MINUS (lex_range lexbuf) }
-  | "|" {OR (lex_range lexbuf) }
+  | "==" {EQ (lex_range lexbuf)}
+  | "<<" {SHL (lex_range lexbuf)}
+  | ">>" {SAR (lex_range lexbuf)}
+  | ">>>" {SHR (lex_range lexbuf)}
+  | "<" {LT (lex_range lexbuf)}
+  | ">" {GT (lex_range lexbuf)}
+  | "<=" {LTE (lex_range lexbuf)}
+  | ">=" {GTE (lex_range lexbuf)}
+  | "!=" {NEQ (lex_range lexbuf)}
+  | "&" {AND (lex_range lexbuf)}
+  | "|" {OR (lex_range lexbuf)}
   | _ as c { unexpected_char lexbuf c }
