@@ -37,24 +37,7 @@ let whitespace = [' ' '\t' '\n' '\r']
 
 rule token = parse
   | eof { EOF }
-  | 'X' { X (lex_range lexbuf) }
-  | '+' {Plus}
-  | '-' {Minus}
-  | '*' 
-  | "=="
-  | "<<"
-  | ">>"
-  | ">>>"
-  | "!="
-  | '<'
-  | "<="
-  | '>'
-  | ">="
-  | '!'
-  | '~'
-  | '&'
-  | '|'
-  | '('
-  | ')'
-
+  | whitespace+ { token lexbuf }
+  | "X" { X (lex_range lexbuf) }
+  | "+" {PLUS (lex_range lexbuf) }
   | _ as c { unexpected_char lexbuf c }

@@ -6,6 +6,7 @@ open Ast;;
 %token EOF
 %token <Range.t * int32> INT
 %token <Range.t> X        /* X */
+%token <Range.t> PLUS
 
 
 /* ---------------------------------------------------------------------- */
@@ -16,9 +17,14 @@ open Ast;;
 
 toplevel:
   | exp EOF { $1 }
-  | exp Plus {exp + exp}
 
 /* Declare your productions here, starting with 'exp'. */
 
 exp:
 | X   { Arg }
+
+B1:
+  |B2 PLUS B2
+B2:
+  |INT {Int (snd $1) }
+  |X {Arg}
