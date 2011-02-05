@@ -59,38 +59,38 @@ A6:
   | A7 SHR A7 {Binop (Shr, $1, $3) }
   | A7 { $1 }
 A7:
-  | A8 SAR A7 {Binop (Sar, $1, $3) }
+  | A8 SAR A8 {Binop (Sar, $1, $3) }
   | A8 { $1 }
 A8:
-  | A9 LT A8 {Binop (Lte, $1, $3) }
+  | A9 LT A9 {Binop (Lte, $1, $3) }
   | A9 { $1 }
 A9:
-  | A10 LTE A9 {Binop (Lte, $1, $3) }
+  | A10 LTE A10 {Binop (Lte, $1, $3) }
   | A10 { $1 }
 A10:
-  | A11 GT A10 {Binop (Gt, $1, $3) }
+  | A11 GT A11 {Binop (Gt, $1, $3) }
   | A11 { $1 }
 A11:
-  | A12 GTE A11 {Binop (Gte, $1, $3) }
+  | A12 GTE A12 {Binop (Gte, $1, $3) }
   | A12 { $1 }
 A12:
-  | A13 EQ A12 {Binop (Eq, $1, $3) }
+  | A13 EQ A13 {Binop (Eq, $1, $3) }
   | A13 { $1 }
 A13:
-  | A14 NEQ A13 {Binop (Neq, $1, $3) }
+  | A14 NEQ A14 {Binop (Neq, $1, $3) }
   | A14 { $1 }
 A14:
-  | A15 AND A14 {Binop (And, $1, $3) }
+  | A15 AND A15 {Binop (And, $1, $3) }
   | A15 { $1 }
 A15:
-  | NEG A16 {Unop (Neg $2) }
-  | A15 { $1 }
+  | NEG A16 {Unop (Neg, $2) }
+  | A16 { $1 }
 A16:
-  | LOGNOT A17 {Unop (Lognot $2) }
+  | LOGNOT A17 {Unop (Lognot, $2) }
   | A17 { $1 }
 A17:
-  | NOT A18 {Unop (Not $2) }
+  | NOT A18 {Unop (Not, $2) }
   | A18 { $1 }
-A17:
+A18:
   |INT {Cint (snd $1) }
   |X   { Arg }
