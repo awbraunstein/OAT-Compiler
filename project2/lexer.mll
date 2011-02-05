@@ -42,4 +42,6 @@ rule token = parse
   | "X" { X (lex_range lexbuf) }
   | "+" {PLUS (lex_range lexbuf) }
   | "*" {TIMES (lex_range lexbuf) }
+  | "-" {MINUS (lex_range lexbuf) }
+  | "|" {OR (lex_range lexbuf) }
   | _ as c { unexpected_char lexbuf c }
