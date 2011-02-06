@@ -56,6 +56,6 @@ rule token = parse
   | "-" {NEG (lex_range lexbuf)}
   | "!" {LOGNOT (lex_range lexbuf)}
   | "~" {NOT (lex_range lexbuf)}
-  | "(" {LPEREN (lex_range lexbuf)}
-  | ")" {RPEREN (lex_range lexbuf)}
+  | "(" {LPAREN (lex_range lexbuf)}
+  | ")" {RPAREN (lex_range lexbuf)}
   | _ as c { unexpected_char lexbuf c }

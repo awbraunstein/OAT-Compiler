@@ -24,8 +24,8 @@ open Ast;;
 %token <Range.t> NEG
 %token <Range.t> LOGNOT
 %token <Range.t> NOT
-%token <Range.t> LPEREN
-%token <Range.t> RPEREN
+%token <Range.t> LPAREN
+%token <Range.t> RPAREN
 
 
 /* ---------------------------------------------------------------------- */
@@ -46,7 +46,7 @@ A1:
   | A2 OR A2 {Binop (Or, $1, $3)}
   | A2 { $1 }
 A2:
-  | A3 AND A3 {Binop (And, $1, $3)}
+  | A1 AND A2 {Binop (And, $1, $3)}
   | A3 { $1 }
 A3:
   | A4 NEQ A4 {Binop (Neq, $1, $3)}
@@ -94,6 +94,6 @@ A17:
   | NOT A18 {Unop (Not, $2) }
   | A18 { $1 }
 A18:
-  |INT {Cint (snd $1) }
-  |X   { Arg }
-  
+  | INT {Cint (snd $1) }
+  | X   { Arg }
+  | LPAREN A1 RPAREN {$2}
