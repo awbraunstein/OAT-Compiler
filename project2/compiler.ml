@@ -28,7 +28,7 @@ let parse (filename : string) (buf : Lexing.lexbuf) : exp =
    Follows cdecl calling conventions and platform-specific name mangling policy. *)
 let compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
-  failwith "unimplemented"
+    
 
 
 let rec emit_exp (e:exp) (stream : insn list) : insn list = 
@@ -37,6 +37,7 @@ let rec emit_exp (e:exp) (stream : insn list) : insn list =
     | Arg  -> stream
     | Binop (a, x ,y) -> 
       begin match a with
-        | Plus -> stream
+        | Plus -> emit_exp x stream :: Mov (ebx, eax) :: emit_exp y stream :: Add(eax, ebx)::stream
+        | Minus -> stream
       end
- end
+   end
