@@ -29,3 +29,9 @@ let parse (filename : string) (buf : Lexing.lexbuf) : exp =
 let compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
 failwith "unimplemented"
+
+let rec emit_exp (e:exp) (stream : insn list) : insn list = 
+ begin match e with
+  | Cint i -> Mov (eax, Imm i) :: stream
+  | Arg -> Mov (ebx, Arg)
+ end
