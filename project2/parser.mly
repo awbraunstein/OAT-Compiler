@@ -40,13 +40,13 @@ toplevel:
 /* Declare your productions here, starting with 'exp'. */
 
 exp:
-  |A1 { $1 }
+  | A1 { $1 }
 
 A1:
   | A2 OR A2 {Binop (Or, $1, $3)}
   | A2 { $1 }
 A2:
-  | A1 AND A2 {Binop (And, $1, $3)}
+  | A2 AND A2 {Binop (And, $1, $3)}
   | A3 { $1 }
 A3:
   | A4 NEQ A4 {Binop (Neq, $1, $3)}
@@ -77,23 +77,17 @@ A11:
   | A12 { $1 }
 A12:
   | A13 PLUS A13 {Binop (Plus, $1, $3) }
+  | A13 MINUS A13 {Binop (Minus, $1, $3) }
   | A13 { $1 }
 A13:
-  | A14 MINUS A14 {Binop (Minus, $1, $3) }
-  | A14 { $1 }
-A14:
   | A15 TIMES A15 {Binop (Times, $1, $3) }
   | A15 { $1 }
 A15:
-  | NEG A16 {Unop (Neg, $2) }
+  | NEG A15 {Unop (Neg, $2) }
+  | LOGNOT A15 {Unop (Lognot, $2) }
+  | NOT A15 {Unop (Not, $2) }
   | A16 { $1 }
 A16:
-  | LOGNOT A17 {Unop (Lognot, $2) }
-  | A17 { $1 }
-A17:
-  | NOT A18 {Unop (Not, $2) }
-  | A18 { $1 }
-A18:
   | INT {Cint (snd $1) }
   | X   { Arg }
-  | LPAREN A1 RPAREN {$2}
+  | LPAREN A1 RPAREN { $2 }
