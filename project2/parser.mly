@@ -74,8 +74,8 @@ A8:
   | NEG A8 {Unop (Neg, $2) }
   | LOGNOT A8 {Unop (Lognot, $2) }
   | NOT A8 {Unop (Not, $2) }
-  | A11 { $1 }
-A11:
+  | A9 { $1 }
+A9:
   | INT {Cint (snd $1) }
   | X   { Arg }
   | LPAREN A1 RPAREN { $2 }
