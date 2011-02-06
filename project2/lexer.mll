@@ -32,6 +32,7 @@
 (* Declare your aliases (let foo = regex) and rules here. *)
 let digit = ['0' -'9']
 let whitespace = [' ' '\t' '\n' '\r']
+let space = [' ']
 
 
 rule token = parse
@@ -41,7 +42,7 @@ rule token = parse
   | "X" { X (lex_range lexbuf) }
   | "+" {PLUS (lex_range lexbuf) }
   | "*" {TIMES (lex_range lexbuf) }
-  | " - " {MINUS (lex_range lexbuf) }
+  | space"-" {MINUS (lex_range lexbuf) }
   | "==" {EQ (lex_range lexbuf)}
   | "<<" {SHL (lex_range lexbuf)}
   | ">>" {SAR (lex_range lexbuf)}
