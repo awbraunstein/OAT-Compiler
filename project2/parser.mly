@@ -46,48 +46,36 @@ A1:
   | A2 OR A2 {Binop (Or, $1, $3)}
   | A2 { $1 }
 A2:
-  | A2 AND A2 {Binop (And, $1, $3)}
+  | A2 AND A3 {Binop (And, $1, $3)}
   | A3 { $1 }
 A3:
-  | A4 NEQ A4 {Binop (Neq, $1, $3)}
+  | A3 NEQ A4 {Binop (Neq, $1, $3)}
+  | A3 EQ A4 {Binop (Eq, $1, $3) }
   | A4 { $1 }
 A4:
-  | A5 EQ A5 {Binop (Eq, $1, $3) }
+  | A4 LT A5 {Binop (Lt, $1, $3) }
+  | A4 LTE A5 {Binop (Lte, $1, $3) }
+  | A4 GT A5 {Binop (Gt, $1, $3) }
+  | A4 GTE A5 {Binop (Gte, $1, $3) }
   | A5 { $1 }
 A5:
-  | A6 LT A6 {Binop (Lt, $1, $3) }
+  | A5 SHL A6 {Binop (Shl, $1, $3) }
+  | A5 SHR A6 {Binop (Shr, $1, $3) }
+  | A5 SAR A6 {Binop (Sar, $1, $3) }
   | A6 { $1 }
 A6:
-  | A7 LTE A7 {Binop (Lte, $1, $3) }
+  | A6 PLUS A7 {Binop (Plus, $1, $3) }
+  | A6 MINUS A7 {Binop (Minus, $1, $3) }
   | A7 { $1 }
 A7:
-  | A8 GT A8 {Binop (Gt, $1, $3) }
+  | A7 TIMES A8 {Binop (Times, $1, $3) }
   | A8 { $1 }
 A8:
-  | A9 GTE A9 {Binop (Gte, $1, $3) }
+  | NEG A8 {Unop (Neg, $2) }
+  | LOGNOT A8 {Unop (Lognot, $2) }
+  | NOT A8 {Unop (Not, $2) }
   | A9 { $1 }
 A9:
-  | A10 SHL A10 {Binop (Shl, $1, $3) }
-  | A10 { $1 }
-A10:
-  | A11 SHR A11 {Binop (Shr, $1, $3) }
-  | A11 { $1 }
-A11:
-  | A12 SAR A12 {Binop (Sar, $1, $3) }
-  | A12 { $1 }
-A12:
-  | A13 PLUS A13 {Binop (Plus, $1, $3) }
-  | A13 MINUS A13 {Binop (Minus, $1, $3) }
-  | A13 { $1 }
-A13:
-  | A15 TIMES A15 {Binop (Times, $1, $3) }
-  | A15 { $1 }
-A15:
-  | NEG A15 {Unop (Neg, $2) }
-  | LOGNOT A15 {Unop (Lognot, $2) }
-  | NOT A15 {Unop (Not, $2) }
-  | A16 { $1 }
-A16:
   | INT {Cint (snd $1) }
   | X   { Arg }
   | LPAREN A1 RPAREN { $2 }
