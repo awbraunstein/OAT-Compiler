@@ -26,7 +26,7 @@ open Ast;;
 %token <Range.t> NOT
 %token <Range.t> LPAREN
 %token <Range.t> RPAREN
-
+%token <Range.t> SPACE
 
 /* ---------------------------------------------------------------------- */
 %start toplevel
@@ -72,12 +72,8 @@ A7:
   | A8 { $1 }
 A8:
   | NEG A8 {Unop (Neg, $2) }
-  | A9 { $1 }
-A9:
-  | LOGNOT A9 {Unop (Lognot, $2) }
-  | A10 { $1 }
-A10:
-  | NOT A10 {Unop (Not, $2) }
+  | LOGNOT A8 {Unop (Lognot, $2) }
+  | NOT A8 {Unop (Not, $2) }
   | A11 { $1 }
 A11:
   | INT {Cint (snd $1) }

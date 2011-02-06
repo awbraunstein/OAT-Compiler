@@ -41,7 +41,7 @@ rule token = parse
   | "X" { X (lex_range lexbuf) }
   | "+" {PLUS (lex_range lexbuf) }
   | "*" {TIMES (lex_range lexbuf) }
-  | "-" {MINUS (lex_range lexbuf) }
+  | " - " {MINUS (lex_range lexbuf) }
   | "==" {EQ (lex_range lexbuf)}
   | "<<" {SHL (lex_range lexbuf)}
   | ">>" {SAR (lex_range lexbuf)}
