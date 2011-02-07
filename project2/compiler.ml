@@ -32,7 +32,8 @@ let rec binop_aux (op:binop) (e1:exp) (e2:exp) (stream : insn list) : insn list 
     Push(eax) :: stream';
     compile_exp e2 :: stream';
     begin match op with
-      | Plus -> Add(eax, (X86.stack_offset 0l)) :: stream'; List.rev(stream'); Pop(ebx); stream;
+      | Plus -> [Add(eax, (X86.stack_offset 0l))] :: stream'; List.rev(stream'); Pop(ebx); stream;
+      | _ -> []
     end
 
 and compile_exp (ast:exp) : Cunit.cunit =
@@ -42,5 +43,6 @@ and compile_exp (ast:exp) : Cunit.cunit =
     begin match ast with
       | Cint i -> Mov (eax, Imm i) :: stream
       | Arg -> Mov (eax, edx) :: stream
-      | Binop (op, e1, e2) -> binop_aux op e1 e2 stream :: stream
+      | Binop (op, e1, e2) -> (binop_aux op e1 e2 stream) @ stream
+      | Unop (op, e1) -> stream
     end
