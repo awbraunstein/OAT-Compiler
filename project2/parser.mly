@@ -43,7 +43,7 @@ exp:
   | A1 { $1 }
 
 A1:
-  | A2 OR A2 {Binop (Or, $1, $3)}
+  | A1 OR A2 {Binop (Or, $1, $3)}
   | A2 { $1 }
 A2:
   | A2 AND A3 {Binop (And, $1, $3)}
