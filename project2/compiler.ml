@@ -26,23 +26,43 @@ let parse (filename : string) (buf : Lexing.lexbuf) : exp =
    int program(int X) { return <expression>; }
 
    Follows cdecl calling conventions and platform-specific name mangling policy. *)
-let rec binop_aux (op:binop) (e1:exp) (e2:exp) (stream : insn list) : insn list =
-  let stream' = [] in
-    compile_exp e1 :: stream';
-    Push(eax) :: stream';
-    compile_exp e2 :: stream';
-    begin match op with
-      | Plus -> [Add(eax, (X86.stack_offset 0l))] :: stream'; List.rev(stream'); Pop(ebx); stream;
-      | _ -> []
-    end
+  
+
+
+  
+let rec emit_exp (exp:exp) (stream : insn list) : insn list =
+  begin match exp with
+    | Cint i -> Mov (eax, Imm i) :: stream
+    | Arg -> Mov (eax, edx) :: stream
+    | Binop (a, x, y) -> binop_aux a x y stream
+    | Unop (a, x) -> unop_aux a x stream
+  end
+  
+and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
+  begin match u with
+    | Not -> X86.Not(eax)::emit_exp x []@i
+    | Lognot -> X86.Not(eax)::emit_exp x []@i
+    | Neg -> X86.Neg(eax)::emit_exp x [] @i
+  end
+  
+and binop_aux2(x:exp)(y:exp)(i:insn list):insn list=
+  emit_exp y []@Mov(ecx, eax)::emit_exp x []@i
+  
+and binop_aux (b:binop) (x:exp) (y:exp) (i: insn list): insn list=
+  begin match b with
+    | Plus -> X86.Add(eax, ecx)::binop_aux2 x y i
+    | Minus -> X86.Sub(eax, ecx)::binop_aux2 x y i
+    | Times -> X86.Imul(eax, ecx)::binop_aux2 x y i
+    | And -> X86.And(eax, ecx)::binop_aux2 x y i
+    | Or  -> X86.Or(eax,ecx)::binop_aux2 x y i
+    | Shl -> X86.Shl(eax,ecx)::binop_aux2 x y i
+    | Shr -> X86.Shr(eax,ecx)::binop_aux2 x y i
+    | Sar -> X86.Sar(eax,ecx)::binop_aux2 x y i
+  end
 
 and compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
     Mov (edx, stack_offset 4l);
-    let stream = [] in
-    begin match ast with
-      | Cint i -> Mov (eax, Imm i) :: stream
-      | Arg -> Mov (eax, edx) :: stream
-      | Binop (op, e1, e2) -> (binop_aux op e1 e2 stream) @ stream
-      | Unop (op, e1) -> stream
-    end
+      let stream = [] in
+        let c = emit_exp ast [];
+      
