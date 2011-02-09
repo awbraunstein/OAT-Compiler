@@ -59,7 +59,10 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
       (Add(eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
     | Times -> i
-    | Minus -> i
+    | Minus -> 
+      binop_aux2 r l i >::
+      (Sub(eax, stack_offset (0l))) >::
+      (Add(esp, Imm 4l))
     | Ast.Eq -> i(* binary equality *)
     | Neq -> i(* binary inequality *)
     | Lt -> i(* binary signed less-than *)
