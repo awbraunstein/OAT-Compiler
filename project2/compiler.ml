@@ -82,11 +82,11 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
       (Add(esp, Imm 4l))
     | Ast.Shr ->
       binop_aux2 l r i >::
-      Mov(ecx, stack_offset (0l)) >::(Shr(eax, ecx)) >::
+      Mov(ecx, stack_offset (0l)) >:: (Shr(eax, ecx)) >::
       (Add(esp, Imm 4l))
     | Ast.Sar ->
       binop_aux2 l r i >::
-      Mov(ecx, stack_offset (0l)) >::(Sar(eax, ecx)) >::
+      Mov(ecx, stack_offset (0l)) >:: (Sar(eax, ecx)) >::
       (Add(esp, Imm 4l))
   end
 
