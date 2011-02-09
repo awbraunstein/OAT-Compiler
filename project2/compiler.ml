@@ -45,22 +45,23 @@ and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
     | Neg -> X86.Neg(eax)::emit_exp x [] @i
   end
   *)
-  
+
 and binop_aux2 (l:exp)(r:exp) (i:insn list) : insn list = 
   let str_l = 
-    (emit_exp l i) >:: (Push eax)
+    (emit_exp r i) >:: (Push eax)
     in
-    (emit_exp r str_l)
-  
+    (emit_exp l str_l);
+
 and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
   begin match b with
-    | Plus ->
+    | Plus -> binop_aux2 l r i >::
+      (Add(eax, stack_offset (0l))) >:: (Add(esp, Imm 4l))
+    | Times ->
       binop_aux2 l r i >::
-      (Add(eax, stack_offset (0l))) >::
+      (Imul(Eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
-    | Times -> i
-    | Minus -> 
-      binop_aux2 r l i >::
+    | Minus ->
+       binop_aux2 l r i >::
       (Sub(eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
     | Ast.Eq -> i(* binary equality *)
@@ -69,18 +70,33 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
     | Lte -> i(* binary signed less-than or equals *)
     | Gt -> i(* binary signed greater-than *)
     | Gte -> i(* binary signed greater-than or equals *)
-    | Ast.And -> i(* binary bitwise and *)
-    | Ast.Or -> i(* binary bitwise or *)
-    | Ast.Shl -> i(* binary shift left *)
-    | Ast.Shr -> i(* binary logical shift right *)
-    | Ast.Sar -> i(* binary arithmetic shift right *)
+    | Ast.And ->
+       binop_aux2 l r i >::
+      (X86.And(eax, stack_offset (0l))) >::
+      (Add(esp, Imm 4l))
+    | Ast.Or ->
+      binop_aux2 l r i >::
+      (X86.Or(eax, stack_offset (0l))) >::
+      (Add(esp, Imm 4l))   
+    | Ast.Shl ->
+      binop_aux2 l r i >::
+      (Shl(eax, stack_offset (0l))) >::
+      (Add(esp, Imm 4l))
+    | Ast.Shr ->
+      binop_aux2 l r i >::
+      (Shr(eax, stack_offset (0l))) >::
+      (Add(esp, Imm 4l))
+    | Ast.Sar ->
+      binop_aux2 l r i >::
+      (Sar(eax, stack_offset (0l))) >::
+      (Add(esp, Imm 4l))
   end
 
-  
+
 
 let compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
-    let init_str = [Mov (edx, stack_offset (4l))] in
+    let init_str = [Mov (edx, stack_offset 4l)] in
       let insns = List.rev(emit_exp ast init_str >:: X86.Ret)  in
         let block : X86.insn_block = {global = true; label = (mk_lbl_named block_name); insns=insns} in
           let comp = Cunit.Code block in
