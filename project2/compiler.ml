@@ -34,17 +34,16 @@ let rec emit_exp (exp:exp) (stream : insn list) : insn list =
     | Cint i -> stream >:: Mov (eax, Imm i)
     | Arg -> stream >:: Mov (eax, edx)
     | Binop (a, l, r) -> binop_aux a l r stream
-    | Unop (a, x) -> stream
+    | Unop (a, x) -> unop_aux a x stream
   end
 
-(*  
 and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
   begin match u with
-    | Not -> X86.Not(eax)::emit_exp x []@i
-    | Lognot -> X86.Not(eax)::emit_exp x []@i
-    | Neg -> X86.Neg(eax)::emit_exp x [] @i
+    | Ast.Not -> X86.Not(eax)::emit_exp x []@i
+    | Ast.Lognot -> X86.Not(eax)::emit_exp x []@i
+    | Ast.Neg -> X86.Neg(eax)::emit_exp x [] @i
   end
-  *)
+  
 
 and binop_aux2 (l:exp)(r:exp) (i:insn list) : insn list = 
   let str_l = 
