@@ -67,7 +67,7 @@ let compile_exp (ast:exp) : Cunit.cunit =
     let init_str = [Mov (edx, stack_offset (4l))] in
      (* let insns = List.rev(emit_exp ast init_str >:: X86.Ret)  in*)
     let insns = test1 in
-        let block : X86.insn_block = {global = true; label = (mk_lbl_named block_name); insns} in
+        let block : X86.insn_block = {global = true; label = (mk_lbl_named block_name); insns=insns} in
           let comp = Cunit.Code block in
             [comp]
       
