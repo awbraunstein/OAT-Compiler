@@ -56,7 +56,7 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
   begin match b with
     | Plus ->
       binop_aux2 l r i >::
-      (Add(eax, stack_offset (4l))) >::
+      (Add(eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
     | Times -> i
     | Minus -> i
