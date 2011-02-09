@@ -55,13 +55,7 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
       (emit_exp r str_l) >::
       (Add(eax, stack_offset (4l))) >::
       (Add(esp, Imm 4l))
-    | Times ->
-      let str_l = 
-        (emit_exp l i) >:: (Push eax)
-      in
-      (emit_exp r str_l) >::
-      (Imul(Eax, stack_offset (4l))) >::
-      (Add(esp, Imm 4l))
+    | Times -> i
     | Minus -> i
     | Ast.Eq -> i(* binary equality *)
     | Neq -> i(* binary inequality *)
@@ -75,6 +69,7 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
     | Ast.Shr -> i(* binary logical shift right *)
     | Ast.Sar -> i(* binary arithmetic shift right *)
   end
+
   
 let compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
