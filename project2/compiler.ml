@@ -26,15 +26,15 @@ let parse (filename : string) (buf : Lexing.lexbuf) : exp =
    int program(int X) { return <expression>; }
 
    Follows cdecl calling conventions and platform-specific name mangling policy. *)
-  
+let (>::) x y =y::x  
 
 
   
 let rec emit_exp (exp:exp) (stream : insn list) : insn list =
   begin match exp with
-    | Cint i -> Mov (eax, Imm i) :: stream
-    | Arg -> Mov (eax, edx) :: stream
-    | Binop (a, x, y) -> binop_aux a x y stream
+    | Cint i -> stream >:: Mov (eax, Imm i)
+    | Arg -> stream >:: Mov (eax, edx)
+    | Binop (a, l, r) -> binop_aux a l r stream
     (*| Unop (a, x) -> unop_aux a x stream*)
   end
 (*  
@@ -49,25 +49,23 @@ and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
 and binop_aux2(x:exp)(y:exp)(i:insn list):insn list=
   emit_exp y []@Mov(ecx, eax)::emit_exp x []@i
   
-and binop_aux (b:binop) (x:exp) (y:exp) (i: insn list): insn list=
+and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
   begin match b with
-    | Plus -> X86.Add(eax, ecx)::binop_aux2 x y i
-    | Minus -> X86.Sub(eax, ecx)::binop_aux2 x y i
-    | Times -> X86.Imul(Eax, ecx)::binop_aux2 x y i
-    | Ast.And -> X86.And(eax, ecx)::binop_aux2 x y i
-    | Ast.Or  -> X86.Or(eax,ecx)::binop_aux2 x y i
-    | Ast.Shl -> X86.Shl(eax,ecx)::binop_aux2 x y i
-    | Ast.Shr -> X86.Shr(eax,ecx)::binop_aux2 x y i
-    | Ast.Sar -> X86.Sar(eax,ecx)::binop_aux2 x y i
+    | Plus ->
+      let str_l = 
+        (emit_exp l i) >:: (Push eax)
+      in
+      (emit_exp r str_l) >::
+      (Add(eax, stack_offset (4l))) >::
+      (Add(esp, Imm 4l))
   end
 
 let compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
-    Mov (edx, stack_offset 4l);
-      let stream = [] in
-        let c = emit_exp ast stream in
-          let block : X86.insn_block = X86.mk_block block_name c in
-            let comp : Cunit.component = block in
+    let init_str = [Mov (edx, stack_offset (4l))] in
+      let insns = List.rev(emit_exp ast init_str) >:: X86.Ret in
+          let block : X86.insn_block = X86.mk_block block_name insns in
+            let comp = Cunit.Code block in
               let unit : Cunit.cunit = [comp] in 
                 unit;
       
