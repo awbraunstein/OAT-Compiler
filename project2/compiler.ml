@@ -36,7 +36,7 @@ let rec emit_exp (exp:exp) (stream : insn list) : insn list =
     | Binop (a, l, r) -> binop_aux a l r stream
     | Unop (a, x) -> unop_aux a x stream
   end
-
+  
 and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
   begin match u with
     | Ast.Not -> X86.Not(eax)::emit_exp x []@i
@@ -44,7 +44,6 @@ and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
     | Ast.Neg -> X86.Neg(eax)::emit_exp x [] @i
   end
   
-
 and binop_aux2 (l:exp)(r:exp) (i:insn list) : insn list = 
   let str_l = 
     (emit_exp r i) >:: (Push eax)
@@ -60,7 +59,7 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
       (Imul(Eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
     | Minus ->
-       binop_aux2 l r i >::
+      binop_aux2 l r i >::
       (Sub(eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
     | Ast.Eq -> i(* binary equality *)
@@ -70,7 +69,7 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
     | Gt -> i(* binary signed greater-than *)
     | Gte -> i(* binary signed greater-than or equals *)
     | Ast.And ->
-       binop_aux2 l r i >::
+      binop_aux2 l r i >::
       (X86.And(eax, stack_offset (0l))) >::
       (Add(esp, Imm 4l))
     | Ast.Or ->
@@ -79,15 +78,15 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
       (Add(esp, Imm 4l))   
     | Ast.Shl ->
       binop_aux2 l r i >::
-      (Shl(eax, stack_offset (0l))) >::
+      Mov(ecx, stack_offset (0l)) >:: (Shl(eax, ecx)) >::
       (Add(esp, Imm 4l))
     | Ast.Shr ->
       binop_aux2 l r i >::
-      (Shr(eax, stack_offset (0l))) >::
+      Mov(ecx, stack_offset (0l)) >::(Shr(eax, ecx)) >::
       (Add(esp, Imm 4l))
     | Ast.Sar ->
       binop_aux2 l r i >::
-      (Sar(eax, stack_offset (0l))) >::
+      Mov(ecx, stack_offset (0l)) >::(Sar(eax, ecx)) >::
       (Add(esp, Imm 4l))
   end
 
