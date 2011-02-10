@@ -19,8 +19,6 @@ let parse (filename : string) (buf : Lexing.lexbuf) : exp =
     failwith (sprintf "Parse error at %s."
         (Range.string_of_range (Lexer.lex_range buf)))
 
-
-
 (* Builds a globally-visible X86 instruction block that acts like the C fuction:
 
    int program(int X) { return <expression>; }
@@ -28,7 +26,6 @@ let parse (filename : string) (buf : Lexing.lexbuf) : exp =
    Follows cdecl calling conventions and platform-specific name mangling policy. *)
 let (>::) x y =y::x  
 
-  
 let rec emit_exp (exp:exp) (stream : insn list) : insn list =
   begin match exp with
     | Cint i -> stream >:: Mov (eax, Imm i)
@@ -40,7 +37,7 @@ let rec emit_exp (exp:exp) (stream : insn list) : insn list =
 and unop_aux (u:unop) (x:exp) (i:insn list): insn list=
   begin match u with
     | Ast.Not -> X86.Not(eax)::emit_exp x []@i
-    | Ast.Lognot -> X86.Not(eax)::emit_exp x []@i
+    | Ast.Lognot -> X86.Setb(eax, Eq)::Cmp(eax, Imm 0l)::emit_exp x []@i
     | Ast.Neg -> X86.Neg(eax)::emit_exp x [] @i
   end
   
@@ -53,44 +50,52 @@ and binop_aux2 (l:exp)(r:exp) (i:insn list) : insn list =
 and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
   begin match b with
     | Plus -> binop_aux2 l r i >::
-      (Add(eax, stack_offset (0l))) >:: (Add(esp, Imm 4l))
+      (Add(eax, stack_offset (0l)))
     | Times ->
       binop_aux2 l r i >::
-      (Imul(Eax, stack_offset (0l))) >::
-      (Add(esp, Imm 4l))
+      (Imul(Eax, stack_offset (0l)))
     | Minus ->
       binop_aux2 l r i >::
-      (Sub(eax, stack_offset (0l))) >::
-      (Add(esp, Imm 4l))
-    | Ast.Eq -> i(* binary equality *)
-    | Neq -> i(* binary inequality *)
-    | Lt -> i(* binary signed less-than *)
-    | Lte -> i(* binary signed less-than or equals *)
-    | Gt -> i(* binary signed greater-than *)
-    | Gte -> i(* binary signed greater-than or equals *)
+      (Sub(eax, stack_offset (0l)))
+    | Ast.Eq -> 
+      binop_aux2 l r i >::
+      X86.Cmp(eax, stack_offset (0l)) >::
+      X86.Setb (eax,Eq)
+    | Neq ->       
+      binop_aux2 l r i >::
+      X86.Cmp(eax, stack_offset (0l)) >::
+      X86.Setb (eax,NotEq)
+    | Lt -> 
+      binop_aux2 l r i >::
+      X86.Cmp(eax, stack_offset (0l)) >::
+      X86.Setb (eax,Slt)
+    | Lte -> 
+      binop_aux2 l r i >::
+      X86.Cmp(eax, stack_offset (0l)) >::
+      X86.Setb (eax,Sle)
+    | Gt ->
+      binop_aux2 l r i >::
+      X86.Cmp(eax, stack_offset (0l)) >::
+      X86.Setb (eax,Sgt)
+    | Gte ->
+      binop_aux2 l r i >::
+      X86.Cmp(eax, stack_offset (0l)) >::
+      X86.Setb (eax,Sge)
     | Ast.And ->
       binop_aux2 l r i >::
-      (X86.And(eax, stack_offset (0l))) >::
-      (Add(esp, Imm 4l))
+      (X86.And(eax, stack_offset (0l)))
     | Ast.Or ->
       binop_aux2 l r i >::
-      (X86.Or(eax, stack_offset (0l))) >::
-      (Add(esp, Imm 4l))   
-    | Ast.Shl ->
-      binop_aux2 l r i >::
-      Mov(ecx, stack_offset (0l)) >:: (Shl(eax, ecx)) >::
-      (Add(esp, Imm 4l))
+      (X86.Or(eax, stack_offset (0l)))
+    | Ast.Shl ->binop_aux2 l r i >::Mov(ecx, stack_offset (0l)) >:: (Shl(eax, ecx))
     | Ast.Shr ->
       binop_aux2 l r i >::
-      Mov(ecx, stack_offset (0l)) >:: (Shr(eax, ecx)) >::
-      (Add(esp, Imm 4l))
+      Mov(ecx, stack_offset (0l)) >:: (Shr(eax, ecx))
     | Ast.Sar ->
       binop_aux2 l r i >::
-      Mov(ecx, stack_offset (0l)) >:: (Sar(eax, ecx)) >::
-      (Add(esp, Imm 4l))
+      Mov(ecx, stack_offset (0l)) >:: (Sar(eax, ecx))
   end
-
-
+  >::(Add(esp, Imm 4l))
 
 let compile_exp (ast:exp) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
