@@ -60,9 +60,12 @@ and binop_aux (b:binop) (l:exp) (r:exp) (i: insn list): insn list=
     | Gte -> binop_aux2 l r i >::Cmp(eax, stack_offset (0l)) >::Setb (eax,Sge)
     | Ast.And -> binop_aux2 l r i >::(X86.And(eax, stack_offset (0l)))
     | Ast.Or -> binop_aux2 l r i >::(X86.Or(eax, stack_offset (0l)))
-    | Ast.Shl->binop_aux2 l r i >::Mov(ecx, stack_offset (0l))>::(Shl(eax, ecx))
-    | Ast.Shr->binop_aux2 l r i >::Mov(ecx, stack_offset (0l)) >::(Shr(eax, ecx))
-    | Ast.Sar ->binop_aux2 l r i >::Mov(ecx, stack_offset (0l)) >::(Sar(eax, ecx))
+    | Ast.Shl->
+      binop_aux2 l r i >::Mov(ecx, stack_offset (0l))>::(Shl(eax, ecx))
+    | Ast.Shr->
+      binop_aux2 l r i >::Mov(ecx, stack_offset (0l)) >::(Shr(eax, ecx))
+    | Ast.Sar ->
+      binop_aux2 l r i >::Mov(ecx, stack_offset (0l)) >::(Sar(eax, ecx))
   end
   >::(Add(esp, Imm 4l))
 
