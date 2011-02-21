@@ -140,7 +140,10 @@ E12:
   | LPAREN exp RPAREN { $2 }
   | IDENT   { Id (snd $1) }
 
-
-stmt: 
-/* Complete this definition: */
-lhs EQ exp SEMI { Assign(Var(snd($1)), $3) }
+stmt:
+  | lhs EQ exp SEMI { Assign(Var(snd($1)), $3) }
+  | LBRACE block RBRACE {Block($2)}
+  | WHILE LPAREN exp RPAREN stmt {While($3,$5)}
+  | FOR LPAREN vdecllist SEMI expOPT SEMI stmtOPT RPAREN stmt {For(($3),$5,$7,$9)}
+  | IF LPAREN exp RPAREN stmt ELSE stmtOPT {If($3,$5,$7)}
+  | IF LPAREN exp RPAREN stmt stmtOPT {If($3,$5,$6)}
