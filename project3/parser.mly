@@ -142,8 +142,8 @@ E12:
 
 stmt:
   | lhs EQ exp SEMI { Assign(Var(snd($1)), $3) }
-  | LBRACE block RBRACE {Block($2)}
+  | IF LPAREN exp RPAREN stmt ELSE stmt {If($3,$5,Some $7)}
+  | IF LPAREN exp RPAREN stmt {If($3,$5,None)}
   | WHILE LPAREN exp RPAREN stmt {While($3,$5)}
-  | FOR LPAREN vdecllist SEMI expOPT SEMI stmtOPT RPAREN stmt {For(($3),$5,$7,$9)}
-  | IF LPAREN exp RPAREN stmt ELSE stmtOPT {If($3,$5,$7)}
-  | IF LPAREN exp RPAREN stmt stmtOPT {If($3,$5,$6)}
+  | FOR LPAREN vdecllist SEMI expOPT SEMI stmtOPT RPAREN stmt{For(($3),$5,$7,$9)}
+  | LBRACE block RBRACE {Block($2)}
