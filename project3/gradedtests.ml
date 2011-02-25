@@ -71,16 +71,18 @@ let file_parse_test (fn:string) (ans:Ast.prog) () : unit =
     if prog = ans then () else failwith (Printf.sprintf "bad of \"%s\"" fn)
 
 let file_parse_error_test (fn:string) (expected:exn) () : unit =
-  try 
-    let path = !test_path ^ fn in
-    let buffer = open_in path in
-    let _ = Phase1.parse fn (Lexing.from_channel buffer) in
-      failwith (Printf.sprintf "File \"%s\" should not parse." fn)
-  with
-    | e -> 
-    if e = expected then () else ()
-    	(* failwith (Printf.sprintf "Lexing/Parsing \"%s\" raised the wrong exception." fn) *)
-
+  let passed =
+    try 
+      let path = !test_path ^ fn in
+      let buffer = open_in path in
+      let _ = Phase1.parse fn (Lexing.from_channel buffer) in
+      true
+    with
+      | _ -> false
+  in 
+    if passed then 
+     failwith (Printf.sprintf "File \"%s\" should not parse." fn)
+    else ()
 
 (*** Parsing Tests ***)
 let parsing_tests : suite = [
