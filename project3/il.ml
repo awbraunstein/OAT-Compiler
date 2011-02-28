@@ -57,7 +57,7 @@ let mk_bb lbl insns link = {
 type prog = {
   il_tmps:  uid list;   (* List of slot identifiers used in this program. *)
   il_cfg:   bb list;
-  il_entry: lbl 
+  il_entry: lbl (*pointer to starting bb*)
 }
 
 

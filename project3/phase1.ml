@@ -44,11 +44,26 @@ let compile_unop uop =
   | Ast.Not    -> Il.Not
 
 
+let rec compile_vardecl (v: var_decl list) =
+  begin match v with
+    | h::tl -> [Il.mk_uid h.v_id] @ compile_vardecl tl
+    | [] -> []
+  end
+
 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
-  begin match ret with
-    | Cint x -> Imm x
-    | Unop (x,y) -> compile_unop ret
-    | Binop (x,y,z) -> compile_binop ret
-    | Id x -> Imm 3l
-  end
+  let il_tmps = [] in
+    let il_cfg = [] in
+      let il_entry = "" in
+        begin match block with
+          | (x,y) -> compile_vardecl x @ il_tmps;
+            begin match y with
+              | []
+            end
+        end
+        begin match ret with
+          | Cint x -> [Imm x] @ il_cfg
+          | Unop (x,y) -> [Imm 0l] @ il_cfg
+          | Binop (x,y,z) -> [Imm 0l] @ il_cfg
+          | Id x -> [Imm 0l]
+        end
