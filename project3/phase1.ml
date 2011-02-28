@@ -45,6 +45,10 @@ let compile_unop uop =
 
 
 
-
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
-failwith "TODO: Phase1.compile_prog unimplemented"
+  begin match ret with
+    | Cint x -> Imm x
+    | Unop (x,y) -> compile_unop ret
+    | Binop (x,y,z) -> compile_binop ret
+    | Id x -> Imm 3l
+  end
