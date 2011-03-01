@@ -49,10 +49,10 @@ let rec compile_vardecl (v: var_decl list) =
     | [] -> []
   end
 
-
 let rec compile_exp (e: exp) =
   begin match e with
-    | []
+    | Ast.Binop -> compile_binop e
+    | Ast.Unop -> compile_unop e
   end
   
 let rec compile_block (b: block) =
