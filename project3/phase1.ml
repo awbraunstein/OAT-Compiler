@@ -37,25 +37,20 @@ let compile_binop bop =
   | Ast.Shr -> Il.Shr
   | Ast.Sar -> Il.Sar
 
-type elt =
-  | I of Il.insn
-  | J of Il.cfinsn
-  | L of Il.lbl
-
-type stream = elt list
-
 let compile_unop uop =
   match uop with
   | Ast.Neg    -> Il.Neg
   | Ast.Lognot -> Il.Lognot
   | Ast.Not    -> Il.Not
 
+
 type elt =
   | I of Il.insn
   | J of Il.cfinsn
   | L of Il.lbl
 
 type stream = elt list
+
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand =
   begin match e with
