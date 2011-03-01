@@ -50,26 +50,55 @@ let compile_unop uop =
   | Ast.Lognot -> Il.Lognot
   | Ast.Not    -> Il.Not
 
-let rec compile_vardecl (v: var_decl list) =
-  begin match v with
-    | h::tl -> [Il.mk_uid h.v_id] @ compile_vardecl tl
-    | [] -> []
-  end
+type elt =
+  | I of Il.insn
+  | J of Il.cfinsn
+  | L of Il.lbl
 
-let rec compile_exp (e: Ast.exp) =
+type stream = elt list
+
+let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand =
   begin match e with
     | Binop (x,y,z) -> compile_binop x
     | Unop (x,y) -> compile_unop x
-    | Cint x -> x
-    | Id y -> y
+    | Cint x -> temp = (lookup y c)
+    | Id y -> temp = (lookup y c)
+      begin match temp with
+      | None -> failwith "Variable not declared"
+      | Some x -> ()
+      end
   end
   
-let rec compile_block (b: block) =
+let compile_stmt (s:stmt)(t:stream) (c:ctxt) : stream * ctxt =
+  begin match s with
+    | Ast.Assign(l, e) -> Il.mk_uid compile_exp e 
+    | Ast.If(e, st ,sto) -> ss
+    | Ast.While(e, s) -> ss
+    | Ast.For(vdl, eo, sto, s) -> ss
+    | Ast.Block b -> compile block
+  end
+
+let rec compile_vardecl (v: var_decl list) (c: ctxt) : ctxt =
+  begin match v with
+    | h::tl -> 
+      begin match h with
+        | (ty, id, init) -> alloc id c
+      end
+    | [] -> c
+  end
+  
+let rec compile_block (b:block)(c:ctxt)(s:stream) : ctxt * stream =
   begin match b with
-    | (x,y) -> compile_vardecl x
+    | (x,y) -> compile_vardecl x c
   end
 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
+	begin match ret with
+	  | Cint x -> [Imm x] @ il_cfg
+	  | Unop (x,y) -> [Imm 0l] @ il_cfg
+	  | Binop (x,y,z) -> [Imm 0l] @ il_cfg
+	  | Id x -> [Imm 0l]
+	end
   let il_tmps = [] in
     let il_cfg = [] in
       let il_entry = "" in
