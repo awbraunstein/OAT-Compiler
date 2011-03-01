@@ -37,6 +37,13 @@ let compile_binop bop =
   | Ast.Shr -> Il.Shr
   | Ast.Sar -> Il.Sar
 
+type elt =
+  | I of Il.insn
+  | J of Il.cfinsn
+  | L of Il.lbl
+
+type stream = elt list
+
 let compile_unop uop =
   match uop with
   | Ast.Neg    -> Il.Neg
@@ -49,8 +56,7 @@ let rec compile_vardecl (v: var_decl list) =
     | [] -> []
   end
 
-let rec compile_exp (e: exp) : Ast.exp =
-  let i = Il.Insn in
+let rec compile_exp (e: Ast.exp) =
   begin match e with
     | Binop (x,y,z) -> compile_binop x
     | Unop (x,y) -> compile_unop x
@@ -67,9 +73,4 @@ let compile_prog ((block,ret):Ast.prog) : Il.prog =
   let il_tmps = [] in
     let il_cfg = [] in
       let il_entry = "" in
-        begin match ret with
-          | Cint x -> [Imm x] @ il_cfg
-          | Unop (x,y) -> [Imm 0l] @ il_cfg
-          | Binop (x,y,z) -> [Imm 0l] @ il_cfg
-          | Id x -> [Imm 0l]
-        end
+      [compile_exp ret] @ il_cfg
