@@ -99,7 +99,7 @@ let compile_prog ((block,ret):Ast.prog) : Il.prog =
 	  | Binop (x,y,z) -> [Imm 0l] @ il_cfg
 	  | Id x -> [Imm 0l]
 	end
-  let il_tmps = [] in
+ (* let il_tmps = [] in
     let il_cfg = [] in
       let il_entry = "" in
-      [compile_exp ret] @ il_cfg
+      [compile_exp ret] @ il_cfg*)
