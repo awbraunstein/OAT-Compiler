@@ -49,27 +49,24 @@ let rec compile_vardecl (v: var_decl list) =
     | [] -> []
   end
 
-let rec compile_exp (e: exp) =
+let rec compile_exp (e: exp) : Ast.exp =
+  let i = Il.Insn in
   begin match e with
-    | Ast.Binop -> compile_binop e
-    | Ast.Unop -> compile_unop e
+    | Binop (x,y,z) -> compile_binop x
+    | Unop (x,y) -> compile_unop x
+    | Cint x -> x
+    | Id y -> y
   end
   
 let rec compile_block (b: block) =
   begin match b with
-    | []
+    | (x,y) -> compile_vardecl x
   end
 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
   let il_tmps = [] in
     let il_cfg = [] in
       let il_entry = "" in
-        begin match block with
-          | (x,y) -> compile_vardecl x @ il_tmps;
-            begin match y with
-              | []
-            end
-        end
         begin match ret with
           | Cint x -> [Imm x] @ il_cfg
           | Unop (x,y) -> [Imm 0l] @ il_cfg
