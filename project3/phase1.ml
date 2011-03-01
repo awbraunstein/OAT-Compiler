@@ -50,6 +50,16 @@ let rec compile_vardecl (v: var_decl list) =
   end
 
 
+let rec compile_exp (e: exp) =
+  begin match e with
+    | []
+  end
+  
+let rec compile_block (b: block) =
+  begin match b with
+    | []
+  end
+
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
   let il_tmps = [] in
     let il_cfg = [] in
