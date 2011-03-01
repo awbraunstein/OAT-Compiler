@@ -93,6 +93,7 @@ let rec compile_block (b:block)(c:ctxt)(s:stream) : ctxt * stream =
   end
 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
+  compile_block (
 	begin match ret with
 	  | Cint x -> [Imm x] @ il_cfg
 	  | Unop (x,y) -> [Imm 0l] @ il_cfg
