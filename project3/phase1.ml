@@ -74,12 +74,12 @@ let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
       end
   end
     
-(*    
+
 let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : ctxt * stream =
   let st = [] in
 	  begin match stm with
-	    (*| Ast.Assign(l, e) -> Il.mk_uid compile_exp e 
-	    | Ast.If(e, st ,sto) -> ss*)
+	    | Ast.Assign(l, e) -> 
+	    (*| Ast.If(e, st ,sto) -> ss
 	    | Ast.While(e, s) ->
         let __lpre = X86.mk_lbl in 
         let __lbody = X86.mk_lbl in
@@ -93,11 +93,12 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : ctxt * stream =
               end
           end
 	    | Ast.For(vdl, eo, sto, s) -> ss
-	    | Ast.Block b -> compile block
+	    | Ast.Block b -> compile block*)
 	  end
-
+    
+(*
 let rec compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : ctxt* stream =
-  (c,s)(*
+  (c,s)
   begin match v with
     | h::tl -> 
       begin match h with
@@ -105,9 +106,9 @@ let rec compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : ctxt* stream =
       end
     | [] -> c
   end
-  *)
+  
   (*TOPLEVEL*)
-(*
+
 let rec compile_block(b:block)(c:ctxt)(s:stream) : ctxt * stream =
   begin match b with
     | (x,y) -> 
@@ -119,11 +120,7 @@ let rec compile_block(b:block)(c:ctxt)(s:stream) : ctxt * stream =
           compile_stmt y s1 c2
       end              
   end
-*)
+ *) 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
-  let ctxt_new = mk_ctxt in
-    let stream_new = [] in
-      let (ctxt_fin, str) = compile_block block ctxt_new stream_new in
-        ()
+failwith "unimplemented"
       
-*)
