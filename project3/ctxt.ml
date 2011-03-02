@@ -6,6 +6,9 @@ type ctxt = {
   mutable ctxt_set : Il.uid list;
 }
 
+let mk_ctxt () : ctxt = 
+  {ctxt_stack = [];ctxt_uids = []; ctxt_set = []}
+
 let enter_scope (c: ctxt) : ctxt =
   let return_c : ctxt = c in
   begin match c.ctxt_stack with
