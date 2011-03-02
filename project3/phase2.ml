@@ -13,7 +13,6 @@ let compile_one (bb: Il.bb list) =
     | h::tl -> compile_two h
   end
 
-
 let compile_prog (prog:Il.prog) : Cunit.cunit =
     let block_name = (Platform.decorate_cdecl "program") in
     compile_one prog.il_cfg
