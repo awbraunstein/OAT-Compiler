@@ -51,28 +51,30 @@ type elt =
 
 type stream = elt list
 
-
-
-
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
-  let temp = Il.mk_uid mk_tmp in
-	  begin match e with
-	    | Binop (x,y,z) -> 
-	      begin match compile_exp y c [] with
-	        | (stream1, operand1, ctxt1) -> 
-	          begin match compile_exp z ctxt1 [] with
-	            | (stream2, operand2, ctxt2) ->
-	              ([stream1]@[stream2]@[I(BinArith compile_binop x)]@[stream2], operand1, ctxt2)
-	          end
-	      end      
-	    | Unop (x,y) -> compile_unop x
-	    | Cint x -> temp = (lookup y c)
-	    | Id y -> temp = (lookup y c)
-	      begin match temp with
-	      | None -> failwith "Variable not declared"
-	      | Some x -> ()
-	      end
-	  end
+  begin match e with
+    | Binop (x,y,z) -> 
+      begin match compile_exp y c [] with
+        | (stream1, operand1, ctxt1) -> 
+          begin match compile_exp z ctxt1 [] with
+            | (stream2, operand2, ctxt2) ->
+              (stream1@stream2@[I(BinArith(operand1, compile_binop x, operand2))], operand1, ctxt2)
+          end
+      end      
+    | Unop (x,y) ->
+    begin match compile_exp y c [] with
+        | (stream1, operand1, ctxt1) -> 
+          (stream1@[I(UnArith(compile_unop x, operand1))], operand1, ctxt1)
+      end      
+    | Cint x ->([],Imm x, c)
+    | Id y ->
+      begin match lookup y c with
+      | None -> failwith "Variable not declared"
+      | Some u -> ([], Slot u, c)
+      end
+  end
+    
+(*    
 let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : ctxt * stream =
   let st = [] in
 	  begin match stm with
@@ -124,3 +126,4 @@ let compile_prog ((block,ret):Ast.prog) : Il.prog =
       let (ctxt_fin, str) = compile_block block ctxt_new stream_new in
         ()
       
+*)

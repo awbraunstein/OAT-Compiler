@@ -23,7 +23,8 @@ let leave_scope (c: ctxt) : ctxt =
     | [] -> return_c.ctxt_stack <- return_c.ctxt_stack; return_c
   end
 
-          
+let lookup (s:string)(c:ctxt) : uid option =
+  failwith "unimplemented"          
 
 (* One possible implementation of a context is:
    - a stack of association (string, uid) lists to implement scoping
