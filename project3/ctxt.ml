@@ -31,9 +31,9 @@ let alloc (s: string) (c: ctxt) : ctxt * uid =
     | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
       begin match x with
         | h::tl -> begin try ignore (List.assoc s h); failwith "found" with Not_found ->
-            ({ctxt_stack = ([(s,u)] @ h)::tl; ctxt_uids = y; ctxt_set = z;}, u)
+            ({ctxt_stack = ([(s,u)] @ h)::tl; ctxt_uids = y @ [u]; ctxt_set = z;}, u)
           end
-        | [] -> ({ctxt_stack = [[(s,u)]]; ctxt_uids = y; ctxt_set = z;},u)
+        | [] -> ({ctxt_stack = [[(s,u)]]; ctxt_uids = y @ [u]; ctxt_set = z;},u)
       end
   end
 
