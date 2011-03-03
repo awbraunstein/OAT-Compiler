@@ -14,18 +14,15 @@ let compile_three (bb: Il.bb) =
   | _ -> []
   end
 
-let rec compile_two (bb: Il.bb) : X86.insn_block =  
-  let block : X86.insn_block =
-  {X86.global = true; X86.label = bb.bb_lbl; X86.insns=compile_three bb} in
+let rec compile_two (bb: Il.bb) : Cunit.component =  
+  let block : Cunit.component =
+  Code({X86.global = true; X86.label = bb.bb_lbl; X86.insns=compile_three bb}) in
   block
 
 and compile_one (bb_list: Il.bb list) : Cunit.component list =
-  let l : Cunit.component list = [] in
-  begin match bb_list with
-    | h::tl -> compile_two h @ compile_one tl @ l
-  end
+  let l : Cunit.component list = [] in List.map compile_two bb_list @ l
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
   let block_name = (Platform.decorate_cdecl "program") in
-    let return_unit : Cunit.cunit = [] in
-    return_unit = compile_one prog.il_cfg
+    let return_unit : Cunit.cunit = compile_one prog.il_cfg in
+    return_unit
