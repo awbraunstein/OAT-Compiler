@@ -102,16 +102,16 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
       end     
     (*| Ast.If(e, st ,sto) -> *)
     | Ast.While(e, s) ->
-      let __lpre =  X86.mk_lbl in 
-      let __lbody = X86.mk_lbl in
-      let __lpost = X86.mk_lbl in
+      let __lpre =  X86.mk_lbl() in 
+      let __lbody = X86.mk_lbl() in
+      let __lpost = X86.mk_lbl() in
         begin match compile_exp e c t with
           | (new_stream, op, new_ctxt) -> 
             let ctxt_step = enter_scope new_ctxt in
 	            begin match compile_stmt stm new_stream ctxt_step with
-	              | (str3, ctxt3) -> (t@new_stream@str3@[__lpre]@
-	                [Il.If op Eq Imm 1l __lbody __lpost]@
-	                [__lbody]@[str2]@[__lpost], leave_scope ctxt3)
+	              | (str3, ctxt3) -> (t@[L(__lpre)]@new_stream@
+	                [J(Il.If(op, Eq, Imm 1l, __lbody, __lpost))]@
+	                [L(__lbody)]@str3@[L(__lpost)], leave_scope ctxt3)
 	            end
         end
     (*| Ast.For(vdl, eo, sto, s) -> ss*)
