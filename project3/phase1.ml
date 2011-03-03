@@ -176,7 +176,7 @@ let mk_blocks(s:stream) : Il.bb list =
         begin match h with
           | L x -> mk_blocks_aux tl x [] this_j b
           | I x -> mk_blocks_aux tl this_l (i_accum@[x]) this_j b
-          | J x -> mk_blocks_aux tl this_l i_accum x (b@[(Il.mk_bb this_l i_accum this_j)])
+          | J x -> mk_blocks_aux tl this_l i_accum x (b@[(Il.mk_bb this_l i_accum x)])
         end
     end in mk_blocks_aux s (X86.mk_lbl_hint "main") [] (Il.Ret (Imm 0l)) []
 

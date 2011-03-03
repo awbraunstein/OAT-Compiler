@@ -33,7 +33,7 @@ let alloc (s: string) (c: ctxt) : ctxt * uid =
         | h::tl -> begin try ignore (List.assoc s h); failwith "found" with Not_found ->
             ({ctxt_stack = ([(s,u)] @ h)::tl; ctxt_uids = y; ctxt_set = z;}, u)
           end
-        | [] -> failwith "not in a scope"
+        | [] -> ({ctxt_stack = [[(s,u)]]; ctxt_uids = y; ctxt_set = z;},u)
       end
   end
 

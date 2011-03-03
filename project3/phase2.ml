@@ -48,14 +48,14 @@ let compile_three (bb: Il.bb) : X86.insn list =
 
 let compile_cfin (bb:Il.bb) =
   begin match bb.bb_link with
-    | Il.Ret o -> [X86.Mov(eax, (get_op o))] @ [X86.Ret]
+    | Il.Ret o -> [X86.Mov(eax, (get_op o))]
   end
     (*| Jump lbl (* jump to a0 *)
     | If of operand * compop * operand * lbl * lbl*)
 
 
 let rec compile_two (bb: Il.bb) : Cunit.component = 
-  let epilogue = compile_cfin bb @ [Mov(esp,ebp)] @ [Pop(ebp)] in 
+  let epilogue = compile_cfin bb @ [Mov(esp,ebp)] @ [Pop(ebp)]@ [X86.Ret] in 
     let block : Cunit.component =
      Code({X86.global = true; X86.label = bb.bb_lbl;
        X86.insns= compile_three bb  @ epilogue}) in
