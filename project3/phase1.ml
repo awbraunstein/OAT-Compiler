@@ -139,7 +139,7 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
                 [L(__lbody)]@str3@[J(Il.Jump __lpre)]@[L(__lpost)], leave_scope ctxt3)
             end
         end
-    | Ast.For(vdl, eo, sto, s) -> 
+    (*| Ast.For(vdl, eo, sto, s) -> *)
     | Ast.Block b ->
       begin match compile_block b (enter_scope c) [] with
         | (stream_new, ctxt_new) -> (t@stream_new, leave_scope ctxt_new)
