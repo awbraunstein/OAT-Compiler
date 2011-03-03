@@ -122,9 +122,11 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
   end
     
 
-(* (*TOPLEVEL*)
+ (*TOPLEVEL*)
 
 and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
+  (s,c)
+  (*
   begin match b with
     | (x,y) -> 
       begin match compile_vardecl x c s with
