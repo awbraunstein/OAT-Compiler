@@ -55,21 +55,6 @@ type elt =
 
 type stream = elt list
 
-let compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt = failwith "test"
- (* let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) : stream * ctxt = 
-	  begin match v with
-	    | [] -> (s,c)
-      | h::tl -> 
-	      begin match h with
-	        | (t,str,e) -> 
-            begin match alloc str c with
-              | (ctxt_new, uid_new) -> 
-                begin match compile_stmt Assign(str, e) [] ctxt_new with
-                  | (stream_ass, ctxt_ass) -> compile_decl tl ctxt_ass (s@stream_ass)
-                end
-            end
-        end
-    end in compile_decl v c s *)
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
   begin match e with
@@ -93,90 +78,93 @@ let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
 	      | Some u -> (s, Slot u, c)
       end
   end
-    
-
-let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
-  begin match stm with
-    | Ast.Assign(l, e) ->
-      begin match compile_exp e c [] with
-        | (stream1, operand1, ctxt1) -> 
-          begin match lookup (compile_lhs l) ctxt1 with
-	          | None -> failwith "Variable not in scope"
-		        | Some u ->
-              (t@stream1@[I(BinArith(Slot u, Il.Move, operand1))],ctxt1)
-          end
-      end     
-    | Ast.If(e, s ,sto) -> 
-      let __lpre =  X86.mk_lbl() in 
-      let __lbody = X86.mk_lbl() in
-      let __lelse = X86.mk_lbl() in
-      let __lpost = X86.mk_lbl() in
-        begin match compile_exp e c t with
-          | (new_stream, op, new_ctxt) -> 
-            begin match compile_stmt s [] (enter_scope new_ctxt) with
-              | (str3, ctxt3) -> 
-                begin match sto with
-                  | None -> (t@
-                    [L(__lpre)]@
-                    new_stream@
-                    [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
-                    [L(__lbody)]@str3@[L(__lpost)], leave_scope ctxt3)
-                  | Some x -> 
-                    begin match compile_stmt x [] (enter_scope new_ctxt) with
-                      | (str_else, ctxt_else) -> (t@
-                        [L(__lpre)]@
-                        new_stream@
-                        [J(Il.If(op, Il.Neq, Imm 0l, __lbody, __lelse))]@
-                        [L(__lbody)]@str3@[J(Il.Jump __lpost)]@
-                        [L(__lelse)]@str_else@
-                        [L(__lpost)], leave_scope ctxt_else)
-                    end
-                end
+and compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
+  let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) :stream * ctxt = 
+	  begin match v with
+	    | [] -> (s,c)
+      | h::tl -> 
+        begin match alloc h.v_id c with
+          | (ctxt_new, uid_new) ->  
+            begin match compile_stmts [Ast.Assign(Var(h.v_id), h.v_init)] [] ctxt_new with
+              | (stream_ass, ctxt_ass) -> compile_decl tl ctxt_ass (s@stream_ass)
             end
         end
-    | Ast.While(e, s) ->
-      let __lpre =  X86.mk_lbl() in 
-      let __lbody = X86.mk_lbl() in
-      let __lpost = X86.mk_lbl() in
-        begin match compile_exp e c t with
-          | (new_stream, op, new_ctxt) -> 
-            begin match compile_stmt s new_stream (enter_scope new_ctxt) with
-              | (str3, ctxt3) -> (t@[L(__lpre)]@new_stream@
-                [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
-                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@
-                [L(__lpost)], leave_scope ctxt3)
-            end
-        end
-   (* | Ast.For(vdl, eo, sto, s) -> 
-      begin match compile_vardecl vdl c [] with
-        | (stream1, ctxt1) -> 
-          begin match *)
-    | Ast.Block b ->
-      begin match compile_block b (enter_scope c) [] with
-        | (stream_new, ctxt_new) -> (t@stream_new, leave_scope ctxt_new)
-      end
-  end
+    end in compile_decl v c s
     
-
- (*TOPLEVEL*)
-
-and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt = failwith "a"
-  (*begin match b with
-    | (x,y) -> 
-      begin match compile_vardecl x c s with
-        | (c2, s2) -> 
-          let c1 = c2;
-          let s1 = s2;
-          (c1, s1);
-          compile_stmt y s1 c2
+and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =    
+	let rec compile_stmt (sl:stmt list)(t:stream) (c:ctxt) : stream*ctxt =
+    begin match sl with
+      | [] -> (t,c)
+      | h::tl -> 
+			  begin match h with
+			    | Ast.Assign(l, e) ->
+			      begin match compile_exp e c [] with
+			        | (stream1, operand1, ctxt1) -> 
+			          begin match lookup (compile_lhs l) ctxt1 with
+				          | None -> failwith "Variable not in scope"
+					        | Some u ->
+			              compile_stmt tl (t@stream1@[I(BinArith(Slot u, Il.Move, operand1))]) ctxt1
+			          end
+			      end     
+			    | Ast.If(e, s ,sto) -> 
+			      let __lpre =  X86.mk_lbl() in 
+			      let __lbody = X86.mk_lbl() in
+			      let __lelse = X86.mk_lbl() in
+			      let __lpost = X86.mk_lbl() in
+			        begin match compile_exp e c t with
+			          | (new_stream, op, new_ctxt) -> 
+			            begin match compile_stmt [s] [] (enter_scope new_ctxt) with
+			              | (str3, ctxt3) -> 
+			                begin match sto with
+			                  | None -> compile_stmt tl (t@
+			                    [L(__lpre)]@
+			                    new_stream@
+			                    [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
+			                    [L(__lbody)]@str3@[L(__lpost)]) (leave_scope ctxt3)
+			                  | Some x -> 
+			                    begin match compile_stmt [x] [] (enter_scope new_ctxt) with
+			                      | (str_else, ctxt_else) -> compile_stmt tl (t@
+			                        [L(__lpre)]@
+			                        new_stream@
+			                        [J(Il.If(op, Il.Neq, Imm 0l, __lbody, __lelse))]@
+			                        [L(__lbody)]@str3@[J(Il.Jump __lpost)]@
+			                        [L(__lelse)]@str_else@
+			                        [L(__lpost)]) (leave_scope ctxt_else)
+			                    end
+			                end
+			            end
+			        end
+			    | Ast.While(e, s) ->
+			      let __lpre =  X86.mk_lbl() in 
+			      let __lbody = X86.mk_lbl() in
+			      let __lpost = X86.mk_lbl() in
+			        begin match compile_exp e c t with
+			          | (new_stream, op, new_ctxt) -> 
+			            begin match compile_stmt [s] new_stream (enter_scope new_ctxt) with
+			              | (str3, ctxt3) -> compile_stmt tl (t@[L(__lpre)]@new_stream@
+			                [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
+			                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@
+			                [L(__lpost)]) (leave_scope ctxt3)
+			            end
+			        end
+			   (* | Ast.For(vdl, eo, sto, s) -> 
+			      begin match compile_vardecl vdl c [] with
+			        | (stream1, ctxt1) -> 
+			          begin match *)
+			    | Ast.Block b ->
+			      begin match compile_block b (enter_scope c) [] with
+			        | (stream_new, ctxt_new) -> compile_stmt tl (t@stream_new) (leave_scope ctxt_new)
+			      end
+        end
+    end in compile_stmt sl t c
+and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
+  begin match b with
+    | (vd,sl) -> 
+      begin match compile_vardecl vd c [] with
+        | (s2, c2) -> compile_stmts sl s2 c2
       end              
-  end*)
+  end
 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
-  let l : Il.lbl = X86.mk_lbl in let s : stream = [] in let c : ctxt = mk_ctxt in
-  begin match block with
-    | (x,y) ->
-   let pro : Il.prog = {il_tmps = [(3,"")]; il_cfg = [];
-   il_entry = l} in pro
-  end
+failwith "unimplemented"
       
