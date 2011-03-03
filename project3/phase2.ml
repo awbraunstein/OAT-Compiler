@@ -6,7 +6,7 @@ open Cunit
 
 let compile_three (bb: Il.bb) : X86.insn list =
   begin match bb with
-    | _ -> [X86.Add(Imm 3l,Imm 3l)]
+    | _ -> [X86.Mov(Imm 4l,eax)]
   end
 
 let rec compile_two (bb: Il.bb) : Cunit.component =  

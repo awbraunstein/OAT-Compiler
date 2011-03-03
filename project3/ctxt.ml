@@ -6,7 +6,7 @@ type ctxt = {
   mutable ctxt_set : Il.uid list;
 }
 
-let mk_ctxt () : ctxt = 
+let mk_ctxt : ctxt = 
   {ctxt_stack = [];ctxt_uids = []; ctxt_set = []}
 
 let enter_scope (c: ctxt) : ctxt =
@@ -23,11 +23,36 @@ let leave_scope (c: ctxt) : ctxt =
     | [] -> return_c.ctxt_stack <- return_c.ctxt_stack; return_c
   end
 
-let alloc (s: string) (c: ctxt) : (ctxt * uid) =
-failwith ":("
+
+let alloc (s: string) (c: ctxt) : ctxt * uid =
+  begin match c.ctxt_stack with
+    | [] -> failwith "wtf"
+    | h::tl ->
+      begin match h with
+        | [] -> failwith "wtf"
+        | x::y ->
+          begin match x with
+            | (s,_) ->
+              let c_ = mk_ctxt  in 
+              let u = mk_uid s in 
+              (c_, u)
+          end
+      end
+  end
 
 let lookup (s:string)(c:ctxt) : uid option =
-  failwith "im a :("
+  begin match c.ctxt_stack with
+    | [] -> None
+    | h::tl ->
+      begin match h with
+        | [] -> None
+        | x::y ->
+          begin match x with
+            | (s,u) ->
+              Some u
+          end
+      end
+  end
         
 
 (* One possible implementation of a context is:

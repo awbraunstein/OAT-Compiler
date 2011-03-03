@@ -56,8 +56,7 @@ type elt =
 type stream = elt list
 
 let rec compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream*ctxt =
-  begin match v with
-    | h::tl -> 
+(s,c)
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
   begin match e with
