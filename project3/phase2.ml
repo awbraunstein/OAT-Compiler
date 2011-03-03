@@ -2,11 +2,19 @@ open Il
 open X86
 open Cunit
 
+
+let stack_offset_ebp (amt:int32) : opnd =
+  Ind{i_base = Some Ebp;
+      i_iscl = None;
+      i_disp = Some (DImm amt)} 
+      
+      
 let get_op (op: Il.operand) : X86.opnd =
   begin match op with
     | Il.Imm (x) -> X86.Imm x
-    | Il.Slot (x,y) -> (X86.stack_offset (Int32.of_int(-4-(4*x))))
+    | Il.Slot (x,y) -> (stack_offset_ebp (Int32.of_int(-4-(4*x))))
   end
+
 
 let compile_four (i: Il.insn) : X86.insn list =
   begin match i with
@@ -60,20 +68,20 @@ let compile_cfin (bb:Il.bb) =
     | If of operand * compop * operand * lbl * lbl*)
 
 
-let rec compile_two (bb: Il.bb) (uids: uid list) : Cunit.component = 
-  let epilogue = compile_cfin bb @ [Sub(ebp, Imm (Int32.mul 4l (Int32.of_int(List.length uids))))] @ [Mov(esp,ebp)] @ [Pop(ebp)]@ [X86.Ret] in 
+let rec compile_two (bb: Il.bb) : Cunit.component = 
+  let epilogue = compile_cfin bb @ [Add(ebp, Imm 400l)] @ [Mov(esp,ebp)] @ [Pop(ebp)]@ [X86.Ret] in 
     let block : Cunit.component =
      Code({X86.global = true; X86.label = bb.bb_lbl;
        X86.insns= compile_three bb  @ epilogue}) in
          block
 
-let compile_one (bb_list: Il.bb list) (uids: uid list): Cunit.component list =
+let compile_one (bb_list: Il.bb list): Cunit.component list =
   let program : Cunit.component =
       let block_name = X86.mk_lbl_named "_program" in 
       Code({X86.global = true; X86.label = block_name;
-        X86.insns= [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(ebp, Imm (Int32.mul 4l (Int32.of_int(List.length uids))))]}) in 
-  let l : Cunit.component list = [] in program :: List.map compile_two bb_list uids @ l
+        X86.insns= [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(ebp, Imm 400l)]}) in 
+  let l : Cunit.component list = [] in program :: List.map compile_two bb_list @ l
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
   let return_unit : Cunit.cunit =
-    compile_one prog.il_cfg prog.il_tmps in return_unit
+    compile_one prog.il_cfg in return_unit
