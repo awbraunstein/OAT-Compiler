@@ -1,63 +1,51 @@
 open Il
 
 type ctxt = {
-  mutable ctxt_stack : ((string * Il.uid) list) list;
-  mutable ctxt_uids : Il.uid list;
-  mutable ctxt_set : Il.uid list;
+  ctxt_stack : ((string * Il.uid) list) list;
+  ctxt_uids : Il.uid list;
+  ctxt_set : Il.uid list;
 }
 
 let mk_ctxt : ctxt = 
   {ctxt_stack = [];ctxt_uids = []; ctxt_set = []}
 
 let enter_scope (c: ctxt) : ctxt =
-  let return_c : ctxt = c in
-  begin match c.ctxt_stack with
-    | h::tl -> return_c.ctxt_stack <- c.ctxt_stack @ return_c.ctxt_stack; return_c
-    | [] -> return_c
+  begin match c with
+    | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
+      {ctxt_stack = [] @ x; ctxt_uids = y; ctxt_set = z;}
   end
   
 let leave_scope (c: ctxt) : ctxt =
- let return_c : ctxt = c in
-  begin match c.ctxt_stack with
-    | h::tl -> return_c.ctxt_stack <- tl; return_c
-    | [] -> return_c.ctxt_stack <- return_c.ctxt_stack; return_c
+  begin match c with
+    | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
+      begin match x with
+        | h::tl -> {ctxt_stack = tl; ctxt_uids = y; ctxt_set = z;}
+        | [] -> failwith "no scope to leave"
+      end
   end
 
 
 let alloc (s: string) (c: ctxt) : ctxt * uid =
-  begin match c.ctxt_stack with
-    | [] -> let c_ = mk_ctxt  in 
-              let u = mk_uid s in 
-              (c_, u)
-    | h::tl ->
-      begin match h with
-        | [] -> let c_ = mk_ctxt  in 
-              let u = mk_uid s in 
-              (c_, u)
-        | x::y ->
-          begin match x with
-            | (s,_) ->
-              let c_ = mk_ctxt  in 
-              let u = mk_uid s in 
-              (c_, u)
+  let u = mk_uid s in
+  begin match c with
+    | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
+      begin match x with
+        | h::tl -> begin try ignore (List.assoc s h); failwith "found" with Not_found ->
+            ({ctxt_stack = ([(s,u)] @ h)::tl; ctxt_uids = y; ctxt_set = z;}, u)
           end
+        | [] -> failwith "not in a scope"
       end
   end
 
 let lookup (s:string)(c:ctxt) : uid option =
-  begin match c.ctxt_stack with
-    | [] -> None
-    | h::tl ->
-      begin match h with
+  begin match c with 
+   | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
+    let rec lookup_r l =
+      begin match x with
+        | h::tl -> begin try Some (List.assoc s h) with Not_found -> lookup_r tl end
         | [] -> None
-        | x::y ->
-          begin match x with
-            | (s,u) ->
-              Some u
-          end
-      end
+      end in lookup_r x
   end
-        
 
 (* One possible implementation of a context is:
    - a stack of association (string, uid) lists to implement scoping
