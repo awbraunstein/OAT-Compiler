@@ -56,15 +56,8 @@ type elt =
 type stream = elt list
 
 let rec compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream*ctxt =
-  (s,c)(*
->>>>>>> .r156
   begin match v with
     | h::tl -> 
-      begin match h with
-        | (ty, id, init) -> alloc id c
-      end
-    | [] -> c
-  end *)
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
   begin match e with
@@ -122,7 +115,9 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
                         [L(__lpre)]@
                         new_stream@
                         [J(Il.If(op, Il.Neq, Imm 0l, __lbody, __lelse))]@
-                        [L(__lbody)]@str3@[L(__lelse)]@str_else@[L(__lpost)], leave_scope ctxt_else)
+                        [L(__lbody)]@str3@[J(Il.Jump __lpost)]@
+                        [L(__lelse)]@str_else@
+                        [L(__lpost)], leave_scope ctxt_else)
                     end
                 end
             end
@@ -136,10 +131,14 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
             begin match compile_stmt s new_stream (enter_scope new_ctxt) with
               | (str3, ctxt3) -> (t@[L(__lpre)]@new_stream@
                 [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
-                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@[L(__lpost)], leave_scope ctxt3)
+                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@
+                [L(__lpost)], leave_scope ctxt3)
             end
         end
-    (*| Ast.For(vdl, eo, sto, s) -> *)
+   (* | Ast.For(vdl, eo, sto, s) -> 
+      begin match compile_vardecl vdl c [] with
+        | (stream1, ctxt1) -> 
+          begin match *)
     | Ast.Block b ->
       begin match compile_block b (enter_scope c) [] with
         | (stream_new, ctxt_new) -> (t@stream_new, leave_scope ctxt_new)
