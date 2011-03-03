@@ -55,8 +55,8 @@ type elt =
 
 type stream = elt list
 
-let compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
-  let rec compile_decl(v: vard_decl list)(c: ctxt)(s:stream) :stream * ctxt = 
+let compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt = failwith "test"
+ (* let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) : stream * ctxt = 
 	  begin match v with
 	    | [] -> (s,c)
       | h::tl -> 
@@ -69,7 +69,7 @@ let compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
                 end
             end
         end
-    end in compile_decl v c s
+    end in compile_decl v c s *)
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
   begin match e with
@@ -160,8 +160,8 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
 
  (*TOPLEVEL*)
 
-and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
-  begin match b with
+and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt = failwith "a"
+  (*begin match b with
     | (x,y) -> 
       begin match compile_vardecl x c s with
         | (c2, s2) -> 
@@ -170,7 +170,13 @@ and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
           (c1, s1);
           compile_stmt y s1 c2
       end              
-  end
+  end*)
+
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
-failwith "unimplemented"
+  let l : Il.lbl = X86.mk_lbl in let s : stream = [] in let c : ctxt = mk_ctxt in
+  begin match block with
+    | (x,y) ->
+   let pro : Il.prog = {il_tmps = [(3,"")]; il_cfg = [];
+   il_entry = l} in pro
+  end
       
