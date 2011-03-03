@@ -26,10 +26,14 @@ let leave_scope (c: ctxt) : ctxt =
 
 let alloc (s: string) (c: ctxt) : ctxt * uid =
   begin match c.ctxt_stack with
-    | [] -> failwith "wtf"
+    | [] -> let c_ = mk_ctxt  in 
+              let u = mk_uid s in 
+              (c_, u)
     | h::tl ->
       begin match h with
-        | [] -> failwith "wtf"
+        | [] -> let c_ = mk_ctxt  in 
+              let u = mk_uid s in 
+              (c_, u)
         | x::y ->
           begin match x with
             | (s,_) ->

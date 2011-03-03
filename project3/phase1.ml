@@ -167,7 +167,7 @@ and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
   end
   
     
-let mk_blocks(s:stream) :Il.bb list =   
+let mk_blocks(s:stream) : Il.bb list =   
 	let rec mk_blocks_aux (s:stream)(this_l:Il.lbl)(i_accum:Il.insn list)(this_j:Il.cfinsn)(b:Il.bb list) : Il.bb list= 
 	  begin match s with
 	    | [] -> b
