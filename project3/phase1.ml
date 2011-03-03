@@ -166,10 +166,10 @@ and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
         | (s2, c2) -> compile_stmts sl s2 c2
       end              
   end
-  
-    
+   
 let mk_blocks(s:stream) : Il.bb list =   
-	let rec mk_blocks_aux (s:stream)(this_l:Il.lbl)(i_accum:Il.insn list)(this_j:Il.cfinsn)(b:Il.bb list) : Il.bb list= 
+	let rec mk_blocks_aux (s:stream)(this_l:Il.lbl)(i_accum:Il.insn list)
+    (this_j:Il.cfinsn)(b:Il.bb list) : Il.bb list = 
 	  begin match s with
 	    | [] -> b
       | h::tl -> 

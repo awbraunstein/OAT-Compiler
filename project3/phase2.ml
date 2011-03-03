@@ -53,6 +53,7 @@ let compile_cfin (bb:Il.bb) =
     (*| Jump lbl (* jump to a0 *)
     | If of operand * compop * operand * lbl * lbl*)
 
+
 let rec compile_two (bb: Il.bb) : Cunit.component = 
   let epilogue = compile_cfin bb @ [Mov(esp,ebp)] @ [Pop(ebp)] in 
     let block : Cunit.component =
@@ -60,7 +61,7 @@ let rec compile_two (bb: Il.bb) : Cunit.component =
        X86.insns= compile_three bb  @ epilogue}) in
          block
 
-and compile_one (bb_list: Il.bb list) : Cunit.component list =
+let compile_one (bb_list: Il.bb list) : Cunit.component list =
   let program : Cunit.component =
       let block_name = X86.mk_lbl_named(Platform.decorate_cdecl "program") in 
       Code({X86.global = true; X86.label = block_name;
