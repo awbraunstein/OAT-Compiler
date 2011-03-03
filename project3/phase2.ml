@@ -21,7 +21,7 @@ let rec compile_two (bb: Il.bb) =
     | h::tl -> compile_three h @ compile_one tl
   end
 
-and let rec compile_one (bb: Il.bb list) =
+and compile_one (bb: Il.bb list) =
   begin match bb with
     | h::tl -> compile_two h @ compile_one tl @ epilogue
   end
