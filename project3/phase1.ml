@@ -78,6 +78,7 @@ let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
 	      | Some u -> (s, Slot u, c)
       end
   end
+  
 and compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
   let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) :stream * ctxt = 
 	  begin match v with
@@ -187,8 +188,9 @@ let compile_prog ((block,ret):Ast.prog) : Il.prog =
         begin match compile_exp ret ctxt_block stream_block with
           | (stream_ret, op, ctxt_ret) -> 
             let final : Il.prog =
-            {il_tmps = ctxt_ret.ctxt_uids;il_cfg = mk_blocks ([L(main)]@stream_ret);il_entry = main} in
+            {il_tmps = ctxt_ret.ctxt_uids;
+              il_cfg = mk_blocks ([L(main)]@stream_ret@[J(Ret op)]);
+                il_entry = main} in
             final
         end
     end
-      
