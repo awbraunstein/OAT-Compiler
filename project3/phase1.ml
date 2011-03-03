@@ -101,21 +101,45 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
               (t@stream1@[I(BinArith(Slot u, Il.Move, operand1))],ctxt1)
           end
       end     
-    (*| Ast.If(e, st ,sto) -> *)
+    | Ast.If(e, s ,sto) -> 
+      let __lpre =  X86.mk_lbl() in 
+      let __lbody = X86.mk_lbl() in
+      let __lelse = X86.mk_lbl() in
+      let __lpost = X86.mk_lbl() in
+        begin match compile_exp e c t with
+          | (new_stream, op, new_ctxt) -> 
+            begin match compile_stmt s [] (enter_scope new_ctxt) with
+              | (str3, ctxt3) -> 
+                begin match sto with
+                  | None -> (t@
+                    [L(__lpre)]@
+                    new_stream@
+                    [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
+                    [L(__lbody)]@str3@[L(__lpost)], leave_scope ctxt3)
+                  | Some x -> 
+                    begin match compile_stmt x [] (enter_scope new_ctxt) with
+                      | (str_else, ctxt_else) -> (t@
+                        [L(__lpre)]@
+                        new_stream@
+                        [J(Il.If(op, Il.Neq, Imm 0l, __lbody, __lelse))]@
+                        [L(__lbody)]@str3@[L(__lelse)]@str_else@[L(__lpost)], leave_scope ctxt_else)
+                    end
+                end
+            end
+        end
     | Ast.While(e, s) ->
       let __lpre =  X86.mk_lbl() in 
       let __lbody = X86.mk_lbl() in
       let __lpost = X86.mk_lbl() in
         begin match compile_exp e c t with
           | (new_stream, op, new_ctxt) -> 
-            let ctxt_step = enter_scope new_ctxt in
-	            begin match compile_stmt stm new_stream ctxt_step with
-	              | (str3, ctxt3) -> (t@[L(__lpre)]@new_stream@
-	                [J(Il.If(op, Eq, Imm 1l, __lbody, __lpost))]@
-	                [L(__lbody)]@str3@[L(__lpost)], leave_scope ctxt3)
-	            end
+            begin match compile_stmt s new_stream (enter_scope new_ctxt) with
+              | (str3, ctxt3) -> (t@[L(__lpre)]@new_stream@
+                [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
+                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@[L(__lpost)], leave_scope ctxt3)
+            end
         end
-    (*| Ast.For(vdl, eo, sto, s) -> ss*)
+    | Ast.For(vdl, eo, sto, s) -> 
     | Ast.Block b ->
       begin match compile_block b (enter_scope c) [] with
         | (stream_new, ctxt_new) -> (t@stream_new, leave_scope ctxt_new)
