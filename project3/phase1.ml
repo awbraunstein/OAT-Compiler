@@ -157,6 +157,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			      end
         end
     end in compile_stmt sl t c
+    
 and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
   begin match b with
     | (vd,sl) -> 
@@ -164,7 +165,30 @@ and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
         | (s2, c2) -> compile_stmts sl s2 c2
       end              
   end
+  
+    
+let mk_blocks(s:stream) :Il.bb list =   
+	let rec mk_blocks_aux (s:stream)(this_l:Il.lbl)(i_accum:Il.insn list)(this_j:Il.cfinsn)(b:Il.bb list) : Il.bb list= 
+	  begin match s with
+	    | [] -> b
+      | h::tl -> 
+        begin match h with
+          | L x -> mk_blocks_aux tl x [] this_j b
+          | I x -> mk_blocks_aux tl this_l (i_accum@[x]) this_j b
+          | J x -> mk_blocks_aux tl this_l i_accum x (b@[(Il.mk_bb this_l i_accum this_j)])
+        end
+    end in mk_blocks_aux s (X86.mk_lbl_hint "main") [] (Il.Ret (Imm 0l)) []
 
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
-failwith "unimplemented"
+  let main = X86.mk_lbl_hint "main" in
+  let c = Ctxt.mk_ctxt in  
+    begin match compile_block block (Ctxt.enter_scope c) [] with
+      | (stream_block, ctxt_block) -> 
+        begin match compile_exp ret ctxt_block stream_block with
+          | (stream_ret, op, ctxt_ret) -> 
+            let final : Il.prog =
+            {il_tmps = ctxt_ret.ctxt_uids;il_cfg = mk_blocks ([L(main)]@stream_ret);il_entry = main} in
+            final
+        end
+    end
       
