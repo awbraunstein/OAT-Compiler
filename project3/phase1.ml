@@ -55,8 +55,21 @@ type elt =
 
 type stream = elt list
 
-let rec compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream*ctxt =
-(s,c)
+let compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
+  let rec compile_decl(v: vard_decl list)(c: ctxt)(s:stream) :stream * ctxt = 
+	  begin match v with
+	    | [] -> (s,c)
+      | h::tl -> 
+	      begin match h with
+	        | (t,str,e) -> 
+            begin match alloc str c with
+              | (ctxt_new, uid_new) -> 
+                begin match compile_stmt Assign(str, e) [] ctxt_new with
+                  | (stream_ass, ctxt_ass) -> compile_decl tl ctxt_ass (s@stream_ass)
+                end
+            end
+        end
+    end in compile_decl v c s
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
   begin match e with
@@ -148,8 +161,6 @@ let rec compile_stmt (stm:stmt)(t:stream) (c:ctxt) : stream*ctxt =
  (*TOPLEVEL*)
 
 and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
-  (s,c)
-  (*
   begin match b with
     | (x,y) -> 
       begin match compile_vardecl x c s with
@@ -160,7 +171,6 @@ and compile_block(b:block)(c:ctxt)(s:stream) : stream*ctxt =
           compile_stmt y s1 c2
       end              
   end
- *)
 let compile_prog ((block,ret):Ast.prog) : Il.prog =
 failwith "unimplemented"
       
