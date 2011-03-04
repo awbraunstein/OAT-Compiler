@@ -38,7 +38,7 @@ let compile_four (i: Il.insn) : X86.insn list =
             | Il.Gt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sgt)]@[X86.Mov(o1,X86.ecx)]
             | Il.Gte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sge)]@[X86.Mov(o1,X86.ecx)]
           end
-        | Il.Move -> [X86.Mov(o1,o2)]
+        | Il.Move -> temp@[X86.Mov(X86.ecx,o2)]@[X86.Mov(o1,X86.ecx)]
       end
   | UnArith (u, op) ->
     let o1 = get_op op in
