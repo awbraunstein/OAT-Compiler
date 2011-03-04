@@ -94,5 +94,6 @@ let compile_one (bb_list: Il.bb list): Cunit.component list =
          program :: List.map compile_two bb_list @ [epi]
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
+  print_endline (string_of_prog prog); 
   let return_unit : Cunit.cunit =
     compile_one prog.il_cfg in return_unit

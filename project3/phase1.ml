@@ -121,7 +121,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			                    [L(_lpre)]@
 			                    new_stream@
 			                    [J(Il.If(op, Neq, Imm 0l, _lbody, _lpost))]@
-			                    [L(_lbody)]@str3@[L(_lpost)]) (ctxt3)
+			                    [L(_lbody)]@str3@[J(Il.Jump(_lpost))]@[L(_lpost)]) (ctxt3)
 			                  | Some x -> 
 			                    begin match compile_stmt [x] [] (new_ctxt) with
 			                      | (str_else, ctxt_else) -> compile_stmt tl (t@
