@@ -79,6 +79,7 @@ let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
       end
   end
   
+  
 and compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
   let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) :stream * ctxt = 
 	  begin match v with
@@ -92,6 +93,15 @@ and compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
         end
     end in compile_decl v c s
     
+and compile_cond (e:exp)(c:ctxt)(s:stream) : stream * operand * ctxt =
+  begin match alloc (mk_tmp()) c with
+    | (ctxt_new, uid_new) -> 
+      begin match compile_exp e ctxt_new [] with
+        | (stream_cond, op, ctxt_cond) ->
+          (s@stream_cond@
+          [I(BinArith(Slot uid_new, Il.Move, op))], Slot uid_new, ctxt_cond)
+      end
+  end
 and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =    
 	let rec compile_stmt (sl:stmt list)(t:stream) (c:ctxt) : stream*ctxt =
     begin match sl with
@@ -112,7 +122,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			      let _lbody = X86.mk_lbl() in
 			      let _lelse = X86.mk_lbl() in
 			      let _lpost = X86.mk_lbl() in
-			        begin match compile_exp e c t with
+			        begin match compile_cond e c t with
 			          | (new_stream, op, new_ctxt) -> 
 			            begin match compile_stmt [s] [] (new_ctxt) with
 			              | (str3, ctxt3) -> 
@@ -129,7 +139,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			                        new_stream@
 			                        [J(Il.If(op, Il.Neq, Imm 0l, _lbody, _lelse))]@
 			                        [L(_lbody)]@str3@[J(Il.Jump _lpost)]@
-			                        [L(_lelse)]@str_else@
+			                        [L(_lelse)]@str_else@[J(Il.Jump(_lpost))]@
 			                        [L(_lpost)]) (ctxt_else)
 			                    end
 			                end
@@ -139,7 +149,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			      let _lpre =  X86.mk_lbl() in 
 			      let _lbody = X86.mk_lbl() in
 			      let _lpost = X86.mk_lbl() in
-			        begin match compile_exp e c t with
+			        begin match compile_cond e c t with
 			          | (new_stream, op, new_ctxt) -> 
 			            begin match compile_stmt [s] new_stream (new_ctxt) with
 			              | (str3, ctxt3) -> compile_stmt tl (t@[L(_lpre)]@new_stream@
