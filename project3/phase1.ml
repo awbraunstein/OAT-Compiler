@@ -74,7 +74,7 @@ let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
     | Cint x ->(s,Imm x, c)
     | Id y ->
       begin match lookup y c with
-	      | None -> failwith "Variable not in scope"
+	      | None -> failwith "Variable not in scope ID"
 	      | Some u -> (s, Slot u, c)
       end
   end
@@ -102,7 +102,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			      begin match compile_exp e c [] with
 			        | (stream1, operand1, ctxt1) -> 
 			          begin match lookup (compile_lhs l) ctxt1 with
-				          | None -> failwith "Variable not in scope"
+				          | None -> failwith "Variable not in scope ASSIGN"
 					        | Some u ->
 			              compile_stmt tl (t@stream1@[I(BinArith(Slot u, Il.Move, operand1))]) ctxt1
 			          end
@@ -114,23 +114,23 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			      let __lpost = X86.mk_lbl() in
 			        begin match compile_exp e c t with
 			          | (new_stream, op, new_ctxt) -> 
-			            begin match compile_stmt [s] [] (enter_scope new_ctxt) with
+			            begin match compile_stmt [s] [] (new_ctxt) with
 			              | (str3, ctxt3) -> 
 			                begin match sto with
 			                  | None -> compile_stmt tl (t@
 			                    [L(__lpre)]@
 			                    new_stream@
 			                    [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
-			                    [L(__lbody)]@str3@[L(__lpost)]) (leave_scope ctxt3)
+			                    [L(__lbody)]@str3@[L(__lpost)]) (ctxt3)
 			                  | Some x -> 
-			                    begin match compile_stmt [x] [] (enter_scope new_ctxt) with
+			                    begin match compile_stmt [x] [] (new_ctxt) with
 			                      | (str_else, ctxt_else) -> compile_stmt tl (t@
 			                        [L(__lpre)]@
 			                        new_stream@
 			                        [J(Il.If(op, Il.Neq, Imm 0l, __lbody, __lelse))]@
 			                        [L(__lbody)]@str3@[J(Il.Jump __lpost)]@
 			                        [L(__lelse)]@str_else@
-			                        [L(__lpost)]) (leave_scope ctxt_else)
+			                        [L(__lpost)]) (ctxt_else)
 			                    end
 			                end
 			            end
@@ -141,11 +141,11 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			      let __lpost = X86.mk_lbl() in
 			        begin match compile_exp e c t with
 			          | (new_stream, op, new_ctxt) -> 
-			            begin match compile_stmt [s] new_stream (enter_scope new_ctxt) with
+			            begin match compile_stmt [s] new_stream (new_ctxt) with
 			              | (str3, ctxt3) -> compile_stmt tl (t@[L(__lpre)]@new_stream@
 			                [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
 			                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@
-			                [L(__lpost)]) (leave_scope ctxt3)
+			                [L(__lpost)]) (ctxt3)
 			            end
 			        end
 			   (* | Ast.For(vdl, eo, sto, s) -> 
