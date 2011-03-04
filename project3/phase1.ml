@@ -149,7 +149,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			                end
 			            end
 			        end
-			    | Ast.While(e, s) ->
+			    (*| Ast.While(e, s) ->
 			      let _lpre =  X86.mk_lbl() in 
 			      let _lbody = X86.mk_lbl() in
 			      let _lpost = X86.mk_lbl() in
@@ -161,7 +161,7 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			                [L(_lbody)]@str3@[J(Il.Jump _lpre)]@
 			                [L(_lpost)]) (ctxt3)
 			            end
-			        end
+			        end*)
 			   (* | Ast.For(vdl, eo, sto, s) -> 
 			      begin match compile_vardecl vdl c [] with
 			        | (stream1, ctxt1) -> 
