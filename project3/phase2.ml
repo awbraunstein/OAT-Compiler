@@ -23,22 +23,22 @@ let compile_four (i: Il.insn) : X86.insn list =
     let temp = [X86.Mov(X86.ecx,o1)]@[X86.Mov(X86.eax,o2)] in
       begin match b with
         | Il.Plus -> temp@[X86.Add(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
-        | Il.Times -> temp@[X86.Imul(Ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.Minus -> temp@[X86.Sub(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.Shl -> temp@[X86.Shl(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.Shr -> temp@[X86.Shr(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.Sar -> temp@[X86.Sar(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.And -> temp@[X86.And(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.Or -> temp@[X86.Or(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
-        | Il.Xor -> temp@[X86.Xor(ecx,eax)]@[X86.Mov(o2,X86.ecx)]
+        | Il.Times -> temp@[X86.Imul(Ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.Minus -> temp@[X86.Sub(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.Shl -> temp@[X86.Shl(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.Shr -> temp@[X86.Shr(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.Sar -> temp@[X86.Sar(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.And -> temp@[X86.And(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.Or -> temp@[X86.Or(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
+        | Il.Xor -> temp@[X86.Xor(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
         | Il.Compare c ->
           begin match c with
-            | Il.Eq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Eq)]@[X86.Mov(o2,X86.ecx)]
-            | Il.Neq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.NotEq)]@[X86.Mov(o2,X86.ecx)]
-            | Il.Lt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Slt)]@[X86.Mov(o2,X86.ecx)]
-            | Il.Lte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sle)]@[X86.Mov(o2,X86.ecx)]
-            | Il.Gt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sgt)]@[X86.Mov(o2,X86.ecx)]
-            | Il.Gte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sge)]@[X86.Mov(o2,X86.ecx)]
+            | Il.Eq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Eq)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Neq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.NotEq)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Lt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Slt)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Lte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sle)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Gt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sgt)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Gte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sge)]@[X86.Mov(o1,X86.ecx)]
           end
         | Il.Move -> [X86.Mov(o1,o2)]
       end
