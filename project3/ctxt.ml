@@ -20,7 +20,7 @@ let leave_scope (c: ctxt) : ctxt =
     | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
       begin match x with
         | h::tl -> {ctxt_stack = tl; ctxt_uids = y; ctxt_set = z;}
-        | [] -> failwith "no scope to leave"
+        | [] -> {ctxt_stack = []; ctxt_uids = y; ctxt_set = z;}
       end
   end
 
@@ -30,7 +30,7 @@ let alloc (s: string) (c: ctxt) : ctxt * uid =
   begin match c with
     | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
       begin match x with
-        | h::tl -> begin try ignore (List.assoc s h); failwith "found" with Not_found ->
+        | h::tl -> begin try ignore (List.assoc s h); failwith "already alloc'd" with Not_found ->
             ({ctxt_stack = ([(s,u)] @ h)::tl; ctxt_uids = y @ [u]; ctxt_set = z;}, u)
           end
         | [] -> ({ctxt_stack = [[(s,u)]]; ctxt_uids = y @ [u]; ctxt_set = z;},u)

@@ -12,7 +12,7 @@ let stack_offset_ebp (amt:int32) : opnd =
 let get_op (op: Il.operand) : X86.opnd =
   begin match op with
     | Il.Imm (x) -> X86.Imm x
-    | Il.Slot (x,y) -> (stack_offset_ebp (Int32.of_int(-4-(4*x))))
+    | Il.Slot (x,y) -> (stack_offset_ebp (Int32.of_int(-4-(4*(x)))))
   end
 
 
@@ -79,11 +79,11 @@ let compile_one (bb_list: Il.bb list): Cunit.component list =
   let epi : Cunit.component =
     let name = X86.mk_lbl_named "_epilogue" in
     Code({X86.global = true; X86.label = name;
-       X86.insns= [Mov(esp,ebp)] @ [Pop(ebp)]@ [X86.Ret]}) in
+       X86.insns= [Add(esp, Imm 100l)]@ [X86.Ret]}) in
   let program : Cunit.component =
       let block_name = X86.mk_lbl_named "_program" in 
       Code({X86.global = true; X86.label = block_name;
-        X86.insns= [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(esp, Imm 8l)]}) in 
+        X86.insns = [Sub(esp, Imm 100l)]}) in 
          program :: List.map compile_two bb_list @ [epi]
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
