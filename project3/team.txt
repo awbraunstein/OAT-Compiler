@@ -6,7 +6,7 @@ bandrew		Andrew Braunstein	bandrew@seas.upenn.edu
 
 Known issues with your implementation:
 
-
+Context doesn't work with list of all uid's.  So a large enough pad is allocated.
 
 ------------------------
 Course Project Feedback:

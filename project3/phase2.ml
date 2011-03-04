@@ -7,14 +7,12 @@ let stack_offset_ebp (amt:int32) : opnd =
   Ind{i_base = Some Ebp;
       i_iscl = None;
       i_disp = Some (DImm amt)} 
-      
-      
+    
 let get_op (op: Il.operand) : X86.opnd =
   begin match op with
     | Il.Imm (x) -> X86.Imm x
     | Il.Slot (x,y) -> (stack_offset_ebp (Int32.of_int(-4-(4*(x)))))
   end
-
 
 let compile_four (i: Il.insn) : X86.insn list =
   begin match i with
@@ -40,7 +38,7 @@ let compile_four (i: Il.insn) : X86.insn list =
             | Il.Gt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sgt)]@[X86.Mov(o1,X86.ecx)]
             | Il.Gte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sge)]@[X86.Mov(o1,X86.ecx)]
           end
-        | Il.Move -> [X86.Mov(o1,o2)]
+        | Il.Move -> temp@[X86.Mov(X86.ecx,o2)]@[X86.Mov(o1,X86.ecx)]
       end
   | UnArith (u, op) ->
     let o1 = get_op op in
@@ -51,8 +49,7 @@ let compile_four (i: Il.insn) : X86.insn list =
         | Il.Lognot -> temp@[X86.Not(o1)]@[X86.Mov(o1,X86.ecx)]
       end
   end
-  
-  
+
 let compile_three (bb: Il.bb) : X86.insn list =
   let rec compile_three_aux(b_list:Il.insn list)(r:X86.insn list):X86.insn list= 
     begin match b_list with
@@ -66,12 +63,12 @@ let compile_cfin (bb:Il.bb) =
     | Jump lbl -> [X86.Jmp (Lbl lbl)]
     | If (op1, compop, op2, lbl1, lbl2) ->
       begin match compop with
-        | Il.Eq -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Eq, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Neq ->(compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.NotEq, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Lt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Slt, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Lte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sle, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Gt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sgt, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Gte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sge, lbl1)]@[X86.Jmp(Lbl lbl2)]
+        | Il.Eq -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Eq, lbl2)]
+        | Il.Neq ->(compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.NotEq, lbl2)]
+        | Il.Lt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Slt, lbl2)]
+        | Il.Lte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sle, lbl2)]
+        | Il.Gt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sgt, lbl2)]
+        | Il.Gte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sge, lbl2)]
       end
   end
 
@@ -87,11 +84,13 @@ let compile_one (bb_list: Il.bb list): Cunit.component list =
   let epi : Cunit.component =
     let name = X86.mk_lbl_named "_epilogue" in
     Code({X86.global = false; X86.label = name;
-       X86.insns= [Add(esp, Imm 100l)]@ [Mov(ebp,esp)] @ [Pop(ebp)] @ [X86.Ret]}) in
+       X86.insns= [Pop(ecx)]@[Pop(edx)]@[Add(esp, Imm 100l)]@[Mov(ebp,esp)]
+        @ [Pop(ebp)] @ [X86.Ret]}) in
   let program : Cunit.component =
       let block_name = X86.mk_lbl_named "_program" in 
       Code({X86.global = true; X86.label = block_name;
-        X86.insns = [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(esp, Imm 100l)]}) in 
+        X86.insns = [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(esp, Imm 100l)]
+          @[Push(edx)]@[Push(ecx)]}) in 
          program :: List.map compile_two bb_list @ [epi]
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
