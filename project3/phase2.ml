@@ -66,12 +66,12 @@ let compile_cfin (bb:Il.bb) =
     | Jump lbl -> [X86.Jmp (Lbl lbl)]
     | If (op1, compop, op2, lbl1, lbl2) ->
       begin match compop with
-        | Il.Eq -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Eq, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Neq ->(compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.NotEq, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Lt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Slt, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Lte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sle, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Gt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sgt, lbl1)]@[X86.Jmp(Lbl lbl2)]
-        | Il.Gte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sge, lbl1)]@[X86.Jmp(Lbl lbl2)]
+        | Il.Eq -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Eq, lbl2)]
+        | Il.Neq ->(compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.NotEq, lbl2)]
+        | Il.Lt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Slt, lbl2)]
+        | Il.Lte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sle, lbl2)]
+        | Il.Gt -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sgt, lbl2)]
+        | Il.Gte -> (compile_four (BinArith(op1,Compare(compop),op2)))@[X86.J(X86.Sge, lbl2)]
       end
   end
 
