@@ -30,10 +30,15 @@ let alloc (s: string) (c: ctxt) : ctxt * uid =
   begin match c with
     | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
       begin match x with
-        | h::tl -> begin try ignore (List.assoc s h); failwith "already alloc'd" with Not_found ->
-            ({ctxt_stack = ([(s,u)] @ h)::tl; ctxt_uids = y @ [u]; ctxt_set = z;}, u)
-          end
-        | [] -> ({ctxt_stack = [[(s,u)]]; ctxt_uids = y @ [u]; ctxt_set = z;},u)
+        | h::tl ->
+          let rec alloc_r a =
+            begin match a with
+              | i::j ->
+                begin match i with
+                  | (a,b) -> if s = a then failwith "already alloc'd" else alloc_r j
+                  | _ -> ({ctxt_stack = [[(s,u)]] @ x; ctxt_uids = y @ [u]; ctxt_set = z;},u)
+                end
+            end in alloc_r h
       end
   end
 
