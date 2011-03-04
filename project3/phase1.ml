@@ -122,7 +122,6 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			          end
 			      end     
 			    | Ast.If(e, s ,sto) -> 
-			      let _lpre =  X86.mk_lbl() in 
 			      let _lbody = X86.mk_lbl() in
 			      let _lelse = X86.mk_lbl() in
 			      let _lpost = X86.mk_lbl() in
@@ -132,14 +131,12 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			              | (str3, ctxt3) -> 
 			                begin match sto with
 			                  | None -> compile_stmt tl (t@
-			                    [L(_lpre)]@
 			                    new_stream@
 			                    [J(Il.If(op, Neq, Imm 0l, _lbody, _lpost))]@
 			                    [L(_lbody)]@str3@[J(Il.Jump(_lpost))]@[L(_lpost)]) (ctxt3)
 			                  | Some x -> 
 			                    begin match compile_stmt [x] [] (new_ctxt) with
 			                      | (str_else, ctxt_else) -> compile_stmt tl (t@
-			                        [L(_lpre)]@
 			                        new_stream@
 			                        [J(Il.If(op, Il.Neq, Imm 0l, _lbody, _lelse))]@
 			                        [L(_lbody)]@str3@[J(Il.Jump _lpost)]@
