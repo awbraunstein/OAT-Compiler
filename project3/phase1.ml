@@ -108,44 +108,44 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			          end
 			      end     
 			    | Ast.If(e, s ,sto) -> 
-			      let __lpre =  X86.mk_lbl() in 
-			      let __lbody = X86.mk_lbl() in
-			      let __lelse = X86.mk_lbl() in
-			      let __lpost = X86.mk_lbl() in
+			      let _lpre =  X86.mk_lbl() in 
+			      let _lbody = X86.mk_lbl() in
+			      let _lelse = X86.mk_lbl() in
+			      let _lpost = X86.mk_lbl() in
 			        begin match compile_exp e c t with
 			          | (new_stream, op, new_ctxt) -> 
 			            begin match compile_stmt [s] [] (new_ctxt) with
 			              | (str3, ctxt3) -> 
 			                begin match sto with
 			                  | None -> compile_stmt tl (t@
-			                    [L(__lpre)]@
+			                    [L(_lpre)]@
 			                    new_stream@
-			                    [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
-			                    [L(__lbody)]@str3@[L(__lpost)]) (ctxt3)
+			                    [J(Il.If(op, Neq, Imm 0l, _lbody, _lpost))]@
+			                    [L(_lbody)]@str3@[L(_lpost)]) (ctxt3)
 			                  | Some x -> 
 			                    begin match compile_stmt [x] [] (new_ctxt) with
 			                      | (str_else, ctxt_else) -> compile_stmt tl (t@
-			                        [L(__lpre)]@
+			                        [L(_lpre)]@
 			                        new_stream@
-			                        [J(Il.If(op, Il.Neq, Imm 0l, __lbody, __lelse))]@
-			                        [L(__lbody)]@str3@[J(Il.Jump __lpost)]@
-			                        [L(__lelse)]@str_else@
-			                        [L(__lpost)]) (ctxt_else)
+			                        [J(Il.If(op, Il.Neq, Imm 0l, _lbody, _lelse))]@
+			                        [L(_lbody)]@str3@[J(Il.Jump _lpost)]@
+			                        [L(_lelse)]@str_else@
+			                        [L(_lpost)]) (ctxt_else)
 			                    end
 			                end
 			            end
 			        end
 			    | Ast.While(e, s) ->
-			      let __lpre =  X86.mk_lbl() in 
-			      let __lbody = X86.mk_lbl() in
-			      let __lpost = X86.mk_lbl() in
+			      let _lpre =  X86.mk_lbl() in 
+			      let _lbody = X86.mk_lbl() in
+			      let _lpost = X86.mk_lbl() in
 			        begin match compile_exp e c t with
 			          | (new_stream, op, new_ctxt) -> 
 			            begin match compile_stmt [s] new_stream (new_ctxt) with
-			              | (str3, ctxt3) -> compile_stmt tl (t@[L(__lpre)]@new_stream@
-			                [J(Il.If(op, Neq, Imm 0l, __lbody, __lpost))]@
-			                [L(__lbody)]@str3@[J(Il.Jump __lpre)]@
-			                [L(__lpost)]) (ctxt3)
+			              | (str3, ctxt3) -> compile_stmt tl (t@[L(_lpre)]@new_stream@
+			                [J(Il.If(op, Neq, Imm 0l, _lbody, _lpost))]@
+			                [L(_lbody)]@str3@[J(Il.Jump _lpre)]@
+			                [L(_lpost)]) (ctxt3)
 			            end
 			        end
 			   (* | Ast.For(vdl, eo, sto, s) -> 
