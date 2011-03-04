@@ -39,16 +39,12 @@ let alloc (s: string) (c: ctxt) : ctxt * uid =
 
         
 let lookup (s:string)(c:ctxt) : uid option =
-  begin match c with 
-   | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
-    let rec lookup_r (l:uid list list):uid option  =
+  let x_ = List.concat c.ctxt_stack in
+    let rec lookup_r (l: (string * Il.uid) list) =
       begin match l with
-        | h::tl -> begin match h with
-          | a::b -> begin match h with
-            | (x,y) -> if s = y then Some (h) else lookup_r tl end end
+        | (a,b)::tl -> if s = a then Some (b) else (lookup_r tl)
         | [] -> None
-      end in lookup_r x
-  end
+      end in lookup_r x_
 
 (* One possible implementation of a context is:
    - a stack of association (string, uid) lists to implement scoping
