@@ -320,7 +320,7 @@ let file_tests : suite = [
     ("easy_mb4", file_test "easy_mb4.oat" 3);
   ]);
  
-  GradedTest("Medium tests", 10, [
+ (* GradedTest("Medium tests", 10, [
     ("test11", file_test "test11.oat" 720);	       
     ("medium_mw1", file_test "medium_mw1.oat" 10);
     ("medium_mw3", file_test "medium_mw3.oat" (-1));
@@ -361,7 +361,7 @@ let file_tests : suite = [
     ("medium_nest2", file_test "medium_nest2.oat" 100);
     ("medium_nest3", file_test "medium_nest3.oat" 100);
     ("medium_nest4", file_test "medium_nest4.oat" 1);
-  ]);
+  ]);*)
 
   GradedTest("Hard tests", 10, [
     ("bsort", file_test "bsort.oat" 1);

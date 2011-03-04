@@ -98,8 +98,12 @@ and compile_cond (e:exp)(c:ctxt)(s:stream) : stream * operand * ctxt =
     | (ctxt_new, uid_new) -> 
       begin match compile_exp e ctxt_new [] with
         | (stream_cond, op, ctxt_cond) ->
-          (s@stream_cond@
-          [I(BinArith(Slot uid_new, Il.Move, op))], Slot uid_new, ctxt_cond)
+          begin match alloc (mk_tmp()) ctxt_cond with
+            | (ctxt2,uid2) -> 
+		          (s@[I(BinArith(Slot uid_new, Il.Move, op))]@stream_cond@
+		          [I(BinArith(Slot uid2, Il.Move, op))]@
+		          [I(BinArith(op, Il.Move, Slot uid_new))], Slot uid2, ctxt2)
+          end
       end
   end
 and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =    
