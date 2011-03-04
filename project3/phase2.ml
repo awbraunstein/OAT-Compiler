@@ -79,11 +79,11 @@ let compile_one (bb_list: Il.bb list): Cunit.component list =
   let epi : Cunit.component =
     let name = X86.mk_lbl_named "_epilogue" in
     Code({X86.global = true; X86.label = name;
-       X86.insns= [Add(esp, Imm 100l)]@ [X86.Ret]}) in
+       X86.insns= [Add(esp, Imm 100l)]@ [Mov(ebp,esp)] @ [Pop(ebp)] @ [X86.Ret]}) in
   let program : Cunit.component =
       let block_name = X86.mk_lbl_named "_program" in 
       Code({X86.global = true; X86.label = block_name;
-        X86.insns = [Sub(esp, Imm 100l)]}) in 
+        X86.insns = [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(esp, Imm 100l)]}) in 
          program :: List.map compile_two bb_list @ [epi]
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
