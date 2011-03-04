@@ -41,9 +41,11 @@ let alloc (s: string) (c: ctxt) : ctxt * uid =
 let lookup (s:string)(c:ctxt) : uid option =
   begin match c with 
    | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
-    let rec lookup_r (l:uid list):uid option  =
+    let rec lookup_r (l:uid list list):uid option  =
       begin match l with
-        | h::tl -> begin try Some (List.assoc s h) with Not_found -> lookup_r tl end
+        | h::tl -> begin match h with
+          | a::b -> begin match h with
+            | (x,y) -> if s = y then Some (h) else lookup_r tl end end
         | [] -> None
       end in lookup_r x
   end
