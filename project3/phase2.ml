@@ -63,24 +63,28 @@ let compile_three (bb: Il.bb) : X86.insn list =
 let compile_cfin (bb:Il.bb) =
   begin match bb.bb_link with
     | Il.Ret o -> [X86.Mov(eax, (get_op o))]
+    | Jump lbl -> [X86.Jmp (Lbl lbl)]
   end
-    (*| Jump lbl (* jump to a0 *)
-    | If of operand * compop * operand * lbl * lbl*)
+   (* | If of operand * compop * operand * lbl * lbl*)
 
 
 let rec compile_two (bb: Il.bb) : Cunit.component = 
-  let epilogue = compile_cfin bb @ [Add(ebp, Imm 400l)] @ [Mov(esp,ebp)] @ [Pop(ebp)]@ [X86.Ret] in 
+  let epilogue = compile_cfin bb in 
     let block : Cunit.component =
      Code({X86.global = true; X86.label = bb.bb_lbl;
        X86.insns= compile_three bb  @ epilogue}) in
          block
 
 let compile_one (bb_list: Il.bb list): Cunit.component list =
+  let epi : Cunit.component =
+    let name = X86.mk_lbl_named "_epilogue" in
+    Code({X86.global = true; X86.label = name;
+       X86.insns= [Mov(esp,ebp)] @ [Pop(ebp)]@ [X86.Ret]}) in
   let program : Cunit.component =
       let block_name = X86.mk_lbl_named "_program" in 
       Code({X86.global = true; X86.label = block_name;
-        X86.insns= [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(ebp, Imm 400l)]}) in 
-  let l : Cunit.component list = [] in program :: List.map compile_two bb_list @ l
+        X86.insns= [Push(ebp)] @ [Mov(ebp,esp)] @ [Sub(esp, Imm 8l)]}) in 
+         program :: List.map compile_two bb_list @ [epi]
 
 let compile_prog (prog:Il.prog) : Cunit.cunit =
   let return_unit : Cunit.cunit =
