@@ -1,5 +1,7 @@
 Team Members:
   <pennkey>	<name>		<email>
+mnico		Nico Mihalich		mnico@seas.upenn.edu
+bandrew		Andrew Braunstein	bandrew@seas.upenn.edu
 
 
 Known issues with your implementation:
@@ -11,19 +13,19 @@ Course Project Feedback:
 ------------------------
 
 1.  How much time did it take to complete this project?
+A lot. 20?
 
-
-2. How effective was this project? [0-10]: 
+2. How effective was this project? [0-10]: 7
 
     0 = learned nothing
    10 = highly educational
 
-3. How engaging was this project? [0-10]:
+3. How engaging was this project? [0-10]: 6
 
     0 = tedious and boring
    10 = fun and engaging
 
-4. How difficult was this project? [0-10]:
+4. How difficult was this project? [0-10]: 10
 
     0 = piece of cake
    10 = extremely hard
