@@ -1,0 +1,7 @@
+int length_of_string (string str) {
+  return length_of_array (array_of_string (str));
+}
+
+int program (int argc, string[] argv) {
+  return length_of_string ("Hello?");
+} 
