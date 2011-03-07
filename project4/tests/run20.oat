@@ -1,5 +1,0 @@
-int f() {return 19;}
-int program (int argc, string[] argv) {
-  int[] a = {-1, -100, f()};
-  return a[2];
-}

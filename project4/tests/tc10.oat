@@ -1,3 +1,0 @@
-bool f(int[] a){
-  return !a;
-}

@@ -1,2 +1,0 @@
-int j = 0;
-int[] x = new [2] (fun i -> j);

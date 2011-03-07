@@ -1,4 +1,0 @@
-int[] a = {12*7+13>>2, 9-4, 5+5};
-int program (int argc, string[] argv) {
-  return a[0];
-}

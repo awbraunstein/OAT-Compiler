@@ -1,5 +1,0 @@
-int[][] arr={{1,2}, {3,4}};
-
-int program (int argc, string[] argv) {
-  return arr[1][1];
-}

@@ -1,5 +1,0 @@
-string[] strs = {"abc", "def"};
-int program (int argc, string[] argv) {
-  print_string (strs[0]);
-  return 0;
-}

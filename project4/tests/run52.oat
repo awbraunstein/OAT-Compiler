@@ -1,9 +1,0 @@
-int x = 10;
-int program (int argc, string[] argv) {
-  int y = 0;
-  {
-    int x = x + 1;
-    y = x;
-  }
-  return y;
-}

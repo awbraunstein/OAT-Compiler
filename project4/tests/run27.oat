@@ -1,4 +1,0 @@
-int program (int argc, string[] argv) {
-  int i=99;
-  return i;
-}

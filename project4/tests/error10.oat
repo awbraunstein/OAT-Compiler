@@ -1,3 +1,0 @@
-int program (int argc, string[] argv) {
-  int[] a = new 3 (fun i -> i);
-}
