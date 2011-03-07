@@ -31,12 +31,12 @@ let compile_four (i: Il.insn) : X86.insn list =
         | Il.Xor -> temp@[X86.Xor(ecx,eax)]@[X86.Mov(o1,X86.ecx)]
         | Il.Compare c ->
           begin match c with
-            | Il.Eq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Eq)]@[X86.Mov(o1,X86.ecx)]
-            | Il.Neq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.NotEq)]@[X86.Mov(o1,X86.ecx)]
-            | Il.Lt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Slt)]@[X86.Mov(o1,X86.ecx)]
-            | Il.Lte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sle)]@[X86.Mov(o1,X86.ecx)]
-            | Il.Gt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sgt)]@[X86.Mov(o1,X86.ecx)]
-            | Il.Gte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sge)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Eq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Eq)]@[X86.And(ecx, Imm 1l)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Neq -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.NotEq)]@[X86.And(ecx, Imm 1l)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Lt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Slt)]@[X86.And(ecx, Imm 1l)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Lte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sle)]@[X86.And(ecx, Imm 1l)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Gt -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sgt)]@[X86.And(ecx, Imm 1l)]@[X86.Mov(o1,X86.ecx)]
+            | Il.Gte -> temp@[X86.Cmp(ecx,eax)]@[X86.Setb(ecx,X86.Sge)]@[X86.And(ecx, Imm 1l)]@[X86.Mov(o1,X86.ecx)]
           end
         | Il.Move -> temp@[X86.Mov(X86.ecx,o2)]@[X86.Mov(o1,X86.ecx)]
       end

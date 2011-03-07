@@ -57,13 +57,16 @@ type stream = elt list
 
 
 let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
+  let exp_temp = mk_tmp() in
+    let (c,uid) = alloc exp_temp c in
   begin match e with
     | Binop (x,y,z) -> 
       begin match compile_exp y c [] with
         | (stream1, operand1, ctxt1) -> 
           begin match compile_exp z ctxt1 [] with
             | (stream2, operand2, ctxt2) ->
-              (s@stream1@stream2@[I(BinArith(operand1, compile_binop x, operand2))], operand1, ctxt2)
+              (s@stream1@[I(BinArith(Slot uid,Move,operand1))]@stream2@
+              [I(BinArith(Slot uid, compile_binop x, operand2))], Slot uid, ctxt2)
           end
       end      
     | Unop (x,y) ->
@@ -74,14 +77,14 @@ let rec compile_exp (e: exp) (c:ctxt) (s: stream) : stream * operand * ctxt=
     | Cint x ->(s,Imm x, c)
     | Id y ->
       begin match lookup y c with
-	      | None -> failwith "Variable not in scope ID"
+	      | None -> failwith "Variable not in scope EXP"
 	      | Some u -> (s, Slot u, c)
       end
   end
   
   
 and compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
-  let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) :stream * ctxt = 
+  let rec compile_decl(v: var_decl list)(c: ctxt)(s:stream) : stream * ctxt = 
 	  begin match v with
 	    | [] -> (s,c)
       | h::tl -> 
@@ -96,16 +99,17 @@ and compile_vardecl (v: var_decl list) (c: ctxt) (s:stream) : stream * ctxt =
 and compile_cond (e:exp)(c:ctxt)(s:stream) : stream * operand * ctxt =
   begin match alloc (mk_tmp()) c with
     | (ctxt_new, uid_new) -> 
-      begin match compile_exp e ctxt_new [] with
+      begin match compile_exp e ctxt_new s with
         | (stream_cond, op, ctxt_cond) ->
           begin match alloc (mk_tmp()) ctxt_cond with
             | (ctxt2,uid2) -> 
-		          (s@[I(BinArith(Slot uid_new, Il.Move, op))]@stream_cond@
+		          ([I(BinArith(Slot uid_new, Il.Move, op))]@stream_cond@
 		          [I(BinArith(Slot uid2, Il.Move, op))]@
 		          [I(BinArith(op, Il.Move, Slot uid_new))], Slot uid2, ctxt2)
           end
       end
   end
+  
 and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =    
 	let rec compile_stmt (sl:stmt list)(t:stream) (c:ctxt) : stream*ctxt =
     begin match sl with
@@ -146,19 +150,20 @@ and compile_stmts(sl:stmt list)(t:stream)(c:ctxt): stream*ctxt =
 			                end
 			            end
 			        end
-			    (*| Ast.While(e, s) ->
-			      let _lpre =  X86.mk_lbl() in 
-			      let _lbody = X86.mk_lbl() in
-			      let _lpost = X86.mk_lbl() in
-			        begin match compile_cond e c t with
+			      | Ast.While(e, s) ->
+			      let _lpre =  X86.mk_lbl_hint("preW") in 
+			      let _lbody = X86.mk_lbl_hint("bodyW") in
+			      let _lpost = X86.mk_lbl_hint("postW") in
+            let stream = t@[L(_lpre)] in
+			        begin match compile_cond e c stream with
 			          | (new_stream, op, new_ctxt) -> 
-			            begin match compile_stmt [s] new_stream (new_ctxt) with
-			              | (str3, ctxt3) -> compile_stmt tl (t@[L(_lpre)]@new_stream@
-			                [J(Il.If(op, Neq, Imm 0l, _lbody, _lpost))]@
+			            begin match compile_stmt [s] [] (new_ctxt) with
+			              | (str3, ctxt3) -> compile_stmt tl (new_stream@
+                      [J(Il.If(op, Neq, Imm 0l, _lbody, _lpost))]@
 			                [L(_lbody)]@str3@[J(Il.Jump _lpre)]@
 			                [L(_lpost)]) (ctxt3)
 			            end
-			        end*)
+			        end
 			   (* | Ast.For(vdl, eo, sto, s) -> 
 			      begin match compile_vardecl vdl c [] with
 			        | (stream1, ctxt1) -> 
@@ -186,7 +191,11 @@ let mk_blocks(s:stream) : Il.bb list =
       | h::tl -> 
         begin match h with
           | L x -> mk_blocks_aux tl x [] this_j b
-          | I x -> mk_blocks_aux tl this_l (i_accum@[x]) this_j b
+          | I x ->
+            begin match tl with
+              | (L y)::_ -> mk_blocks_aux ([J(Jump y)]@tl) this_l i_accum this_j b
+              | _ ->  mk_blocks_aux tl this_l (i_accum@[x]) this_j b
+            end 
           | J x -> mk_blocks_aux tl this_l i_accum x (b@[(Il.mk_bb this_l i_accum x)])
         end
     end in mk_blocks_aux s (X86.mk_lbl_hint "main") [] (Il.Ret (Imm 0l)) []

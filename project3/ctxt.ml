@@ -20,7 +20,7 @@ let leave_scope (c: ctxt) : ctxt =
     | {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;} ->
       begin match x with
         | h::tl -> {ctxt_stack = tl; ctxt_uids = y; ctxt_set = z;}
-        | [] -> {ctxt_stack = []; ctxt_uids = y; ctxt_set = z;}
+        | [] -> {ctxt_stack = x; ctxt_uids = y; ctxt_set = z;}
       end
   end
 
