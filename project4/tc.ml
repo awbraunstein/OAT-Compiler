@@ -11,4 +11,10 @@ let report_error (info:Range.t) (expected:typ) (t:typ) : string =
 
 
 let typecheck_prog (p:Range.t prog) : unit =
-failwith "unimplemented"
+  begin match p with
+    | h::tl ->
+      begin match h with
+        | _  -> failwith "error"
+      end
+    | _ -> failwith "no program"
+  end
