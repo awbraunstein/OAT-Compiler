@@ -14,7 +14,14 @@ let typecheck_prog (p:Range.t prog) : unit =
   begin match p with
     | h::tl ->
       begin match h with
-        | _  -> failwith "error"
+        | Gvdecl v  ->
+          begin match v with
+            | _ -> failwith "noprogram"
+          end
+        | Gfdecl f ->
+          begin match f with
+            | (rtyp,id, args, block,exp) -> failwith "no program"
+          end
       end
     | _ -> failwith "no program"
   end
