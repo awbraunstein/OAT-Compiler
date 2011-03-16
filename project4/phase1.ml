@@ -170,11 +170,16 @@ and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
   match l with
   | Var (_,x) -> failwith "Phase1: compile_lhs Var not implemented"
 
+
   | Index (l1, e2) -> failwith "Phase1: compile_lhs Index not implemented"
 
 and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
   match l with
-  | Var (_,x) -> failwith "Phase1: compile_lhs_exp Var not implemented"
+  | Var (_,x) -> 
+    begin match lookup x c with
+      | None -> failwith "Variable not in scope ID"
+      | Some u -> failwith "some lhs_exp"
+    end
 
   | Index (l1, e2) -> failwith "Phase1: compile_lhs_exp Index not implemented"
 
