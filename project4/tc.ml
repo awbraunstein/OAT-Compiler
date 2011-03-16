@@ -56,8 +56,9 @@ and tc_new x y z c : typ =
   failwith "unimplemented"
 
 and tc_ecall x y c : typ =
-  failwith "unimplemented
-  "
+  failwith "unimplemented"
+  
+
 and tc_exp (e:Range.t exp) (c:ctxt) : typ =
  begin match e with
     | Binop (x,y,z) -> tc_binop x y z c
@@ -70,12 +71,12 @@ and tc_exp (e:Range.t exp) (c:ctxt) : typ =
 
 and tc_fdecl f c : unit =
   begin match f with
-    | _ -> failwith "error"
+    | (rtyp, id, args, block, exp) -> ()
   end
 
 and tc_vdecl v c: unit =
   begin match v with
-    | _ -> failwith "error"
+    | {v_ty = x; v_id = y; v_init = z;} -> ()
   end
 
 let get_decls (p:Range.t prog) : ctxt =
@@ -91,10 +92,20 @@ let get_decls (p:Range.t prog) : ctxt =
 		        end
 	       | Gfdecl f ->
            begin match f with
-		         | (rtyp, id, args, block, exp) -> failwith ""
+		         | (rtyp, id, args, block, exp) ->
+              begin match args with
+                | h::tl -> 
+                  begin match h with
+                    | (_,a) -> 
+                      begin match a with
+                        | (_,x) -> add_fdecl x ([],rtyp) c
+                      end
+                  end
+                | [] -> add_fdecl "" ([],rtyp) c
+              end
 		       end
 		   end in
-      List.fold_left typecheck_h c p
+      List.fold_left typecheck_h c p 
   
 
 let typecheck_prog (p:Range.t prog) : unit =
