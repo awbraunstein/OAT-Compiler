@@ -86,8 +86,13 @@ let rec get_args (l:Range.t Ast.args list) : typ list =
   begin match l with
     | h::tl -> 
       begin match h with
-        | (t,_) -> r@[t]@get_args tl
+        | y::z ->
+          begin match y with
+            | (t,_) -> r@[t]@get_args tl
+          end
+        | _ -> r@[]
       end
+    | _ -> r@[]
   end
 
 let get_decls (p:Range.t prog) : ctxt =
