@@ -48,24 +48,33 @@ and tc_unop x y c : typ =
     | Not (_) -> if (tc_exp y c <> TInt) then failwith "" else TInt
     | Lognot (_) -> if (tc_exp y c <> TBool) then failwith "" else TBool
   end
-    
+
+and tc_lhs x c : typ =
+  failwith "unimplemented"
+  
+and tc_new x y z c : typ =
+  failwith "unimplemented"
+
+and tc_ecall x y c : typ =
+  failwith "unimplemented
+  "
 and tc_exp (e:Range.t exp) (c:ctxt) : typ =
  begin match e with
     | Binop (x,y,z) -> tc_binop x y z c
     | Const (x) -> tc_const x c
-    | Lhs (x) -> failwith ""
-    | New (x,y,z) -> failwith ""
-    | Unop (x,y) -> failwith ""
-    | Ecall (x,y) -> failwith ""
+    | Lhs (x) -> tc_lhs x c
+    | New (x,y,z) -> tc_new x y z c
+    | Unop (x,y) -> tc_unop x y c
+    | Ecall (x,y) -> tc_ecall x y c
   end
 
-let typecheck_fdecl (p:Range.t prog) (c:ctxt) : unit =
-  begin match p with
+and tc_fdecl f c : unit =
+  begin match f with
     | _ -> failwith "error"
   end
 
-let typecheck_vdecl (p:Range.t prog) (c:ctxt) : unit =
-  begin match p with
+and tc_vdecl v c: unit =
+  begin match v with
     | _ -> failwith "error"
   end
 
@@ -84,17 +93,15 @@ let get_decls (p:Range.t prog) : ctxt =
            begin match f with
 		         | (rtyp, id, args, block, exp) -> failwith ""
 		       end
-         | _ -> failwith "no program"
 		   end in
       List.fold_left typecheck_h c p
   
 
 let typecheck_prog (p:Range.t prog) : unit =
   let c = get_decls p in
-      let rec typecheck_h (h:Range.t Ast.gdecl) : unit =
+    let rec typecheck_h (h:Range.t Ast.gdecl) : unit =
       begin match h with
-		     | Gvdecl v  -> failwith ""
-	       | Gfdecl f -> failwith ""
-         | _ -> failwith "no program"
+		     | Gvdecl v  -> tc_vdecl v c
+	       | Gfdecl f -> tc_fdecl f c
 		   end in
       List.iter typecheck_h p
