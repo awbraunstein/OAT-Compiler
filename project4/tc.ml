@@ -50,13 +50,15 @@ and tc_unop x y c : typ =
   end
 
 and tc_lhs x c : typ =
-  failwith "unimplemented"
+  begin match x with
+    | Var a -> TInt
+    | Index (a,b) -> TInt
+  end
   
 and tc_new x y z c : typ =
-  failwith "unimplemented"
+  if (tc_exp x c <> tc_exp z c) then failwith "" else (tc_exp x c)
 
-and tc_ecall x y c : typ =
-  failwith "unimplemented"
+and tc_ecall x y c : typ = TInt
   
 
 and tc_exp (e:Range.t exp) (c:ctxt) : typ =
@@ -79,6 +81,15 @@ and tc_vdecl v c: unit =
     | {v_ty = x; v_id = y; v_init = z;} -> ()
   end
 
+let rec get_args (l:Range.t Ast.args list) : typ list =
+  let r = [] in 
+  begin match l with
+    | h::tl -> 
+      begin match h with
+        | (t,_) -> r@[t]@get_args tl
+      end
+  end
+
 let get_decls (p:Range.t prog) : ctxt =
   let c = enter_scope empty_ctxt in
     let rec typecheck_h (c:ctxt) (h:Range.t Ast.gdecl) : ctxt =
@@ -93,15 +104,9 @@ let get_decls (p:Range.t prog) : ctxt =
 	       | Gfdecl f ->
            begin match f with
 		         | (rtyp, id, args, block, exp) ->
-              begin match args with
-                | h::tl -> 
-                  begin match h with
-                    | (_,a) -> 
-                      begin match a with
-                        | (_,x) -> add_fdecl x ([],rtyp) c
-                      end
-                  end
-                | [] -> add_fdecl "" ([],rtyp) c
+              let f = get_args in
+              begin match id with
+                | (_,a) -> add_fdecl a (f,rtyp) c
               end
 		       end
 		   end in
