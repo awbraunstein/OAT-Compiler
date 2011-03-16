@@ -81,16 +81,12 @@ and tc_vdecl v c: unit =
     | {v_ty = x; v_id = y; v_init = z;} -> ()
   end
 
-let rec get_args (l:Range.t Ast.args list) : typ list =
+let rec get_args (l:Range.t Ast.args) : typ list =
   let r = [] in 
   begin match l with
     | h::tl -> 
       begin match h with
-        | y::z ->
-          begin match y with
-            | (t,_) -> r@[t]@get_args tl
-          end
-        | _ -> r@[]
+       | (t,_) -> r@[t]@(get_args tl)
       end
     | _ -> r@[]
   end
@@ -109,7 +105,7 @@ let get_decls (p:Range.t prog) : ctxt =
 	       | Gfdecl f ->
            begin match f with
 		         | (rtyp, id, args, block, exp) ->
-              let f = get_args in
+              let f = get_args args in
               begin match id with
                 | (_,a) -> add_fdecl a (f,rtyp) c
               end
