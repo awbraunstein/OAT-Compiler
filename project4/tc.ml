@@ -78,12 +78,75 @@ and tc_exp (e:Range.t exp) (c:ctxt) : typ =
     | Ecall (x,y) -> tc_ecall x y c
   end
 
-and tc_fdecl f c : unit =
-  begin match f with
-    | (rtyp, id, args, block, exp) -> ()
+  
+and tc_stmt (s: Range.t stmt) (c:ctxt)  =
+  begin match s with
+    | Assign (l,e) -> tc_exp e c
+    | Scall (i,e) -> 
+      begin match e with
+        | h::tl -> tc_exp h c
+      end
+    | If (e,s,o) -> tc_exp e c; tc_stmt s c;
+      begin match o with
+        | Some st -> tc_stmt st c
+        | None -> failwith "!"
+      end
+    | While (e,s) -> tc_stmt s c; tc_exp e c
+    | For (v,oe,os,s) -> tc_stmt s c;
+      begin match oe with
+        | Some e -> tc_exp e c
+        | None -> failwith "!"
+      end;
+      begin match os with
+        | Some st -> tc_stmt st c
+        | None -> failwith "!"
+      end;
+    | Block b ->failwith "" 
+  end
+  
+and tc_rtyp (r:rtyp) (c:ctxt) : unit =
+  begin match r with
+    | Some t -> ()
+    | None -> ()
   end
 
-and tc_vdecl v c: unit =
+and tc_id (i: Range.t id) (c:ctxt) : unit =
+  ()
+
+and tc_args (a:Range.t args) (c:ctxt) : unit =
+  ()
+
+and vdecl_h (v:Range.t Ast.vdecl list) (c:ctxt) =
+  begin match v with
+    | h::tl -> tc_vdecl h c; vdecl_h tl c
+    | _ -> ()
+  end
+
+and stmt_h (s:Range.t stmt list) (c:ctxt) : unit =
+  begin match s with
+    | h::tl -> ignore (tc_stmt h c); stmt_h tl c
+    | _ -> ()
+  end
+
+and tc_block (b:Range.t block) (c:ctxt) : unit =
+  begin match b with
+    | (x,y) -> vdecl_h x c; stmt_h y c
+  end
+  
+and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit =
+  begin match f with
+    | (rtyp, id, args, block, exp) ->
+      ignore (tc_rtyp rtyp c);
+      ignore (tc_id id c);
+      ignore (tc_args args c);
+      ignore (tc_block block c);
+      begin match exp with
+        | Some e -> ignore (tc_exp e c); ()
+        | None -> failwith "wtf"
+      end
+  end
+
+and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
   begin match v with
     | {v_ty = x; v_id = y; v_init = z;} -> ()
   end
