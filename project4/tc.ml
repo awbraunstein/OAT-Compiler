@@ -65,13 +65,6 @@ and tc_lhs x c : typ =
 and tc_new e1 id e2 c : typ =
   if (tc_exp e1 c <> TInt) then
     failwith (report_error (exp_info e2) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
-
-
-and ecall_h y c : typ list=
-  let l = [] in
-  begin match y with
-    | h:: tl -> tc_exp h c; ecall_h tl c; l
-  end
   
 and tc_ecall x y c : typ = 
   let f = lookup_fdecl x c in
@@ -96,7 +89,6 @@ and tc_exp (e:Range.t exp) (c:ctxt) : typ =
     | Ecall ((_,id),y) ->tc_ecall id y c
   end
 
-  
 and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
   begin match s with
     | Assign (l,e) -> ignore (tc_exp e c)
