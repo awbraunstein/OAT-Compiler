@@ -54,17 +54,35 @@ and tc_unop x y c : typ =
 
 and tc_lhs x c : typ =
   begin match x with
-    | Var a -> TInt
-    | Index (a,b) -> TInt
+    | Var (_,s) -> let a = lookup_vdecl s c in
+      begin match a with
+        | Some t -> t
+        | None -> failwith "not declared"
+      end
+    | Index (a,b) -> tc_exp b c
   end
   
-and tc_new x y z c : typ =
-  if (tc_exp x c <> tc_exp z c) then
-    failwith (report_error (exp_info z) (tc_exp x c) (tc_exp z c)) else (tc_exp x c)
+and tc_new e1 id e2 c : typ =
+  if (tc_exp e1 c <> TInt) then
+    failwith (report_error (exp_info e2) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
 
+
+and ecall_h y c : typ list=
+  let l = [] in
+  begin match y with
+    | h:: tl -> tc_exp h c; ecall_h tl c; l
+  end
+  
 and tc_ecall x y c : typ = 
-  begin match x with 
-    | (_,_) -> TInt
+  let f = lookup_fdecl x c in
+  begin match f with
+    | Some (l,r) ->List.iter2 (fun a -> fun b -> if a = tc_exp b c then ()
+        else failwith "exception") l y;
+        begin match r with
+          | Some t -> t
+          | None -> failwith "no type"
+        end
+    | None -> failwith "not declared yet"
   end
   
 
@@ -75,46 +93,25 @@ and tc_exp (e:Range.t exp) (c:ctxt) : typ =
     | Lhs (x) -> tc_lhs x c
     | New (x,y,z) -> tc_new x y z c
     | Unop (x,y) -> tc_unop x y c
-    | Ecall (x,y) -> tc_ecall x y c
+    | Ecall ((_,id),y) ->tc_ecall id y c
   end
 
   
-and tc_stmt (s: Range.t stmt) (c:ctxt)  =
+and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
   begin match s with
-    | Assign (l,e) -> tc_exp e c
+    | Assign (l,e) -> ignore (tc_exp e c)
     | Scall (i,e) -> 
       begin match e with
-        | h::tl -> tc_exp h c
+        | h::tl -> ignore(tc_exp h c)
+        | [] -> failwith "!"
       end
-    | If (e,s,o) -> tc_exp e c; tc_stmt s c;
-      begin match o with
-        | Some st -> tc_stmt st c
-        | None -> failwith "!"
-      end
-    | While (e,s) -> tc_stmt s c; tc_exp e c
-    | For (v,oe,os,s) -> tc_stmt s c;
-      begin match oe with
-        | Some e -> tc_exp e c
-        | None -> failwith "!"
-      end;
-      begin match os with
-        | Some st -> tc_stmt st c
-        | None -> failwith "!"
-      end;
-    | Block b ->failwith "" 
+    | If (e,st,Some o) -> ignore (tc_exp e c); tc_stmt st c; tc_stmt o c
+    | While (e,s) -> ignore(tc_exp e c); tc_stmt s c;
+    | For (v,Some oe,Some os,st) -> tc_stmt st c; ignore(tc_exp oe c); tc_stmt os c
+    | Block b -> tc_block b c
+    | _ -> failwith "empty statement"
   end
   
-and tc_rtyp (r:rtyp) (c:ctxt) : unit =
-  begin match r with
-    | Some t -> ()
-    | None -> ()
-  end
-
-and tc_id (i: Range.t id) (c:ctxt) : unit =
-  ()
-
-and tc_args (a:Range.t args) (c:ctxt) : unit =
-  ()
 
 and vdecl_h (v:Range.t Ast.vdecl list) (c:ctxt) =
   begin match v with
@@ -124,7 +121,7 @@ and vdecl_h (v:Range.t Ast.vdecl list) (c:ctxt) =
 
 and stmt_h (s:Range.t stmt list) (c:ctxt) : unit =
   begin match s with
-    | h::tl -> ignore (tc_stmt h c); stmt_h tl c
+    | h::tl -> tc_stmt h c; stmt_h tl c
     | _ -> ()
   end
 
@@ -133,56 +130,48 @@ and tc_block (b:Range.t block) (c:ctxt) : unit =
     | (x,y) -> vdecl_h x c; stmt_h y c
   end
   
-and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit =
+and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
   begin match f with
     | (rtyp, id, args, block, exp) ->
-      ignore (tc_rtyp rtyp c);
-      ignore (tc_id id c);
-      ignore (tc_args args c);
-      ignore (tc_block block c);
+      let c = List.fold_left (fun c -> (fun (t,(_,id)) -> add_vdecl id t c)) c args in
+        tc_block block c;
       begin match exp with
-        | Some e -> ignore (tc_exp e c); ()
-        | None -> failwith "wtf"
+        | Some e -> ignore(tc_exp e c)
+        | None -> failwith "erorr"
       end
   end
 
+and tc_init (i:Range.t init) (c:ctxt) : typ =
+   begin match i with
+        | Iexp e -> tc_exp e c
+        | Iarray (_,l) ->
+          begin match l with
+            | h::tl -> let typ1 = tc_init h c in
+              List.iter (fun init -> if (tc_init init c = typ1) then ()
+                else failwith "wrong types") tl; TArray typ1
+            | [] -> failwith "must have length greater than 1"
+          end
+      end
+      
 and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
   begin match v with
-    | {v_ty = x; v_id = y; v_init = z;} -> ()
+    | {v_ty = ty; v_id = id; v_init = i;} ->
+       if (tc_init i c <> ty) then
+          failwith (report_error (init_info i) (ty) (tc_init i c)) else ()
   end
 
-let rec get_args (l:Range.t Ast.args) : typ list =
-  let r = [] in 
-  begin match l with
-    | h::tl -> 
-      begin match h with
-       | (t,_) -> r@[t]@(get_args tl)
-      end
-    | _ -> r@[]
-  end
-
-let get_decls (p:Range.t prog) : ctxt =
+let get_decls (p: Range.t prog) : ctxt =
   let c = enter_scope empty_ctxt in
-    let rec typecheck_h (c:ctxt) (h:Range.t Ast.gdecl) : ctxt =
-      begin match h with
-		      | Gvdecl v  ->
-		        begin match v with
-		          | {v_ty = x; v_id = y; v_init = z;} ->
-		            begin match y with
-		              | (_,a) -> add_vdecl a x c
-		            end
-		        end
-	       | Gfdecl f ->
-           begin match f with
-		         | (rtyp, id, args, block, exp) ->
-              let f = get_args args in
-                begin match id with
-                  | (_,a) -> add_fdecl a (f,rtyp) c
-                end
-		       end
-		   end in
-      List.fold_left typecheck_h c p 
-  
+  let rec typecheck_h (c: ctxt) (h: Range.t Ast.gdecl) : ctxt =
+    begin match h with
+      | Gvdecl { v_ty = x; v_id = y; v_init = z;} ->
+        begin match y with
+          | (_, a) -> add_vdecl a x c
+        end
+      | Gfdecl (rtyp, (_, a), args, block, exp) ->
+        let (f, _) = List.split args in
+          add_fdecl a (f, rtyp) c
+    end in  List.fold_left typecheck_h c p
 
 let typecheck_prog (p:Range.t prog) : unit =
   let c = get_decls p in
