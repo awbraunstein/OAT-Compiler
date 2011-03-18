@@ -8,18 +8,18 @@ let report_error (info:Range.t) (expected:typ) (t:typ) : string =
     "%s: This expression has type %s but an expression was expected of type %s." 
     (Range.string_of_range info) (string_of_typ expected) (string_of_typ t)
 
-let rec tc_typ y z c : typ =
+let rec tc_typ y z (c:ctxt) : typ =
   if (tc_exp y c <> tc_exp z c) then
           failwith (report_error (exp_info z) (tc_exp y c) (tc_exp z c)) else TBool
 
-and tc_bool y z c : typ = 
+and tc_bool y z (c:ctxt) : typ = 
   if (tc_exp y c <> TBool) then
           failwith (report_error (exp_info y) TBool (tc_exp y c))
            else if (tc_exp z c <> TBool) then
           failwith (report_error (exp_info z) TBool (tc_exp z c))
           else TBool
 
-and tc_int y z c : typ = 
+and tc_int y z (c:ctxt) : typ = 
   if (tc_exp y c <> TInt) then
           failwith (report_error (exp_info y) TInt (tc_exp y c))
          else if (tc_exp z c <> TInt) then
@@ -42,7 +42,7 @@ and tc_const x (c:ctxt) : typ =
     | Cstring _ -> TString
   end
 
-and tc_unop x y c : typ =
+and tc_unop x y (c:ctxt) : typ =
   begin match x with
     | Neg (_) -> if (tc_exp y c <> TInt) then
       failwith (report_error (exp_info y) TInt (tc_exp y c)) else TInt
@@ -52,7 +52,7 @@ and tc_unop x y c : typ =
       failwith (report_error (exp_info y) TBool (tc_exp y c)) else TBool
   end
 
-and tc_lhs x c : typ =
+and tc_lhs (x:Range.t lhs) (c:ctxt) : typ =
   begin match x with
     | Var (_,s) -> let a = lookup_vdecl s c in
       begin match a with
@@ -63,11 +63,11 @@ and tc_lhs x c : typ =
       failwith (report_error (exp_info b) TInt (tc_exp b c)) else TInt
   end
   
-and tc_new e1 id e2 c : typ =
+and tc_new e1 id e2 (c:ctxt) : typ =
   if (tc_exp e1 c <> TInt) then
     failwith (report_error (exp_info e1) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
   
-and tc_ecall x y c : typ = 
+and tc_ecall (x:string) (y:Range.t Ast.exp list) (c:ctxt) : typ = 
   let f = lookup_fdecl x c in
   begin match f with
     | Some (l,r) -> List.iter2 (fun a -> fun b -> if a = tc_exp b c then ()
@@ -125,7 +125,8 @@ and tc_block (b:Range.t block) (c:ctxt) : unit =
   
 and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
   begin match f with
-    | (rtyp, id, args, block, exp) ->
+    | (rtyp, (_,s), args, block, exp) ->
+          lookup_fdecl s c;
       let c = List.fold_left (fun c -> (fun (t,(_,id)) -> add_vdecl id t c)) c args in
         tc_block block c;
       begin match exp with
@@ -148,7 +149,7 @@ and tc_init (i:Range.t init) (c:ctxt) : typ =
       
 and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
   begin match v with
-    | {v_ty = ty; v_id = id; v_init = i;} ->
+    | {v_ty = ty; v_id = (_,s); v_init = i;} -> (*lookup_vdecl s c does nothing; add_vdecl s ty c fixes*)
        if (tc_init i c <> ty) then
           failwith (report_error (init_info i) (ty) (tc_init i c)) else ()
   end
@@ -157,10 +158,8 @@ let get_decls (p: Range.t prog) : ctxt =
   let c = enter_scope empty_ctxt in
   let rec get_decl_h (c: ctxt) (h: Range.t Ast.gdecl) : ctxt =
     begin match h with
-      | Gvdecl { v_ty = x; v_id = y; v_init = z;} ->
-        begin match y with
-          | (_, a) -> add_vdecl a x c
-        end
+      | Gvdecl { v_ty = x; v_id = (_, s); v_init = z;} ->
+        add_vdecl s x c
       | Gfdecl (rtyp, (_, a), args, block, exp) ->
         let (f, _) = List.split args in
           add_fdecl a (f, rtyp) c
