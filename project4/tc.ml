@@ -8,70 +8,70 @@ let report_error (info:Range.t) (expected:typ) (t:typ) : string =
     "%s: This expression has type %s but an expression was expected of type %s." 
     (Range.string_of_range info) (string_of_typ expected) (string_of_typ t)
 
-let rec tc_typ y z (c:ctxt) : typ =
-  if (tc_exp y c <> tc_exp z c) then
-          failwith (report_error (exp_info z) (tc_exp y c) (tc_exp z c)) else TBool
+let rec tc_typ (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
+  if (tc_exp e1 c <> tc_exp e2 c) then
+          failwith (report_error (exp_info e2) (tc_exp e1 c) (tc_exp e2 c)) else TBool
 
-and tc_bool y z (c:ctxt) : typ = 
-  if (tc_exp y c <> TBool) then
-          failwith (report_error (exp_info y) TBool (tc_exp y c))
-           else if (tc_exp z c <> TBool) then
-          failwith (report_error (exp_info z) TBool (tc_exp z c))
+and tc_bool (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ = 
+  if (tc_exp e1 c <> TBool) then
+          failwith (report_error (exp_info e1) TBool (tc_exp e1 c))
+           else if (tc_exp e2 c <> TBool) then
+          failwith (report_error (exp_info e2) TBool (tc_exp e2 c))
           else TBool
 
-and tc_int y z (c:ctxt) : typ = 
-  if (tc_exp y c <> TInt) then
-          failwith (report_error (exp_info y) TInt (tc_exp y c))
-         else if (tc_exp z c <> TInt) then
-          failwith (report_error (exp_info z) TInt (tc_exp z c))
+and tc_int (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ = 
+  if (tc_exp e1 c <> TInt) then
+          failwith (report_error (exp_info e1) TInt (tc_exp e1 c))
+         else if (tc_exp e2 c <> TInt) then
+          failwith (report_error (exp_info e2) TInt (tc_exp e2 c))
           else TInt
           
-and tc_binop x y z (c:ctxt) : typ =
-  begin match x with
-        | Eq (_) -> tc_typ y z c
-        | Neq (_) -> tc_typ y z c
-        | And (_) -> tc_bool y z c
-        | Or (_) -> tc_bool y z c
-        | (_) -> tc_int y z c
+and tc_binop (b:Range.t binop) (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
+  begin match b with
+    | Eq (_) -> tc_typ e1 e2 c
+    | Neq (_) -> tc_typ e1 e2 c
+    | And (_) -> tc_bool e1 e2 c
+    | Or (_) -> tc_bool e1 e2 c
+    | (_) -> tc_int e1 e2 c
   end
 
-and tc_const x (c:ctxt) : typ =
-  begin match x with
+and tc_const (con: Range.t const) (c:ctxt) : typ =
+  begin match con with
     | Cbool _ -> TBool
     | Cint _ -> TInt
     | Cstring _ -> TString
   end
 
-and tc_unop x y (c:ctxt) : typ =
-  begin match x with
-    | Neg (_) -> if (tc_exp y c <> TInt) then
-      failwith (report_error (exp_info y) TInt (tc_exp y c)) else TInt
-    | Not (_) -> if (tc_exp y c <> TInt) then
-      failwith (report_error (exp_info y) TInt (tc_exp y c)) else TInt
-    | Lognot (_) -> if (tc_exp y c <> TBool) then
-      failwith (report_error (exp_info y) TBool (tc_exp y c)) else TBool
+and tc_unop (u: Range.t unop) (e1:Range.t exp) (c:ctxt) : typ =
+  begin match u with
+    | Neg (_) -> if (tc_exp e1 c <> TInt) then
+      failwith (report_error (exp_info e1) TInt (tc_exp e1 c)) else TInt
+    | Not (_) -> if (tc_exp e1 c <> TInt) then
+      failwith (report_error (exp_info e1) TInt (tc_exp e1 c)) else TInt
+    | Lognot (_) -> if (tc_exp e1 c <> TBool) then
+      failwith (report_error (exp_info e1) TBool (tc_exp e1 c)) else TBool
   end
 
-and tc_lhs (x:Range.t lhs) (c:ctxt) : typ =
-  begin match x with
-    | Var (_,s) -> let a = lookup_vdecl s c in
-      begin match a with
+and tc_lhs (l:Range.t lhs) (c:ctxt) : typ =
+  begin match l with
+    | Var (_,s) -> let typo = lookup_vdecl s c in
+      begin match typo with
         | Some t -> t
         | None -> failwith "not declared yet: lhs"
       end
-    | Index (a,b) -> if (tc_exp b c <> TInt) then
-      failwith (report_error (exp_info b) TInt (tc_exp b c)) else TInt
+    | Index (lh,e) -> if (tc_exp e c <> TInt) then
+      failwith (report_error (exp_info e) TInt (tc_exp e c)) else TInt
   end
   
-and tc_new e1 id e2 (c:ctxt) : typ =
+and tc_new (e1:Range.t exp) (id: Range.t id) (e2:Range.t exp) (c:ctxt) : typ =
   if (tc_exp e1 c <> TInt) then
     failwith (report_error (exp_info e1) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
   
-and tc_ecall (x:string) (y:Range.t Ast.exp list) (c:ctxt) : typ = 
-  let f = lookup_fdecl x c in
+and tc_ecall (s:string) (el:Range.t Ast.exp list) (c:ctxt) : typ = 
+  let f = lookup_fdecl s c in
   begin match f with
     | Some (l,r) -> List.iter2 (fun a -> fun b -> if a = tc_exp b c then ()
-        else failwith "exception : ecall") l y;
+        else failwith "exception : ecall") l el;
         begin match r with
           | Some t -> t
           | None -> failwith "no return type"
@@ -125,8 +125,7 @@ and tc_block (b:Range.t block) (c:ctxt) : unit =
   
 and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
   begin match f with
-    | (rtyp, (_,s), args, block, exp) ->
-          lookup_fdecl s c;
+    | (rtyp, (_,s), args, block, exp) ->(*lookup_fdecl s c;*)
       let c = List.fold_left (fun c -> (fun (t,(_,id)) -> add_vdecl id t c)) c args in
         tc_block block c;
       begin match exp with
@@ -146,7 +145,7 @@ and tc_init (i:Range.t init) (c:ctxt) : typ =
             | [] -> failwith "must have length greater than 1"
           end
       end
-      
+
 and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
   begin match v with
     | {v_ty = ty; v_id = (_,s); v_init = i;} -> (*lookup_vdecl s c does nothing; add_vdecl s ty c fixes*)
