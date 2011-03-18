@@ -57,25 +57,26 @@ and tc_lhs x c : typ =
     | Var (_,s) -> let a = lookup_vdecl s c in
       begin match a with
         | Some t -> t
-        | None -> failwith "not declared"
+        | None -> failwith "not declared yet: lhs"
       end
-    | Index (a,b) -> tc_exp b c
+    | Index (a,b) -> if (tc_exp b c <> TInt) then
+      failwith (report_error (exp_info b) TInt (tc_exp b c)) else TInt
   end
   
 and tc_new e1 id e2 c : typ =
   if (tc_exp e1 c <> TInt) then
-    failwith (report_error (exp_info e2) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
+    failwith (report_error (exp_info e1) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
   
 and tc_ecall x y c : typ = 
   let f = lookup_fdecl x c in
   begin match f with
-    | Some (l,r) ->List.iter2 (fun a -> fun b -> if a = tc_exp b c then ()
-        else failwith "exception") l y;
+    | Some (l,r) -> List.iter2 (fun a -> fun b -> if a = tc_exp b c then ()
+        else failwith "exception : ecall") l y;
         begin match r with
           | Some t -> t
-          | None -> failwith "no type"
+          | None -> failwith "no return type"
         end
-    | None -> failwith "not declared yet"
+    | None -> failwith "not declared yet : ecall"
   end
   
 
@@ -101,7 +102,7 @@ and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
     | While (e,s) -> ignore(tc_exp e c); tc_stmt s c;
     | For (v,Some oe,Some os,st) -> tc_stmt st c; ignore(tc_exp oe c); tc_stmt os c
     | Block b -> tc_block b c
-    | _ -> failwith "empty statement"
+    | _ -> failwith "empty statement : stmt"
   end
   
 
@@ -154,7 +155,7 @@ and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
 
 let get_decls (p: Range.t prog) : ctxt =
   let c = enter_scope empty_ctxt in
-  let rec typecheck_h (c: ctxt) (h: Range.t Ast.gdecl) : ctxt =
+  let rec get_decl_h (c: ctxt) (h: Range.t Ast.gdecl) : ctxt =
     begin match h with
       | Gvdecl { v_ty = x; v_id = y; v_init = z;} ->
         begin match y with
@@ -163,7 +164,7 @@ let get_decls (p: Range.t prog) : ctxt =
       | Gfdecl (rtyp, (_, a), args, block, exp) ->
         let (f, _) = List.split args in
           add_fdecl a (f, rtyp) c
-    end in  List.fold_left typecheck_h c p
+    end in List.fold_left get_decl_h c p
 
 let typecheck_prog (p:Range.t prog) : unit =
   let c = get_decls p in
