@@ -65,7 +65,10 @@ and tc_lhs (l:Range.t lhs) (c:ctxt) : typ =
   
 and tc_new (e1:Range.t exp) (id: Range.t id) (e2:Range.t exp) (c:ctxt) : typ =
   if (tc_exp e1 c <> TInt) then
-    failwith (report_error (exp_info e1) (TInt) (tc_exp e1 c)) else TArray (tc_exp e2 c)
+    failwith (report_error (exp_info e1) (TInt) (tc_exp e1 c)) else
+      begin match id with
+        | (_,s) -> let c = add_vdecl s TInt c in TArray (tc_exp e2 c)
+      end
   
 and tc_ecall (s:string) (el:Range.t Ast.exp list) (c:ctxt) : typ = 
   let f = lookup_fdecl s c in
@@ -101,15 +104,18 @@ and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
     | If (e,st,Some o) -> ignore (tc_exp e c); tc_stmt st c; tc_stmt o c
     | While (e,s) -> ignore(tc_exp e c); tc_stmt s c;
     | For (v,Some oe,Some os,st) -> tc_stmt st c; ignore(tc_exp oe c); tc_stmt os c
-    | Block b -> tc_block b c
+    | Block b -> tc_block b c true; ()
     | _ -> failwith "empty statement : stmt"
   end
   
 
-and vdecl_h (v:Range.t Ast.vdecl list) (c:ctxt) =
+and vdecl_h (v:Range.t Ast.vdecl list) (c:ctxt) : ctxt =
   begin match v with
-    | h::tl -> tc_vdecl h c; vdecl_h tl c
-    | _ -> ()
+    | h::tl -> tc_vdecl h c;
+      begin match h with
+        | { v_ty = x; v_id = (_, s); v_init = z;} -> add_vdecl s x c
+      end
+    | _ -> c
   end
 
 and stmt_h (s:Range.t stmt list) (c:ctxt) : unit =
@@ -118,19 +124,20 @@ and stmt_h (s:Range.t stmt list) (c:ctxt) : unit =
     | _ -> ()
   end
 
-and tc_block (b:Range.t block) (c:ctxt) : unit =
+and tc_block (b:Range.t block) (c:ctxt) (flag: bool) : ctxt =
+  enter_scope empty_ctxt;
   begin match b with
-    | (x,y) -> vdecl_h x c; stmt_h y c
-  end
+    | (x,y) -> stmt_h y c; vdecl_h x c;
+  end; if not flag then leave_scope c else c
   
 and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
   begin match f with
-    | (rtyp, (_,s), args, block, exp) ->(*lookup_fdecl s c;*)
+    | (rtyp, (_,s), args, block, exp) ->
       let c = List.fold_left (fun c -> (fun (t,(_,id)) -> add_vdecl id t c)) c args in
-        tc_block block c;
+        let c = tc_block block c true in
       begin match exp with
         | Some e -> ignore(tc_exp e c)
-        | None -> failwith "erorr"
+        | None -> failwith "error: tc_fdecl"
       end
   end
 
@@ -148,18 +155,19 @@ and tc_init (i:Range.t init) (c:ctxt) : typ =
 
 and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
   begin match v with
-    | {v_ty = ty; v_id = (_,s); v_init = i;} -> (*lookup_vdecl s c does nothing; add_vdecl s ty c fixes*)
+    | {v_ty = ty; v_id = (_,s); v_init = i;} ->
        if (tc_init i c <> ty) then
           failwith (report_error (init_info i) (ty) (tc_init i c)) else ()
   end
+
 
 let get_decls (p: Range.t prog) : ctxt =
   let c = enter_scope empty_ctxt in
   let rec get_decl_h (c: ctxt) (h: Range.t Ast.gdecl) : ctxt =
     begin match h with
-      | Gvdecl { v_ty = x; v_id = (_, s); v_init = z;} ->
-        add_vdecl s x c
-      | Gfdecl (rtyp, (_, a), args, block, exp) ->
+      | Gvdecl {v_ty = x; v_id = (_, s); v_init = z;} ->
+         if tc_init z empty_ctxt <> x then failwith "problem!"; add_vdecl s x c
+      | Gfdecl (rtyp, (_, a), args, (vdls,_), exp) ->
         let (f, _) = List.split args in
           add_fdecl a (f, rtyp) c
     end in List.fold_left get_decl_h c p
