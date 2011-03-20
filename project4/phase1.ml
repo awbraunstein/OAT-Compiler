@@ -167,19 +167,22 @@ let rec compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
 
 
 and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
-  match l with
-  | Var (_,x) -> failwith "Phase1: compile_lhs Var not implemented"
+  begin match l with
+  | Var (_,x) -> 
+    begin match lookup x c with
+      | Some x -> (c,x,[])
+      | None -> failwith "WTF?!?!"
+    end
 
-
-  | Index (l1, e2) -> failwith "Phase1: compile_lhs Index not implemented"
+  | Index (l1, e2) -> 
+    begin match compile_exp c e2 with
+      | (ctxt1, op1, str1) -> failwith "Working on it"
+      | 
+  end
 
 and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
   match l with
-  | Var (_,x) -> 
-    begin match lookup x c with
-      | None -> failwith "Variable not in scope ID"
-      | Some u -> failwith "some lhs_exp"
-    end
+  | Var (_,x) -> failwith "Phase1: compile_lhs_exp Var not implemented"
 
   | Index (l1, e2) -> failwith "Phase1: compile_lhs_exp Index not implemented"
 
