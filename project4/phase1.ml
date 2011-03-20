@@ -177,13 +177,16 @@ and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
   | Index (l1, e2) -> 
     begin match compile_exp c e2 with
       | (ctxt1, op1, str1) -> failwith "Working on it"
-      | 
+     end
   end
 
 and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
   match l with
-  | Var (_,x) -> failwith "Phase1: compile_lhs_exp Var not implemented"
-
+  | Var (_,x) -> 
+    begin match lookup x c with
+      | Some x -> (c,x,[])
+      | None -> failwith "value not found"
+    end
   | Index (l1, e2) -> failwith "Phase1: compile_lhs_exp Index not implemented"
 
 (* Compile a constant cn in context c 
@@ -232,8 +235,20 @@ and compile_block c (vdls, stmts) top: ctxt * stream =
 
 and compile_stmt c stmt : ctxt * stream =
     begin match stmt with
-      | Assign (l1, e2) -> failwith "Phase1: Assign not implemented"
-
+      | Assign (l1, e2) -> 
+       begin match compile_lhs c l1 with
+          | (c2, op2, str2) -> 
+            begin match compile_exp c2 e2 with
+              | (c3, op3, str3) -> 
+                begin match op2 with
+                  | Slot u1 -> 
+                    (c3, str2 >@ str3 >:: 
+                    I(Il.BinArith (Slot u1, Move, op3)))
+                  | _ -> failwith "lhs is fucked"
+                end
+                        
+            end
+        end
       | Scall ((_,fid), es) -> failwith "Phase1: Scall not implemented"
 
       | Ast.If(e, stmt1, ostmt2) ->
