@@ -57,7 +57,7 @@ and tc_lhs (l:Range.t lhs) (c:ctxt) : typ =
     | Var (_,s) -> let typo = lookup_vdecl s c in
       begin match typo with
         | Some t -> t
-        | None -> failwith "not declared yet: lhs"
+        | None -> failwith "LHS not matched"
       end
     | Index (lh,e) -> if (tc_exp e c <> TInt) then
       failwith (report_error (exp_info e) TInt (tc_exp e c)) else TInt
@@ -69,12 +69,12 @@ and tc_new (e1:Range.t exp) (id: Range.t id) (e2:Range.t exp) (c:ctxt) : typ =
       begin match id with
         | (_,s) -> let c = add_vdecl s TInt c in TArray (tc_exp e2 c)
       end
-  
+
 and tc_ecall (s:string) (el:Range.t Ast.exp list) (c:ctxt) : typ = 
   let f = lookup_fdecl s c in
   begin match f with
     | Some (l,r) -> List.iter2 (fun a -> fun b -> if a = tc_exp b c then ()
-        else failwith "exception : ecall") l el;
+        else failwith "exception : ECall") l el;
         begin match r with
           | Some t -> t
           | None -> failwith "no return type"
@@ -95,18 +95,23 @@ and tc_exp (e:Range.t exp) (c:ctxt) : typ =
 
 and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
   begin match s with
-    | Assign (l,e) -> ignore (tc_exp e c)
+    | Assign (l,e) -> tc_exp e c; ()
     | Scall (i,e) -> 
       begin match e with
-        | h::tl -> ignore(tc_exp h c)
+        | h::tl -> tc_exp h c; ()
         | [] -> failwith "!"
       end
-    | If (e,st,Some o) -> if tc_exp e c <> TBool then failwith "not bool" else
+    | If (e,st,Some o) -> if tc_exp e c <> TBool then
+      failwith (report_error (exp_info e) TBool (tc_exp e c)) else
       tc_stmt st c; tc_stmt o c
-    | If (e,st, None) -> if tc_exp e c <> TBool then failwith "not bool" else
+    | If (e,st, None) -> if tc_exp e c <> TBool then
+      failwith (report_error (exp_info e) TBool (tc_exp e c)) else
       tc_stmt st c
     | While (e,s) -> ignore(tc_exp e c); tc_stmt s c;
     | For (v,Some oe,Some os,st) -> tc_stmt st c; ignore(tc_exp oe c); tc_stmt os c
+    | For (v,None,Some os,st) -> failwith "can't have this"
+    | For (v,None,None,st) -> failwith "can't have this"
+    | For (v, Some oe, None, st) -> failwith "can't have this"
     | Block b -> tc_block b c true; ()
   end
   
@@ -115,7 +120,7 @@ and vdecl_h (v:Range.t Ast.vdecl list) (c:ctxt) : ctxt =
   begin match v with
     | h::tl -> tc_vdecl h c;
       begin match h with
-        | { v_ty = x; v_id = (_, s); v_init = z;} -> add_vdecl s x c
+        | { v_ty = x; v_id = (_, s); v_init = z;} -> let c = add_vdecl s x c in vdecl_h tl c
       end
     | _ -> c
   end
@@ -127,18 +132,22 @@ and stmt_h (s:Range.t stmt list) (c:ctxt) : unit =
   end
 
 and tc_block (b:Range.t block) (c:ctxt) (flag: bool) : ctxt =
-  enter_scope empty_ctxt;
   begin match b with
-    | (x,y) -> stmt_h y c; vdecl_h x c;
+    | (x,y) -> let c = vdecl_h x c in stmt_h y c; c
   end
   
 and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
   begin match f with
     | (rtyp, (_,s), args, block, exp) ->
       let c = List.fold_left (fun c -> (fun (t,(_,id)) -> add_vdecl id t c)) c args in
-        let c = tc_block block c true in
+      let c = enter_scope c in let c = tc_block block c true in
       begin match exp with
-        | Some e -> ignore(tc_exp e c); leave_scope c; ()
+        | Some e ->
+          begin match rtyp with 
+            | Some t -> if ((tc_exp e c) <> t) then
+              failwith (report_error (exp_info e) (t) (tc_exp e c))
+            | None -> failwith "no return type"
+            end
         | None -> failwith "error: tc_fdecl"
       end
   end
