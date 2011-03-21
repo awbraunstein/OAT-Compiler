@@ -131,12 +131,19 @@ let rec compile_const (c:ctxt) (cn:Range.t const) : ctxt * operand * stream =
          I (BinArith (Slot ptr, Plus, Imm 4l)) >@ 
          (initialize_string [] 0))
 
-
+let rec call_helper (c:ctxt)(str:stream)(ops:operand list)(exps:Range.t exp list) : ctxt*operand list*stream = 
+  begin match exps with
+    | h::tl -> 
+      begin match compile_exp c h with
+        | (c1,o1,s1) ->  call_helper c1  (str>@s1) (ops@[o1]) tl
+      end
+    | [] -> (c, ops, str)
+  end
 
 (* Compile an expression e in context c 
  * The result is list of labeled instructions in reverse execution order. 
 *)
-let rec compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream = 
+and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream = 
   match e with
   | Const cn -> compile_const c cn
 
@@ -162,15 +169,19 @@ let rec compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
                    I (BinArith (Slot v, Move, ans1)) >::
 		   I (UnArith (compile_unop op, Slot v)))
 
-  | Ecall ((_,fid), es) -> failwith "Phase1: Ecall not implemented"
-
-
+  | Ecall ((_,fid), es) ->
+    let er = List.rev es in
+    let tmp = mk_tmp () in
+    let (c, v) = alloc tmp c in
+    let (c2, ops, str1) = call_helper c [] [] er in
+    (c2, Slot v, str1 >:: I(Call(Some (Slot v), fid, ops)))
+    
 
 and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
   begin match l with
   | Var (_,x) -> 
     begin match lookup x c with
-      | Some x -> (c,x,[])
+      | Some n -> (c,n,[])
       | None -> failwith "WTF?!?!"
     end
 
@@ -184,10 +195,16 @@ and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
   match l with
   | Var (_,x) -> 
     begin match lookup x c with
-      | Some x -> (c,x,[])
+      | Some n -> (c,n,[])
       | None -> failwith "value not found"
     end
-  | Index (l1, e2) -> failwith "Phase1: compile_lhs_exp Index not implemented"
+  | Index (l1, e2) -> 
+    begin match compile_exp c e2 with
+      | (ctxt1, op1, str1) -> 
+        begin match compile_lhs_exp ctxt1 l1 with
+          | (ctxt2, op2, str2) -> failwith "trying to figure out how to get a value at an index"
+        end
+    end
 
 (* Compile a constant cn in context c 
  * An array is compiled to be a pointer p that points to the
@@ -243,13 +260,18 @@ and compile_stmt c stmt : ctxt * stream =
                 begin match op2 with
                   | Slot u1 -> 
                     (c3, str2 >@ str3 >:: 
-                    I(Il.BinArith (Slot u1, Move, op3)))
-                  | _ -> failwith "lhs isnt working"
+                    I(Il.BinArith(Slot u1, Move, op3)))
+                  | _ -> failwith "lhs is fucked"
                 end
                         
             end
         end
-      | Scall ((_,fid), es) -> failwith "Phase1: Scall not implemented"
+      | Scall ((_,fid), es) -> 
+        let er = List.rev es in
+        let tmp = mk_tmp () in
+        let (c, v) = alloc tmp c in
+        let (c2, ops, str1) = call_helper c [] [] er in
+        (c2, str1 >:: I(Call(Some (Slot v), fid, ops)))
 
       | Ast.If(e, stmt1, ostmt2) ->
 	  let ltrue = X86.mk_lbl_hint "then" in
