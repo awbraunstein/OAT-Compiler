@@ -10,7 +10,7 @@ let report_error (info:Range.t) (expected:typ) (t:typ) : string =
 
 let rec tc_typ (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
   if (tc_exp e1 c <> tc_exp e2 c) then
-          failwith (report_error (exp_info e2) (tc_exp e1 c) (tc_exp e2 c)) else (tc_exp e1 c)
+          failwith (report_error (exp_info e2) (tc_exp e1 c) (tc_exp e2 c)) else TBool
 
 and tc_bool (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ = 
   if (tc_exp e1 c <> TBool) then
@@ -28,22 +28,22 @@ and tc_int (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
           
 and tc_binop (b:Range.t binop) (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
   begin match b with
-    | Eq (_) -> ignore(tc_typ e1 e2 c); TBool
-    | Neq (_) -> ignore(tc_typ e1 e2 c); TBool
-    | And (_) -> ignore(tc_bool e1 e2 c); TBool
-    | Or (_) -> ignore(tc_bool e1 e2 c); TBool
-    | Plus (_) -> ignore(tc_int e1 e2 c); TInt
-    | Times (_) -> ignore(tc_int e1 e2 c); TInt
-    | Minus (_) -> ignore(tc_int e1 e2 c); TInt
-    | Lt (_) -> ignore(tc_int e1 e2 c); TBool
-    | Lte (_) -> ignore(tc_int e1 e2 c); TBool
-    | Gt (_) -> ignore(tc_int e1 e2 c); TBool
-    | Gte (_) -> ignore(tc_int e1 e2 c); TBool
-    | IAnd (_) -> ignore(tc_int e1 e2 c); TInt
-    | IOr (_) -> ignore(tc_int e1 e2 c); TInt
-    | Shl (_) -> ignore(tc_int e1 e2 c); TInt
-    | Shr (_) -> ignore(tc_int e1 e2 c); TInt
-    | Sar (_) -> ignore(tc_int e1 e2 c); TInt
+    | Eq (_) -> tc_typ e1 e2 c
+    | Neq (_) -> tc_typ e1 e2 c
+    | And (_) -> tc_bool e1 e2 c
+    | Or (_) -> tc_bool e1 e2 c
+    | Plus (_) -> tc_int e1 e2 c
+    | Times (_) -> tc_int e1 e2 c
+    | Minus (_) -> tc_int e1 e2 c
+    | Lt (_) -> tc_int e1 e2 c; TBool
+    | Lte (_) -> tc_int e1 e2 c; TBool
+    | Gt (_) -> tc_int e1 e2 c; TBool
+    | Gte (_) -> tc_int e1 e2 c; TBool
+    | IAnd (_) -> tc_int e1 e2 c
+    | IOr (_) -> tc_int e1 e2 c
+    | Shl (_) -> tc_int e1 e2 c
+    | Shr (_) -> tc_int e1 e2 c
+    | Sar (_) -> tc_int e1 e2 c
   end
 
 and tc_const (con: Range.t const) (c:ctxt) : typ =
@@ -123,12 +123,14 @@ and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
     | If (e,st, None) -> if tc_exp e c <> TBool then
       failwith (report_error (exp_info e) TBool (tc_exp e c)) else
       tc_stmt st c
-    | While (e,s) -> ignore(tc_exp e c); tc_stmt s c;
-    | For (v,Some oe,Some os,st) -> tc_stmt st c; ignore(tc_exp oe c); tc_stmt os c
+    | While (e,s) -> tc_exp e c; tc_stmt s c;
+    | For (v,Some oe,Some os,st) -> let c = enter_scope c in let c = vdecl_h v c in
+      tc_stmt st c; if tc_exp oe c <> TBool then failwith "not a bool" else
+        tc_stmt os c; leave_scope c; ()
     | For (v,None,Some os,st) -> failwith "can't have this"
     | For (v,None,None,st) -> failwith "can't have this"
     | For (v, Some oe, None, st) -> failwith "can't have this"
-    | Block b -> tc_block b c true; ()
+    | Block b -> let c = enter_scope c in let c = tc_block b c true in leave_scope c; ()
   end
   
 

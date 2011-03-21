@@ -84,4 +84,3 @@ let add_fdecls (c:ctxt) (p:Range.t prog) : ctxt =
             add_fdecl fid (ts, rt) c
   	| _ -> c
    ) c p
-
