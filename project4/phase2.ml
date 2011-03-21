@@ -81,14 +81,37 @@ let compile_insn slu i : X86.insn list =
          Call (Lbl (X86.mk_lbl_named (Platform.decorate_cdecl "oat_malloc"))); 
          Mov (ao0, eax);
          Add (esp, Imm 4l);]
-    | Il.AddrOf (a0, a1, a2) -> failwith "Phase2: AddrOf not implemented"
-    | Il.Load (a0, a1) -> failwith "Phase2: Load not implemented"
+    | Il.AddrOf (a0, a1, a2) ->
+  let ao0 = compile_op slu a0 in
+	let ao1 = compile_op slu a1 in
+	let ao2 = compile_op slu a2 in
+      [Mov(ecx, ao1);
+       Lea(Eax, {i_base = Some Ecx;
+                    i_iscl = None;
+                    i_disp = None});
+       Mov(ecx, ao2);
+       Imul(Ecx,Imm 4l);
+       Add(eax, ecx);
+       Mov(ao0, eax);]
+       
+    | Il.Load (a0, a1) -> 
+  let ao0 = compile_op slu a0 in
+	let ao1 = compile_op slu a1 in
+      [Mov(eax, ao0); Push(ebx);
+       Mov(ebx, ao1);
+       Mov(ebx, Ind{i_base = Some Eax;
+                    i_iscl = None;
+                    i_disp = None}); 
+       Pop(ebx);]
     | Il.Store (a0, a1) -> 
   let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
-      [Mov(eax, ao0); Push(ebx); Mov(ebx, ao1); Mov(Ind{i_base = Some Eax;
-      i_iscl = None;
-      i_disp = None},ebx); Pop(ebx)]
+      [Mov(eax, ao0); Push(ebx);
+       Mov(ebx, ao1);
+       Mov(Ind{i_base = Some Eax;
+               i_iscl = None;
+               i_disp = None},ebx); 
+       Pop(ebx);]
       
     | Il.Call (opa0, fid, as1) ->
         let code = List.fold_left 
