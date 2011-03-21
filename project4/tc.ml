@@ -112,7 +112,13 @@ and tc_exp (e:Range.t exp) (c:ctxt) : typ =
 and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
   begin match s with
     | Assign (l,e) -> if (tc_lhs l c) <> (tc_exp e c) then failwith "types dont match" else ()
-    | Scall (i,e) -> 
+    | Scall (i,e) -> (*let f = lookup_fdecl i c in
+      begin match f with
+        | None -> failwith "couldn't find function"
+        | Some (tl,rt) ->
+          begin match tl with
+            | h2::tl2 ->
+      end*)
       begin match e with
         | h::tl -> tc_exp h c; ()
         | [] -> failwith "!"
