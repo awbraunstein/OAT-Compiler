@@ -244,7 +244,7 @@ and compile_stmt c stmt : ctxt * stream =
                   | Slot u1 -> 
                     (c3, str2 >@ str3 >:: 
                     I(Il.BinArith (Slot u1, Move, op3)))
-                  | _ -> failwith "lhs is fucked"
+                  | _ -> failwith "lhs isnt working"
                 end
                         
             end

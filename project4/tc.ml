@@ -123,7 +123,7 @@ and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
     | If (e,st, None) -> if tc_exp e c <> TBool then
       failwith (report_error (exp_info e) TBool (tc_exp e c)) else
       tc_stmt st c
-    | While (e,s) -> tc_exp e c; tc_stmt s c;
+    | While (e,s) -> if (tc_exp e c <> TBool) then failwith "not bool" else tc_stmt s c;
     | For (v,Some oe,Some os,st) -> let c = enter_scope c in let c = vdecl_h v c in
       tc_stmt st c; if tc_exp oe c <> TBool then failwith "not a bool" else
         tc_stmt os c; leave_scope c; ()
