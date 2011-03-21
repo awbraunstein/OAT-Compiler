@@ -181,8 +181,10 @@ and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
   begin match l with
   | Var (_,x) -> 
     begin match lookup x c with
-      | Some n -> (c,n,[])
-      | None -> failwith "WTF?!?!"
+      | Some n -> let tmp = mk_tmp () in
+        let (c,v) = alloc tmp c in
+        (c,n,[I(AddrOf (Slot v, n, Imm 0l))])
+      | None -> failwith "Var not found"
     end
 
   | Index (l1, e2) -> 
