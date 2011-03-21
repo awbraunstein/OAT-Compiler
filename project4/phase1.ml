@@ -150,8 +150,8 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
   | Lhs l -> 
       compile_lhs_exp c l
 
-  | New (e1, id, e2) -> failwith "Phase1: New not implemented"
-
+  | New (e1, id, e2) -> failwith "Phase 1: New not implemented"
+        
   | Binop (op, e1, e2) -> 
       let (c, ans1, code1) = compile_exp c e1 in
       let tmp = mk_tmp () in
@@ -186,9 +186,15 @@ and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
     end
 
   | Index (l1, e2) -> 
-    begin match compile_exp c e2 with
-      | (ctxt1, op1, str1) -> failwith "Working on it"
-     end
+    let (c, ans1, code1) = compile_lhs c l1 in
+      let tmp = mk_tmp () in
+      let (c, v) = alloc tmp c in
+      let (c, ans2, code2) = compile_exp c e2 in
+      (c, Slot v, code1 >@ code2
+        >:: I(Load(ans1,ans1))
+        >:: I(BinArith(Slot v, Move, ans2))
+        >:: I(BinArith(Slot v, Times, Imm 4l))
+        >:: I (BinArith(Slot v, Plus, ans1)))
   end
 
 and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
@@ -198,14 +204,18 @@ and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
       | Some n -> (c,n,[])
       | None -> failwith "value not found"
     end
-  | Index (l1, e2) -> 
-    begin match compile_exp c e2 with
-      | (ctxt1, op1, str1) -> 
-        begin match compile_lhs_exp ctxt1 l1 with
-          | (ctxt2, op2, str2) -> failwith "trying to figure out how to get a value at an index"
-        end
-    end
-
+  | Index (l1, e2) ->
+    let (c, ans1, code1) = compile_lhs c l1 in
+      let tmp = mk_tmp () in
+      let (c, v) = alloc tmp c in
+      let (c, ans2, code2) = compile_exp c e2 in
+      (c, Slot v, code1 >@ code2
+        >:: I(Load(ans1,ans1))
+        >:: I(BinArith(Slot v, Move, ans2))
+        >:: I(BinArith(Slot v, Times, Imm 4l))
+        >:: I (BinArith(Slot v, Plus, ans1))
+        >:: I(Load(Slot v, Slot v)))
+        
 (* Compile a constant cn in context c 
  * An array is compiled to be a pointer p that points to the
  * memory address at which the data of the array are stored. 
