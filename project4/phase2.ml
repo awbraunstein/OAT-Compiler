@@ -84,6 +84,15 @@ let compile_insn slu i : X86.insn list =
     | Il.AddrOf (a0, a1, a2) -> failwith "Phase2: AddrOf not implemented"
     | Il.Load (a0, a1) -> failwith "Phase2: Load not implemented"
     | Il.Store (a0, a1) -> failwith "Phase2: Store not implemented"
+ (* let ao0 = compile_op slu a0 in
+	let ao1 = compile_op slu a1 in
+      [Mov(ao1, eax); ind_to_ecx ao0;
+      
+        Ind{i_base = Some Ebp;
+      i_iscl = None;
+      i_disp = Some (DImm amt)} 
+      *)
+      
     | Il.Call (opa0, fid, as1) ->
         let code = List.fold_left 
            (fun code -> fun a -> (Push (compile_op slu a))::code) 

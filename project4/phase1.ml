@@ -135,7 +135,7 @@ let rec call_helper (c:ctxt)(str:stream)(ops:operand list)(exps:Range.t exp list
   begin match exps with
     | h::tl -> 
       begin match compile_exp c h with
-        | (c1,o1,s1) ->  call_helper c1  (str>@s1) (ops@[o1]) tl
+        | (c1,o1,s1) ->  call_helper c1  (str>@s1) (ops>@[o1]) tl
       end
     | [] -> (c, ops, str)
   end
