@@ -89,19 +89,17 @@ let compile_insn slu i : X86.insn list =
        Lea(Eax, {i_base = Some Ecx;
                     i_iscl = None;
                     i_disp = None});
-       Mov(ecx, ao2);
-       Imul(Ecx,Imm 4l);
-       Add(eax, ecx);
+       Add(eax, ao2);
        Mov(ao0, eax);]
-       
     | Il.Load (a0, a1) -> 
   let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
-      [Mov(eax, ao0); Push(ebx);
+      [Push(ebx);
        Mov(ebx, ao1);
-       Mov(ebx, Ind{i_base = Some Eax;
+       Mov(ebx, Ind{i_base = Some Ebx;
                     i_iscl = None;
                     i_disp = None}); 
+       Mov(ao0,ebx);
        Pop(ebx);]
     | Il.Store (a0, a1) -> 
   let ao0 = compile_op slu a0 in
@@ -112,7 +110,6 @@ let compile_insn slu i : X86.insn list =
                i_iscl = None;
                i_disp = None},ebx); 
        Pop(ebx);]
-      
     | Il.Call (opa0, fid, as1) ->
         let code = List.fold_left 
            (fun code -> fun a -> (Push (compile_op slu a))::code) 
