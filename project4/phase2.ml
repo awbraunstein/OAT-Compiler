@@ -87,7 +87,8 @@ let compile_insn slu i : X86.insn list =
 	let ao2 = compile_op slu a2 in
 	  begin match ao1 with
 	    | Ind(i) -> [Lea(Eax, i);
-                   Add(eax, ao2);
+                   Mov(ecx, ao2);
+                   Add(eax, ecx);
                    Mov(ao0, eax);]
 	    | _ -> failwith "can't load address of non-index"
 	  end
@@ -95,10 +96,9 @@ let compile_insn slu i : X86.insn list =
   let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
       [Mov(eax, ao1);
-       Mov(ecx, ao0);
-       Mov(eax, Ind{i_base = Some Ecx;
+       Mov(eax, Ind{i_base = Some Eax;
                     i_iscl = None;
-                    i_disp = None}); 
+                    i_disp = Some (DImm 0l)}); 
        Mov(ao0,eax)]
     | Il.Store (a0, a1) -> 
   let ao0 = compile_op slu a0 in
@@ -107,7 +107,7 @@ let compile_insn slu i : X86.insn list =
        Mov(eax, ao1);
        Mov(Ind{i_base = Some Ecx;
                i_iscl = None;
-               i_disp = None},eax)]
+               i_disp = Some (DImm 0l)},eax)]
     | Il.Call (opa0, fid, as1) ->
         let code = List.fold_left 
            (fun code -> fun a -> (Push (compile_op slu a))::code) 
