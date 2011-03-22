@@ -75,8 +75,10 @@ let blocks_of_ilist code =
     match code with
       | I insn :: rest -> match_body lbl (insn::body) rest blks
       | J link :: [] -> ((mk_bb lbl (List.rev body) link) :: blks)
-      | J link :: more -> match_start more ((mk_bb lbl (List.rev body) link) :: blks)
-      | L nextlbl :: rest  -> match_start code ((mk_bb lbl (List.rev body) (Jump nextlbl))::blks)
+      | J link :: more -> match_start more
+        ((mk_bb lbl (List.rev body) link) :: blks)
+      | L nextlbl :: rest  -> match_start code
+        ((mk_bb lbl (List.rev body) (Jump nextlbl))::blks)
       | _ -> failwith "Found label with no code"
   in
     List.rev(match_start code [])
@@ -101,14 +103,15 @@ let rec compile_const (c:ctxt) (cn:Range.t const) : ctxt * operand * stream =
       let (c, ptr) = alloc (mk_tmp ()) c in
       let (c, t) = alloc (mk_tmp ()) c in
       let len = String.length s in 
-      let word_len = ((len + 1)/4) + (if ((len + 1) mod 4) <> 0 then 1 else 0) in
+      let word_len = ((len + 1)/4) + (if ((len + 1) mod 4) <> 0 then 1
+        else 0) in
       let storage_size_in_words = 1 + word_len in
       let get_ith_word_of_string s i =
 	let rec build_word w j =
 	  let s_index = i*4 + j in
 	    if (j = 4) || (s_index >= String.length s) then w
 	  else let w' = Int32.logor w
-            (Int32.shift_left (Int32.of_int (Char.code (String.get s s_index))) 
+            (Int32.shift_left (Int32.of_int (Char.code (String.get s s_index)))
               (8 * j))
 	  in
 	    build_word w' (j+1)
@@ -131,14 +134,15 @@ let rec compile_const (c:ctxt) (cn:Range.t const) : ctxt * operand * stream =
          I (BinArith (Slot ptr, Plus, Imm 4l)) >@ 
          (initialize_string [] 0))
 
-let rec call_helper (c:ctxt)(str:stream)(ops:operand list)(exps:Range.t exp list) : ctxt*operand list*stream = 
-  begin match exps with
-    | h::tl -> 
-      begin match compile_exp c h with
-        | (c1,o1,s1) ->  call_helper c1  (str>@s1) (ops>@[o1]) tl
-      end
-    | [] -> (c, ops, str)
-  end
+let rec call_helper (c:ctxt)(str:stream)(ops:operand list)
+  (exps:Range.t exp list) : ctxt*operand list*stream = 
+    begin match exps with
+      | h::tl -> 
+        begin match compile_exp c h with
+          | (c1,o1,s1) ->  call_helper c1  (str>@s1) (ops>@[o1]) tl
+        end
+      | [] -> (c, ops, str)
+    end
 
 (* Compile an expression e in context c 
  * The result is list of labeled instructions in reverse execution order. 
@@ -160,12 +164,12 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
       let (c, v) = alloc (mk_tmp ()) c in
       let (c, ai) = alloc (mk_tmp()) c in
       let (c, i2) = alloc (mk_tmp()) c in
-      let (c, op1, str) = compile_exp c e1 in
       let (c, i) = alloc (mk_tmp ()) c in
+      let (c, op1, str) = compile_exp c e1 in
       let code = [I(BinArith(Slot v,Move,op1))]>@
-      [I(BinArith(Slot v, Plus, Imm(Int32.of_int 1)))]>@
-      [I(BinArith(Slot v, Times, Imm(Int32.of_int 4)))]>@
-      [I (Alloc (Slot ptr, Slot v))]>@
+      [I(BinArith(Slot v, Plus, Imm 1l))]>@
+      [I(BinArith(Slot v, Times, Imm 4l))]>@
+      [I(Alloc (Slot ptr, Slot v))]>@
       [I(Store(Slot ptr, op1))]>@
       [I(BinArith(Slot ptr, Plus, Imm 4l))] in
       let (c, e, code2) = compile_exp c e2 in
@@ -173,30 +177,15 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
       [I(BinArith(Slot i, Move, Imm 0l))]>@
       [L lpre]>@
       [J(If(Slot i, Lt, op1, lbody, lpost))]>@
-      [L lbody]>@
-      code2>@
+      [L lbody] >@code2 >@
       [I(BinArith(Slot ai, Move, Slot ptr))]>@
       [I(BinArith(Slot i2, Move, Slot i))]>@
-      [I(BinArith(Slot i, Plus, Imm 1l))]>@
       [I(BinArith(Slot i2, Times, Imm 4l))]>@
-      [I(BinArith(Slot i2, Plus, Slot ai))]>@
-      [I(Store(Slot i2, e))]>@
+      [I(BinArith(Slot ai, Plus, Slot i2))]>@
+      [I(BinArith(Slot i, Plus, Imm 1l))]>@
+      [I(Store(Slot ai, e))]>@
       [J(Jump(lpre))]>@
       [L lpost] in (leave_scope c, Slot ptr, code3)
-
-      
-
-      (*let vdec = {v_ty = TInt;
-                  v_id=id; 
-                  v_init=Iexp (Const (Cint (Range.norange, 0l)));} in
-      let vdecs = [vdec] in     
-      let com = Binop(Ast.Lt Range.norange, Lhs(Var id), e1) in
-      let inc = Assign(Var id, Binop(Ast.Plus Range.norange,
-        (Lhs (Var id)), (Const (Cint (Range.norange, 1l))))) in
-      let (u,s) = ptr in
-      let body = Assign(Index(Var (Range.norange, s), Lhs(Var id)), e2) in
-      let (c1,s2) = compile_stmt c (For(vdecs, Some com, Some inc, body)) in
-      (c1, Slot ptr, code>@s2)*)
 
   | Binop (op, e1, e2) -> 
       let (c, ans1, code1) = compile_exp c e1 in
@@ -222,7 +211,8 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
     let (c2, ops, str1) = call_helper c [] [] er in
     (c2, Slot v, str1 >:: I(Call(Some (Slot v), fid, ops)))
 
-and compile_index (c:ctxt) (l:Range.t lhs) (e: Range.t exp) : ctxt * operand * stream =
+and compile_index (c:ctxt) (l:Range.t lhs)
+  (e: Range.t exp) : ctxt * operand * stream =
   let lc = X86.mk_lbl_hint "continue" in
   let lc2 = X86.mk_lbl_hint "continue2" in
   let lb = X86.mk_lbl_hint "break" in
@@ -232,18 +222,18 @@ and compile_index (c:ctxt) (l:Range.t lhs) (e: Range.t exp) : ctxt * operand * s
   let (c,v2) = alloc (mk_tmp ()) c in
   (c, Slot v, code1 >@ code2 >::
         I(Load(Slot v2, ans1))
-        >:: I(BinArith(Slot v2, Minus, Imm 4l))
-        >:: I(Load(Slot v2, Slot v2))
-        >:: J(If(ans2, Lt, Slot v2, lc, lb))
-        >:: L lc
-        >:: J(If(ans2, Lt, Imm 0l, lb, lc2))
-        >:: L lb
-        >:: I(Call(None, "oat_abort", []))
-        >:: L lc2
-  >:: I(Load(Slot v, ans1)) >::
-  I(BinArith(Slot v2, Move, ans2)) >::
-  I(BinArith(Slot v2, Times, Imm 4l)) >::
-  I(BinArith(Slot v, Plus, Slot v2)))
+    >:: I(BinArith(Slot v2, Minus, Imm 4l))
+    >:: I(Load(Slot v2, Slot v2))
+    >:: J(If(ans2, Lt, Slot v2, lc, lb))
+    >:: L lc
+    >:: J(If(ans2, Lt, Imm 0l, lb, lc2))
+    >:: L lb
+    >:: I(Call(None, "oat_abort", []))
+    >:: L lc2
+    >:: I(Load(Slot v, ans1))
+    >:: I(BinArith(Slot v2, Move, ans2))
+    >:: I(BinArith(Slot v2, Times, Imm 4l))
+    >:: I(BinArith(Slot v, Plus, Slot v2)))
   
 
 and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
@@ -258,36 +248,6 @@ and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
 
   | Index (l1, e2) -> 
     compile_index c l1 e2
-    
-    
-    
-(*    let (c, arr, code1) = compile_lhs c l1 in
-      let lc = X86.mk_lbl_hint "continue" in
-      let lc2 = X86.mk_lbl_hint "continue2" in
-      let lb = X86.mk_lbl_hint "break" in
-      let lf = X86.mk_lbl_hint "finish" in
-      let (c, v) = alloc (mk_tmp ()) c in
-      let (c, v2) = alloc (mk_tmp ()) c in
-      let (c, i, code2) = compile_exp c e2 in
-      (c, Slot v, code1 >@ code2
-        >:: I(Load(Slot v2, arr))
-        >:: I(BinArith(Slot v2, Minus, Imm 4l))
-        >:: I(Load(Slot v2, Slot v2))
-        >:: I(BinArith(Slot v, Move, i))
-        >:: I(Load(Slot v2, Slot v2))
-        >:: J(If(Slot v, Lt, Slot v2, lc, lb))
-        >:: L lc
-        >:: J(If(Slot v, Lt, Imm 0l, lb, lc2))
-        >:: L lc2
-        >:: I(Load(Slot v2, arr))
-        >:: I(BinArith(Slot v, Move, i))
-        >:: I(BinArith(Slot v, Times, Imm 4l))
-        >:: I (BinArith(Slot v, Plus, Slot v2))
-        >:: J(Jump lf)
-        >:: L lb
-        >:: I(Call(None, "oat_abort", []))
-        >:: J(Jump lf)
-        >:: L lf)*)
   end
 
 and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
@@ -300,109 +260,8 @@ and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
   | Index (l1, e2) ->
     let (c,ans,code) = compile_index c l1 e2 in
     (c,ans,code >:: I(Load(ans,ans)))
-   (* let (c, arr, code1) = compile_lhs c l1 in
-     let lc = X86.mk_lbl_hint "continue" in
-      let lc2 = X86.mk_lbl_hint "continue2" in
-      let lb = X86.mk_lbl_hint "break" in
-      let lf = X86.mk_lbl_hint "finish" in
-      let (c, v) = alloc (mk_tmp ()) c in
-      let (c, v2) = alloc (mk_tmp ()) c in
-      let (c, i, code2) = compile_exp c e2 in
-      (c, Slot v, code1 >@ code2
-        >:: I(Load(Slot v2, arr))
-        >:: I(BinArith(Slot v2, Minus, Imm 4l))
-        >:: I(Load(Slot v2, Slot v2))
-        >:: I(BinArith(Slot v, Move, i))
-        >:: I(Load(Slot v2, Slot v2))
-        >:: J(If(Slot v, Lt, Slot v2, lc, lb))
-        >:: L lc
-        >:: J(If(Slot v, Lt, Imm 0l, lb, lc2))
-        >:: L lc2
-        >:: I(Load(Slot v2, arr))
-        >:: I(BinArith(Slot v, Move, i))
-        >:: I(BinArith(Slot v, Times, Imm 4l))
-        >:: I (BinArith(Slot v, Plus, Slot v2))
-        >:: I(Load(Slot v, Slot v))
-        >:: J(Jump lf)
-        >:: L lb
-        >:: I(Call(None, "oat_abort", []))
-        >:: J(Jump lf)
-        >:: L lf)*)
-  end
-(* 
-and compile_index (c:ctxt) (l:Range.t lhs) (e: Range.t exp) : ctxt * operand * stream =
-  let (c, arr, code1) = compile_lhs c l in
-  let (c, i, code2) = compile_exp c e in
-  let lc = X86.mk_lbl_hint "continue" in
-  let lb = X86.mk_lbl_hint "break" in
-  let lc2 = X86.mk_lbl_hint "continue2" in
-  let tmp = mk_tmp () in
-  let (c,v) = alloc tmp c in
-  let tmp2 = mk_tmp () in
-  let (c,v2) = alloc tmp2 c in
-  (c, Slot v, code1 >@ code2
-        >:: I(BinArith(Slot v2, Move, arr))
-        >:: I(BinArith(Slot v2, Minus, Imm 4l))
-        >:: I(Load(Slot v2, Slot v2))
-        >:: I(BinArith(Slot v, Move, i))
-        >:: J(If(Slot v, Lt, Slot v2, lc, lb))
-        >:: L lc
-        >:: J(If(Slot v, Lt, Imm 0l, lb, lc2))
-        >:: L lc2
-        >:: I(Load(Slot v2,arr))
-        >:: I(BinArith(Slot v, Move, i))
-        >:: I(BinArith(Slot v, Times, Imm 4l))
-        >:: I(BinArith(Slot v2, Plus, Slot v))
-        >:: I(BinArith(Slot v, Move, Slot v2)))
-
-and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
-  begin match l with
-  | Var (_,x) -> 
-    begin match lookup x c with
-      | Some n -> let tmp = mk_tmp () in
-        let (c,v) = alloc tmp c in
-        (c,Slot v,[I(AddrOf (Slot v, n, Imm 0l))])
-      | None -> failwith "Var not found"
-    end
-
-  | Index (l1, e2) -> 
-      let lb = X86.mk_lbl_hint "break" in
-      let lf = X86.mk_lbl_hint "finish" in
-      let tmp = mk_tmp () in
-      let (c, v) = alloc tmp c in
-      let (c, ans3, code) = compile_index c l e2 in
-      (c, Slot v, code
-        >:: J(Jump lf)
-        >:: L lb
-        >:: I(Call(None, "oat_abort", []))
-        >:: J(Jump lf)
-        >:: L lf)
   end
 
-and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
-  begin match l with
-  | Var (_,x) -> 
-    begin match lookup x c with
-      | Some n -> (c,n,[])
-      | None -> failwith "value not found"
-    end
-  | Index (l1, e2) ->
-      let lb = X86.mk_lbl_hint "break" in
-      let lf = X86.mk_lbl_hint "finish" in
-      let tmp = mk_tmp () in
-      let tmp2 = mk_tmp () in
-      let (c, v) = alloc tmp c in
-      let (c, v2) = alloc (tmp2) c in
-      let (c, ans3, code) = compile_index c l e2 in
-      (c, Slot v, code
-        >:: I(Load(Slot v, Slot v2))
-        >:: J(Jump lf)
-        >:: L lb
-        >:: I(Call(None, "oat_abort", []))
-        >:: J(Jump lf)
-        >:: L lf)
-  end
- *)       
 (* Compile a constant cn in context c 
  * An array is compiled to be a pointer p that points to the
  * memory address at which the data of the array are stored. 

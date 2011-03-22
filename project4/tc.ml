@@ -10,20 +10,21 @@ let report_error (info:Range.t) (expected:typ) (t:typ) : string =
 
 let rec tc_typ (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
   if (tc_exp e1 c <> tc_exp e2 c) then
-          failwith (report_error (exp_info e2) (tc_exp e1 c) (tc_exp e2 c)) else TBool
+    failwith (report_error (exp_info e2) (tc_exp e1 c) (tc_exp e2 c))
+      else TBool
 
 and tc_bool (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ = 
   if (tc_exp e1 c <> TBool) then
-          failwith (report_error (exp_info e1) TBool (tc_exp e1 c))
-           else if (tc_exp e2 c <> TBool) then
-          failwith (report_error (exp_info e2) TBool (tc_exp e2 c))
+    failwith (report_error (exp_info e1) TBool (tc_exp e1 c))
+      else if (tc_exp e2 c <> TBool) then
+        failwith (report_error (exp_info e2) TBool (tc_exp e2 c))
           else TBool
 
 and tc_int (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ = 
   if (tc_exp e1 c <> TInt) then
-          failwith (report_error (exp_info e1) TInt (tc_exp e1 c))
-         else if (tc_exp e2 c <> TInt) then
-          failwith (report_error (exp_info e2) TInt (tc_exp e2 c))
+    failwith (report_error (exp_info e1) TInt (tc_exp e1 c))
+      else if (tc_exp e2 c <> TInt) then
+        failwith (report_error (exp_info e2) TInt (tc_exp e2 c))
           else TInt
           
 and tc_binop (b:Range.t binop) (e1:Range.t exp) (e2:Range.t exp) (c:ctxt) : typ =
@@ -83,7 +84,8 @@ and tc_new (e1:Range.t exp) (id: Range.t id) (e2:Range.t exp) (c:ctxt) : typ =
   if (tc_exp e1 c <> TInt) then
     failwith (report_error (exp_info e1) (TInt) (tc_exp e1 c)) else
       begin match id with
-        | (_,s) -> let c = add_vdecl s (TInt) (enter_scope c) in TArray (tc_exp e2 c)
+        | (_,s) -> let c = add_vdecl s (TInt) (enter_scope c)
+          in TArray (tc_exp e2 c)
       end
 
 and tc_length (e:Range.t exp list) (c:ctxt) : typ =
@@ -133,7 +135,8 @@ and cmp_typs (e:Range.t exp list) (t: typ list) (c:ctxt) : unit =
   begin match t with
     | h::tl ->
     begin match e with
-      | h2::tl2 -> if tc_exp h2 c <> h then failwith "types dont match" else cmp_typs tl2 tl c
+      | h2::tl2 -> if tc_exp h2 c <> h then failwith "types dont match"
+        else cmp_typs tl2 tl c
       | [] -> ()
     end
     | [] -> ()
@@ -141,10 +144,12 @@ and cmp_typs (e:Range.t exp list) (t: typ list) (c:ctxt) : unit =
 
 and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
   begin match s with
-    | Assign (l,e) -> if (tc_lhs l c) <> (tc_exp e c) then failwith "types dont match" else ()
+    | Assign (l,e) -> if (tc_lhs l c) <> (tc_exp e c) then
+       failwith "types dont match" else ()
     | Scall ((_,s),e) -> let f = lookup_fdecl s c in
       begin match f with
-        | Some (tl,rt) -> cmp_typs e tl c; if rt <> None then failwith "can't call as stmt"
+        | Some (tl,rt) -> cmp_typs e tl c; if rt <> None then
+          failwith "can't call as stmt"
         | None -> failwith "couldn't find function"; ()
       end
     | If (e,st,Some o) -> if tc_exp e c <> TBool then
@@ -152,17 +157,19 @@ and tc_stmt (s: Range.t stmt) (c:ctxt) : unit  =
       tc_stmt st c; tc_stmt o c
     | If (e,st, None) -> if tc_exp e c <> TBool then
       failwith (report_error (exp_info e) TBool (tc_exp e c)) else
-      tc_stmt st c
-    | While (e,s) -> if (tc_exp e c <> TBool) then failwith "not bool" else tc_stmt s c;
-    | For (v,Some oe,Some os,st) -> let c = enter_scope c in let c = vdecl_h v c in
-      tc_stmt st c; if tc_exp oe c <> TBool then failwith "not a bool" else
-        tc_stmt os c; ()
+        tc_stmt st c
+    | While (e,s) -> if (tc_exp e c <> TBool) then failwith "not bool" else
+      tc_stmt s c;
+    | For (v,Some oe,Some os,st) -> let c = enter_scope c in
+      let c = vdecl_h v c in tc_stmt st c; if tc_exp oe c <> TBool
+        then failwith "not a bool" else tc_stmt os c; ()
     | For (v,None,Some os,st) -> let c = enter_scope c in let c = vdecl_h v c in
       tc_stmt st c; tc_stmt os c
     | For (v,None,None,st) -> let c = enter_scope c in let c = vdecl_h v c in
       tc_stmt st c
-    | For (v, Some oe, None, st) ->let c = enter_scope c in let c = vdecl_h v c in
-      tc_stmt st c; if tc_exp oe c <> TBool then failwith "not a bool" else ()
+    | For (v, Some oe, None, st) ->let c = enter_scope c in
+      let c = vdecl_h v c in tc_stmt st c; if tc_exp oe c <> TBool
+        then failwith "not a bool" else ()
     | Block b -> let c = enter_scope c in tc_block b c true; ()
   end
   
@@ -170,7 +177,8 @@ and vdecl_h (v:Range.t Ast.vdecls) (c:ctxt) : ctxt =
   begin match v with
     | h::tl -> tc_vdecl h c;
       begin match h with
-        | { v_ty = x; v_id = (_, s); v_init = z;} -> let c = add_vdecl s x c in vdecl_h tl c
+        | { v_ty = x; v_id = (_, s); v_init = z;} ->
+           let c = add_vdecl s x c in vdecl_h tl c
       end
     | [] -> c
   end
@@ -189,7 +197,8 @@ and tc_block (b:Range.t block) (c:ctxt) (flag: bool) : ctxt =
 and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
   begin match f with
     | (rtyp, (_,s), args, block, exp) ->
-      let c = enter_scope c in let c = List.fold_left (fun c -> (fun (t,(_,s)) -> add_vdecl s t c)) c args in
+      let c = enter_scope c in let c =
+        List.fold_left (fun c -> (fun (t,(_,s)) -> add_vdecl s t c)) c args in
       let c = tc_block block c true in
       begin match exp with
         | Some e ->
@@ -198,7 +207,8 @@ and tc_fdecl (f:Range.t fdecl) (c:ctxt) : unit  =
               failwith (report_error (exp_info e) (t) (tc_exp e c)) else ()
             | None -> failwith "no return type"
             end
-        | None -> if (rtyp = None) then () else failwith "return type is not None"
+        | None -> if (rtyp = None) then ()
+          else failwith "return type is not None"
       end
   end
 
@@ -222,14 +232,12 @@ and tc_vdecl (v:Range.t vdecl) (c:ctxt) : unit =
   end
 
 let get_decls (p: Range.t prog) (c:ctxt) : ctxt =
- (* let c = enter_scope empty_ctxt in*)
   let rec get_decl_h (c: ctxt) (h: Range.t Ast.gdecl) : ctxt =
     begin match h with
       | Gvdecl {v_ty = x; v_id = (_, s); v_init = z;} ->
-         if tc_init z (enter_scope empty_ctxt) <> x then failwith "" else add_vdecl s x c
-      | Gfdecl _ -> c(*(rtyp, (_, a), args, (vdls,_), exp) ->
-        let (f, _) = List.split args in
-          add_fdecl a (f, rtyp) c*)
+         if tc_init z (enter_scope empty_ctxt) <> x then failwith ""
+          else add_vdecl s x c
+      | Gfdecl _ -> c
     end in List.fold_left get_decl_h c p
 
 let typecheck_prog (p:Range.t prog) : unit =
@@ -237,7 +245,7 @@ let typecheck_prog (p:Range.t prog) : unit =
     let c = get_decls p c in
     let rec typecheck_h (h:Range.t Ast.gdecl) : unit =
       begin match h with
-		     | Gvdecl v  -> () (*tc_vdecl v c*)
+		     | Gvdecl v  -> ()
 	       | Gfdecl f -> tc_fdecl f c
 		   end in
       List.iter typecheck_h p

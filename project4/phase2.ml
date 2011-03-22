@@ -78,7 +78,7 @@ let compile_insn slu i : X86.insn list =
 	let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
         [Push (ao1); 
-         Call (Lbl (X86.mk_lbl_named (Platform.decorate_cdecl "oat_malloc"))); 
+         Call (Lbl (X86.mk_lbl_named (Platform.decorate_cdecl "oat_malloc")));
          Mov (ao0, eax);
          Add (esp, Imm 4l);]
     | Il.AddrOf (a0, a1, a2) ->
