@@ -85,31 +85,29 @@ let compile_insn slu i : X86.insn list =
   let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
 	let ao2 = compile_op slu a2 in
-      [Mov(ecx, ao1);
-       Lea(Eax, {i_base = Some Ecx;
-                    i_iscl = None;
-                    i_disp = None});
-       Add(eax, ao2);
-       Mov(ao0, eax);]
+	  begin match ao1 with
+	    | Ind(i) -> [Lea(Eax, i);
+                   Add(eax, ao2);
+                   Mov(ao0, eax);]
+	    | _ -> failwith "can't load address of non-index"
+	  end
     | Il.Load (a0, a1) -> 
   let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
-      [Push(ebx);
-       Mov(ebx, ao1);
-       Mov(ebx, Ind{i_base = Some Ebx;
+      [Mov(eax, ao1);
+       Mov(ecx, ao0);
+       Mov(eax, Ind{i_base = Some Ecx;
                     i_iscl = None;
                     i_disp = None}); 
-       Mov(ao0,ebx);
-       Pop(ebx);]
+       Mov(ao0,eax)]
     | Il.Store (a0, a1) -> 
   let ao0 = compile_op slu a0 in
 	let ao1 = compile_op slu a1 in
-      [Mov(eax, ao0); Push(ebx);
-       Mov(ebx, ao1);
-       Mov(Ind{i_base = Some Eax;
+      [Mov(ecx, ao0);
+       Mov(eax, ao1);
+       Mov(Ind{i_base = Some Ecx;
                i_iscl = None;
-               i_disp = None},ebx); 
-       Pop(ebx);]
+               i_disp = None},eax)]
     | Il.Call (opa0, fid, as1) ->
         let code = List.fold_left 
            (fun code -> fun a -> (Push (compile_op slu a))::code) 
