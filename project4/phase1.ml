@@ -189,18 +189,34 @@ and compile_lhs (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
 
   | Index (l1, e2) -> 
     let (c, ans1, code1) = compile_lhs c l1 in
+      let lc = X86.mk_lbl_hint "continue" in
+      let lb = X86.mk_lbl_hint "break" in
+      let lf = X86.mk_lbl_hint "finish" in
       let tmp = mk_tmp () in
+      let tmp2 = mk_tmp () in
       let (c, v) = alloc tmp c in
+      let (c, v2) = alloc (tmp2) c in
       let (c, ans2, code2) = compile_exp c e2 in
       (c, Slot v, code1 >@ code2
+      (*  >:: I(Load(Slot v2, ans1))
+        >:: I(BinArith(Slot v2, Minus, Imm 4l))
+        >:: I(Load(Slot v2, Slot v2))
+        >:: I(BinArith(Slot v, Move, ans2))
+        >:: J(If(Slot v, Lt, Slot v2, lc, lb))
+        >:: L lc*)
         >:: I(Load(ans1,ans1))
         >:: I(BinArith(Slot v, Move, ans2))
         >:: I(BinArith(Slot v, Times, Imm 4l))
         >:: I (BinArith(Slot v, Plus, ans1)))
+        (*>:: J(Jump lf)
+        >:: L lb
+        >:: I(Call(None, "oat_abort", []))
+        >:: J(Jump lf)
+        >:: L lf)*)
   end
 
 and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream = 
-  match l with
+  begin match l with
   | Var (_,x) -> 
     begin match lookup x c with
       | Some n -> (c,n,[])
@@ -208,15 +224,32 @@ and compile_lhs_exp (c:ctxt) (l:Range.t lhs) : ctxt * operand * stream =
     end
   | Index (l1, e2) ->
     let (c, ans1, code1) = compile_lhs c l1 in
+     let lc = X86.mk_lbl_hint "continue" in
+      let lb = X86.mk_lbl_hint "break" in
+      let lf = X86.mk_lbl_hint "finish" in
       let tmp = mk_tmp () in
+      let tmp2 = mk_tmp () in
       let (c, v) = alloc tmp c in
+      let (c, v2) = alloc (tmp2) c in
       let (c, ans2, code2) = compile_exp c e2 in
       (c, Slot v, code1 >@ code2
+      (*  >:: I(Load(Slot v2, ans1))
+        >:: I(BinArith(Slot v2, Minus, Imm 4l))
+        >:: I(Load(Slot v2, Slot v2))
+        >:: I(BinArith(Slot v, Move, ans2))
+        >:: J(If(Slot v, Lt, Slot v2, lc, lb))
+        >:: L lc*)
         >:: I(Load(ans1,ans1))
         >:: I(BinArith(Slot v, Move, ans2))
         >:: I(BinArith(Slot v, Times, Imm 4l))
         >:: I (BinArith(Slot v, Plus, ans1))
         >:: I(Load(Slot v, Slot v)))
+       (* >:: J(Jump lf)
+        >:: L lb
+        >:: I(Call(None, "oat_abort", []))
+        >:: J(Jump lf)
+        >:: L lf)*)
+  end
         
 (* Compile a constant cn in context c 
  * An array is compiled to be a pointer p that points to the
