@@ -223,12 +223,24 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
     (c2, Slot v, str1 >:: I(Call(Some (Slot v), fid, ops)))
 
 and compile_index (c:ctxt) (l:Range.t lhs) (e: Range.t exp) : ctxt * operand * stream =
+  let lc = X86.mk_lbl_hint "continue" in
+  let lc2 = X86.mk_lbl_hint "continue2" in
+  let lb = X86.mk_lbl_hint "break" in
   let (c, ans1, code1) = compile_lhs c l in
   let (c, ans2, code2) = compile_exp c e in
   let (c,v) = alloc (mk_tmp ()) c in
   let (c,v2) = alloc (mk_tmp ()) c in
   (c, Slot v, code1 >@ code2 >::
-  I(Load(Slot v, ans1)) >::
+        I(Load(Slot v2, ans1))
+        >:: I(BinArith(Slot v2, Minus, Imm 4l))
+        >:: I(Load(Slot v2, Slot v2))
+        >:: J(If(ans2, Lt, Slot v2, lc, lb))
+        >:: L lc
+        >:: J(If(ans2, Lt, Imm 0l, lb, lc2))
+        >:: L lb
+        >:: I(Call(None, "oat_abort", []))
+        >:: L lc2
+  >:: I(Load(Slot v, ans1)) >::
   I(BinArith(Slot v2, Move, ans2)) >::
   I(BinArith(Slot v2, Times, Imm 4l)) >::
   I(BinArith(Slot v, Plus, Slot v2)))
