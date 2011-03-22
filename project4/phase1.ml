@@ -272,7 +272,7 @@ and compile_stmt c stmt : ctxt * stream =
                 begin match op2 with
                   | Slot u1 -> 
                     (c3, str2 >@ str3 >:: 
-                    I(Il.BinArith(Slot u1, Move, op3)))
+                    I(Il.Store(Slot u1, op3)))
                   | _ -> failwith "lhs is fucked"
                 end
                         
