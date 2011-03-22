@@ -150,7 +150,23 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
   | Lhs l -> 
       compile_lhs_exp c l
 
-  | New (e1, id, e2) -> failwith "Phase 1: New not implemented"
+  | New (e1, id, e2) -> 
+      let (c, ptr) = alloc (mk_tmp ()) c in
+      let (c, op1, str) = compile_exp c e1 in
+      let code = [I(BinArith(op1, Plus, Imm(Int32.of_int 1)))]>@
+      [I(BinArith(op1, Times, Imm(Int32.of_int 4)))]>@
+      [I (Alloc (Slot ptr, op1))] in
+      let vdec = {v_ty = TInt;
+                  v_id=id; 
+                  v_init=Iexp (Const (Cint (Range.norange, 0l)));} in
+      let vdecs = [vdec] in     
+      let com = Binop(Ast.Lt Range.norange, Lhs(Var id), e1) in
+      let inc = Assign(Var id, Binop(Ast.Plus Range.norange, (Lhs (Var id)), (Const (Cint (Range.norange, 1l))))) in
+      let (u,s) = ptr in
+      let body = Assign(Index(Var (Range.norange, s), Lhs(Var id)), e2) in
+      let (c1,s2) = compile_stmt c (For(vdecs, Some com, Some inc, body)) in
+      (c1, Slot ptr, code>@s2)
+
         
   | Binop (op, e1, e2) -> 
       let (c, ans1, code1) = compile_exp c e1 in
