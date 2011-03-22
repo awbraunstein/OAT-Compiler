@@ -274,8 +274,7 @@ and compile_stmt c stmt : ctxt * stream =
                     (c3, str2 >@ str3 >:: 
                     I(Il.Store(Slot u1, op3)))
                   | _ -> failwith "lhs is fucked"
-                end
-                        
+                end  
             end
         end
       | Scall ((_,fid), es) -> 
