@@ -40,7 +40,7 @@ let parse_file (fn:string) : Range.t Ast.prog =
   else (print_char '.'; flush stdout);
   prog
 
-let file_test ?ast2cpp:(ast2cpp=true) ?il2c:(il2c=true) ?il2s:(il2s=true)
+let file_test ?ast2cpp:(ast2cpp=false) ?il2c:(il2c=false) ?il2s:(il2s=true)
   (fn:string) (args:string) (ans:string) () : unit =
   (* generating all temporary files *)
   let tmp_dot_s = Platform.gen_name (!Platform.obj_path) "tmp" ".s" in
