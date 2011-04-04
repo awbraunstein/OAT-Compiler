@@ -716,16 +716,15 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
       args 
   in
   let (c, operands, str) = ctor_exp c es [] [] in
+  let call = [I (Call (None, mk_ctor_name "_this", operands)) ] in
   let (c, mycode) =
     compile_cinits c cis in
   let (c, block_stream) = compile_block c b true in
-  let prefix = [L (l)] >@ (mycode >@ block_stream) in
-  
-  
+  let code = [L (l)] >@ (mycode >@ block_stream >@ call) in
   let c = leave_scope c in
   let c = leave_scope c in
   let (n, c) = clear_args c in
-  fdecl_of_code c cidopt (mk_ctor_name "_this") n l prefix
+  fdecl_of_code c cidopt (mk_ctor_name "_this") n l code
 
 let compile_cdecl c ((cid, cidopt, fds, ctor, fdls):Range.t Ast.cdecl)
   : ctxt * Il.cdecl * Il.fdecl list =
