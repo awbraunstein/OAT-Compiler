@@ -694,11 +694,13 @@ let compile_cinits c cis : ctxt * stream =
  * 10) return "_this" 
 *)
 
-let rec ctor_helper (r:(ctxt * operand * stream) list) (es:Range.t exp list) (c: ctxt) =
-  begin match es with
-    | h::tl -> let (c, ans, code_e) = compile_exp c h in
-      [(c, ans, code_e)]@(ctor_helper r tl c)@ r
-    | _ -> r
+  
+let rec ctor_exp c exps ops str : ctxt * operand list * stream = 
+  begin match exps with
+    | h::tl -> 
+      let (c, op, st) = compile_exp c h in
+      ctor_exp c tl (ops@[op]) (str>@st)
+    | [] -> (c, ops,str)
   end
 
 let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor) 
@@ -713,7 +715,7 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
          | Some cid -> add_args "_this" (TRef (RClass cid)) c)
       args 
   in
-  let code = ctor_helper [] es c in
+  let (c, operands, str) = ctor_exp c es [] [] in
   let (c, mycode) =
     compile_cinits c cis in
   let (c, block_stream) = compile_block c b true in
