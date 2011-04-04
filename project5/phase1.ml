@@ -682,15 +682,15 @@ let compile_cinits c cis : ctxt * stream =
 
 (* 1) add an additional arg named "_this" as the first args, which is the
  *    this pointer, and with type class [cid].
- * 2) add [args] into context
+ * 2) add [args] into context  ()
  * 3) evaluate [es]
  * 4) call super class's constructor with ("_this"::es)
  * 5) add "this._name = [cid];" in [cis] to update class name
- * 6) run [cis] and initialize fields
+ * 6) run [cis] and initialize fields ()
  * 7) check if all non-null fields are not null, raise a runtime exception if 
  *    null by calling "oat_abort(1)"
  * 8) update vtble to be this class's vtble
- * 9) evalute the block [b]
+ * 9) evalute the block [b] ()
  * 10) return "_this" 
 *)
 
