@@ -682,15 +682,15 @@ let compile_cinits c cis : ctxt * stream =
 
 (* 1) add an additional arg named "_this" as the first args, which is the
  *    this pointer, and with type class [cid].
- * 2) add [args] into context  ()
+ * 2) add [args] into context
  * 3) evaluate [es]
  * 4) call super class's constructor with ("_this"::es)
  * 5) add "this._name = [cid];" in [cis] to update class name
- * 6) run [cis] and initialize fields ()
+ * 6) run [cis] and initialize fields
  * 7) check if all non-null fields are not null, raise a runtime exception if 
  *    null by calling "oat_abort(1)"
  * 8) update vtble to be this class's vtble
- * 9) evalute the block [b] ()
+ * 9) evalute the block [b]
  * 10) return "_this" 
 *)
 
@@ -717,11 +717,12 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
   in
   let (c, operands, str) = ctor_exp c es [] [] in
   let call = [I (Call (None, mk_ctor_name "_this", operands)) ] in
+  let cis = [((Range.norange, "_name"),
+    Iexp (Const (Cstring( Range.norange, cid))))]@cis in
   let (c, mycode) =
     compile_cinits c cis in
   let (c, block_stream) = compile_block c b true in
-  let code = [L (l)] >@ (mycode >@ block_stream >@ call) in
-  let c = leave_scope c in
+  let code = [L (l)] >@ (mycode >@ block_stream >@ call) >:: J (Ret None) in
   let c = leave_scope c in
   let (n, c) = clear_args c in
   fdecl_of_code c cidopt (mk_ctor_name "_this") n l code
