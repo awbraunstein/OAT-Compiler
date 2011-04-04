@@ -414,7 +414,12 @@ let rec typecheck_stmt (c:ctxt) (s:Range.t stmt) : unit =
         if subclass c.sigs cid0 cid then
           let c = enter_scope c in
           let c = add_vdecl id (TRef (RClass cid)) c in
-          typecheck_stmt c st1 else failwith "not a subclass"
+          typecheck_stmt c st1 else failwith "not a subclass TR"
+      | TNullable (RClass cid) -> 
+        if subclass c.sigs cid0 cid then
+          let c = enter_scope c in
+          let c = add_vdecl id (TRef (RClass cid)) c in
+          typecheck_stmt c st1 else failwith "not a subclass TN"
       | _ -> failwith "Something is wrong..."
     end
   | While (e, st) ->
