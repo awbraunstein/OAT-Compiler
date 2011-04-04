@@ -411,11 +411,13 @@ let rec typecheck_stmt (c:ctxt) (s:Range.t stmt) : unit =
     let t = typecheck_exp c e in
     begin match t with
       | TRef (RClass cid) ->
+        typecheck_option_stmt c sto2;
         if subclass c.sigs cid0 cid then
           let c = enter_scope c in
           let c = add_vdecl id (TRef (RClass cid)) c in
           typecheck_stmt c st1 else failwith "not a subclass TR"
-      | TNullable (RClass cid) -> 
+      | TNullable (RClass cid) ->
+        typecheck_option_stmt c sto2;
         if subclass c.sigs cid0 cid then
           let c = enter_scope c in
           let c = add_vdecl id (TRef (RClass cid)) c in
