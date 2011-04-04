@@ -693,11 +693,37 @@ let compile_cinits c cis : ctxt * stream =
  * 9) evalute the block [b]
  * 10) return "_this" 
 *)
+
+let rec ctor_helper (r:(ctxt * operand * stream) list) (es:Range.t exp list) (c: ctxt) =
+  begin match es with
+    | h::tl -> let (c, ans, code_e) = compile_exp c h in
+      [(c, ans, code_e)]@(ctor_helper r tl c)@ r
+    | _ -> r
+  end
+
 let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor) 
   : Il.fdecl =
   let (l, _) = lookup_fdecl (mk_ctor_name cid) c in 
   let c = enter_scope c in
-failwith "Phase1: compile_ctor not implemented"
+  let c = 
+    List.fold_left 
+      (fun c -> fun (t, (_,id)) -> add_args id t c)
+      (match cidopt with
+         | None -> c
+         | Some cid -> add_args "_this" (TRef (RClass cid)) c)
+      args 
+  in
+  let code = ctor_helper [] es c in
+  let (c, mycode) =
+    compile_cinits c cis in
+  let (c, block_stream) = compile_block c b true in
+  let prefix = [L (l)] >@ (mycode >@ block_stream) in
+  
+  
+  let c = leave_scope c in
+  let c = leave_scope c in
+  let (n, c) = clear_args c in
+  fdecl_of_code c cidopt (mk_ctor_name "_this") n l prefix
 
 let compile_cdecl c ((cid, cidopt, fds, ctor, fdls):Range.t Ast.cdecl)
   : ctxt * Il.cdecl * Il.fdecl list =
