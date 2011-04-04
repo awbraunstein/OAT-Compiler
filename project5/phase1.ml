@@ -506,13 +506,41 @@ and compile_stmt c stmt : ctxt * stream =
           let c = Ctxt.enter_scope c in
           let (c, op, str) = compile_exp c e in
           let (c,u) =  Ctxt.alloc id (Some(TRef(RClass(cid)))) c in
-          let str = str >::I(Il.Store ((Slot u), op)) in
+          let str = str >::I(Il.BinArith ((Slot u), Il.Move,  op)) in
           let (c,us) = alloc (mk_tmp()) None c in
+          let (c,an) = alloc (mk_tmp()) None c in
+          let (c,ans) = alloc (mk_tmp()) None c in
+          let (c,good) = alloc (mk_tmp()) None c in
+          let (c,bad) = alloc (mk_tmp()) None c in
+          let (c, cstmt1) = compile_stmt c stmt1 in
+          let (c, cstmt2) = (
+            begin match ostmt2 with
+              | Some x -> compile_stmt c x 
+              | None -> (c,[])
+            end) in
+           
+          let str = str >@[I(Il.BinArith(op, Il.Move, Slot us))]>@
+                          [I(Il.BinArith(Slot us,Il.Minus, Imm 4l))]>@
+                          [I(Il.Load(Slot ans, Slot us))] in
+      	  let lpre = X86.mk_lbl_hint "pre" in
+	        let lbody = X86.mk_lbl_hint "body" in
+	        let lpost = X86.mk_lbl_hint "post" in 
+          let lzero = X86.mk_lbl_hint "zero" in 
+          let lcont = X86.mk_lbl_hint "cont" in 
+          let ldone = X86.mk_lbl_hint "done" in 
+	        let n = Ctxt.lookup_cdecl cid c in
+          let disp = n.cd_dispatch_lbl in
+          (c, str >@ 
+            [I(Il.AddrOf(Slot an, Global {Cunit.link=false; Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
+            [L lpre] >@
+            [J (If (Slot an, Neq, Slot ans, lbody, lpost))] >@
+            [L lbody] >@[I(Il.BinArith(Slot ans,Il.Minus, Imm 4l))]>@
+            [I(Il.Load(Slot ans, Slot ans))] >@
+            [J(Il.If(Slot ans, Eq, Imm 0l, lzero, lcont))]>@[L lcont] 
+            >:: (J (Jump lpre)) >::(L lpost) >@ cstmt1 >@[J(Jump ldone)] >::
+            (L lzero)>@ cstmt2 >@[L ldone])
           
-          
-          
-failwith "Phase1: Cast not implemented"
-
+       
       | While(e, s) ->
 	  let lpre = X86.mk_lbl_hint "pre" in
 	  let lbody = X86.mk_lbl_hint "body" in
