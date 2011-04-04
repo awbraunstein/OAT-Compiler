@@ -60,7 +60,7 @@ let rec subclass (sigs:signature) (cid1:Ast.cid) (cid2:Ast.cid) : bool =
   if (cid1 = cid2) then true else
   let p = find_parent sigs cid1 in
   begin match p with
-    | (Some a,_) -> if (cid2 = a) then true else subclass sigs a cid2
+    | (Some a,_) -> if (a = cid2) then true else subclass sigs a cid2
     | (None, _ ) -> false
   end
 
@@ -402,7 +402,15 @@ let rec typecheck_stmt (c:ctxt) (s:Range.t stmt) : unit =
               (Range.string_of_range (exp_info e)))
       end
   | Cast (cid0, (info, id), e, st1, sto2) ->
-    let t = typecheck_exp c e in failwith "TC: Cast not implemented"
+    let t = typecheck_exp c e in
+    begin match t with
+      | TRef (RClass cid) ->
+        if subclass c.sigs cid0 cid then
+          let c = enter_scope c in
+          let c = add_vdecl id (TRef (RClass cid)) c in
+          typecheck_stmt c st1 else failwith "not a subclass"
+      | _ -> failwith "Something is wrong..."
+    end
   | While (e, st) ->
       typecheck c e TBool (typecheck_exp c e);
       typecheck_stmt c st;
