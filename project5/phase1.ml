@@ -503,6 +503,14 @@ and compile_stmt c stmt : ctxt * stream =
            * Note it does not matter if we also allocate [id] for [ostmt2],
            * since type checking ensures that [ostmt2] cannot use it.
           *)
+          let c = Ctxt.enter_scope c in
+          let (c, op, str) = compile_exp c e in
+          let (c,u) =  Ctxt.alloc id (Some(TRef(RClass(cid)))) c in
+          let str = str >::I(Il.Store ((Slot u), op)) in
+          let (c,us) = alloc (mk_tmp()) None c in
+          
+          
+          
 failwith "Phase1: Cast not implemented"
 
       | While(e, s) ->

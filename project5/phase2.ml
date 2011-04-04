@@ -12,6 +12,11 @@ let ccode_for_compare = function
 
 let (>::) x y = y::x
 let (>@) x y = y @ x
+let rec push_vars n str =
+  begin match n with
+    | h::tl -> [Push h]@(push_vars tl str)
+    | [] -> str
+  end
 
 let compile_comparison ccode lhs rhs = 
   [Cmp (lhs, rhs); 
@@ -125,7 +130,8 @@ let compile_insn slu i : X86.insn list =
          * 4) store eax to opa1 if needed
          * 5) pop args
         *)
-failwith "Phase2: compile_insn Method not implemented"
+        let l = a1::as3 in
+        failwith ""
   end
 
 let compile_cfinsn slu epilogue i = 
@@ -185,8 +191,15 @@ let compile_cdecl
   : Cunit.cunit =
   let decorate_lbl l = X86.mk_lbl_named (Platform.decorate_cdecl 
     (X86.string_of_lbl l)) in
-failwith "Phase2: compile_cdecl not implemented"
-
+  (begin match super_opt with
+    | Some x -> 
+      let n = GLabelOffset(x, 4l) in
+      [Data({link=true; label=this; value=n;})]
+    | None -> [Data({link=true; label=this; value=GZero(4);})]
+  end
+  @[Data({link=true; label=decorate_lbl tbl_lbl; value=GLabels(tbl);})])
+  
+  
 let compile_prog (prog:Il.prog) : Cunit.cunit =
   let cu = List.fold_left 
     (fun cu -> fun fdecl -> (compile_fdecl fdecl)@cu) [] prog.il_fdecls in
