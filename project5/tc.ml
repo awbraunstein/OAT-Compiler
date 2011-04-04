@@ -43,24 +43,64 @@ and wellformed_ref (sigs:signature) (r:ref) : bool =
  * be a child class of sig2.
  *)
 let rec find_parent (sigs:signature) (cid:Ast.cid) : cid option * signature = 
-failwith "TC: find_parent not implemented"
+  begin match sigs with
+    | (s,(Some st, fc, tl, mc))::tail ->
+      if cid = s then (Some st, sigs) else
+        find_parent tail cid
+    | (s,(None, fc, tl, mc))::tail ->
+       if cid = s then (None, sigs) else find_parent tail cid
+    | [] -> (None, [])
+  end
 
 (*
  * Returns whether cid1 is a subclass of cid2 (transitively) according to
  * the given signatures.
  *)
-let rec subclass (sigs:signature) (cid1:Ast.cid) (cid2:Ast.cid) : bool = failwith "TC: subclass not implemented"
+let rec subclass (sigs:signature) (cid1:Ast.cid) (cid2:Ast.cid) : bool =
+  if (cid1 = cid2) then true else
+  let p = find_parent sigs cid1 in
+  begin match p with
+    | (Some a,_) -> if (cid2 = a) then true else subclass sigs a cid2
+    | (None, _ ) -> false
+  end
 
 (*
  * Determines whether r1 is a subtype (as a reference) of r2.
  *)
-let subref (sigs:signature) (r1:Ast.ref) (r2:Ast.ref) : bool = failwith "TC: subref not implemented"
+let subref (sigs:signature) (r1:Ast.ref) (r2:Ast.ref) : bool =
+  if r1 = r2 then true else 
+    begin match r1 with
+      | RClass c ->
+        begin match r2 with 
+          | RClass c2 -> subclass sigs c c2
+          | _ -> false
+        end
+      | RArray t ->
+        begin match r2 with
+          | RArray t2 -> (t = t2)
+          | _ -> false
+        end
+      | _ -> false
+    end
 
 (*
  * Determines whether type t1 is a subtype of type t2.
  *)
-let subtyping (sigs:signature) (t1:Ast.typ) (t2:Ast.typ) : bool = failwith "TC: subtyping not implemented"
-
+let subtyping (sigs:signature) (t1:Ast.typ) (t2:Ast.typ) : bool =
+  if (t1 = t2) then true else
+  begin match t1 with
+    | TRef r ->
+      begin match t2 with
+        | TRef r2 -> subref sigs r r2
+        | _ -> false
+      end
+    | TNullable r ->
+      begin match t2 with
+        | TNullable r2 -> subref sigs r r2
+        | _ -> false
+      end
+    | _ -> false
+  end
 
 let rec cid_join sigs cid1 cid2 : cid option =
   match find_parent sigs cid1 with
@@ -361,7 +401,8 @@ let rec typecheck_stmt (c:ctxt) (s:Range.t stmt) : unit =
 	| _ -> failwith (sprintf "%s: Ifnull must check nullable type." 
               (Range.string_of_range (exp_info e)))
       end
-  | Cast (cid0, (info, id), e, st1, sto2) -> failwith "TC: Cast not implemented"
+  | Cast (cid0, (info, id), e, st1, sto2) ->
+    let t = typecheck_exp c e in failwith "TC: Cast not implemented"
   | While (e, st) ->
       typecheck c e TBool (typecheck_exp c e);
       typecheck_stmt c st;
