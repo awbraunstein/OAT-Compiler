@@ -12,11 +12,8 @@ let ccode_for_compare = function
 
 let (>::) x y = y::x
 let (>@) x y = y @ x
-let rec push_vars n str =
-  begin match n with
-    | h::tl -> [Push h]@(push_vars tl str)
-    | [] -> str
-  end
+
+  
 
 let compile_comparison ccode lhs rhs = 
   [Cmp (lhs, rhs); 
@@ -41,6 +38,11 @@ let compile_op slu o =
     | Global {Cunit.label=l} -> X86.deref_lbl l
     | Arg i -> arg_offset i
     | Il.Slot v -> slot_offset (slu v)
+  end
+let rec push_args slu n str =
+  begin match n with
+    | h::tl -> [Push (compile_op slu h)]@(push_args slu tl str)
+    | [] -> str
   end
 
 let ind_to_ecx o = 
@@ -127,11 +129,23 @@ let compile_insn slu i : X86.insn list =
          * 1) push (a1::as3)
          * 2) let edx = a1-4
          * 3) call i2(edx)
-         * 4) store eax to opa1 if needed
+         * 4) store eax to opa0 if needed
          * 5) pop args
         *)
         let l = a1::as3 in
-        failwith ""
+        let ao1 = compile_op slu a1 in
+        let len = List.length l in
+        let l = List.rev l in
+        let code = push_args slu l []in
+        let code = code@[Mov (ao1,edx)]@[Sub(edx,Imm 4l)] in
+        let ind = {i_base = Some Edx; i_iscl = None; i_disp = Some (DImm (Int32.of_int i2))} in
+        let code = code@[Call(Ind ind)] in
+        let code = code@(
+          begin match opa0 with
+            | Some x -> [Mov((compile_op slu x), eax)]
+            | None -> []
+          end) in
+        code@[Sub(esp, Imm (Int32.of_int (4*len)))]
   end
 
 let compile_cfinsn slu epilogue i = 
