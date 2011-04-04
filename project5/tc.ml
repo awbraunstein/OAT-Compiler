@@ -45,10 +45,10 @@ and wellformed_ref (sigs:signature) (r:ref) : bool =
 let rec find_parent (sigs:signature) (cid:Ast.cid) : cid option * signature = 
   begin match sigs with
     | (s,(Some st, fc, tl, mc))::tail ->
-      if cid = s then (Some st, sigs) else
+      if cid = s then (Some st, tail) else
         find_parent tail cid
     | (s,(None, fc, tl, mc))::tail ->
-       if cid = s then (None, sigs) else find_parent tail cid
+       if cid = s then (None, tail) else find_parent tail cid
     | [] -> (None, [])
   end
 
@@ -92,11 +92,17 @@ let subtyping (sigs:signature) (t1:Ast.typ) (t2:Ast.typ) : bool =
     | TRef r ->
       begin match t2 with
         | TRef r2 -> subref sigs r r2
+        | TNullable r2 -> subref sigs r r2
         | _ -> false
       end
     | TNullable r ->
       begin match t2 with
         | TNullable r2 -> subref sigs r r2
+        | _ -> false
+      end
+    | TBot ->
+      begin match t2 with
+        | TNullable _ -> true
         | _ -> false
       end
     | _ -> false
