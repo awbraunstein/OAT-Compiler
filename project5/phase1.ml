@@ -722,8 +722,15 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
   let (c, mycode) =
     compile_cinits c cis in
   let (c, block_stream) = compile_block c b true in
-  let code = [L (l)] >@ (call >@ mycode >@ block_stream) >:: J (Ret None) in
-  let c = leave_scope c in
+  let (c,temp_1) = alloc (mk_tmp()) None c in
+  let (c,temp_2) = alloc (mk_tmp()) None c in
+  let d = Ctxt.lookup_cdecl cid c in
+  let disp = d.cd_dispatch_lbl in
+  let disp_stream = 
+        [I(Il.BinArith(Slot temp_1, Il.Move, Slot temp_1))]>@
+        [I(Il.BinArith(Slot temp_1,Il.Minus, Imm 4l))]>@
+        [I(Il.BinArith(Global {Cunit.link=false; Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Il.Move, Slot temp_1))] in
+  let code = [L (l)] >@ (call >@ mycode >@ disp_stream >@ block_stream) >:: J (Ret None) in
   let (n, c) = clear_args c in
   fdecl_of_code c cidopt (mk_ctor_name cid) n l code
 
