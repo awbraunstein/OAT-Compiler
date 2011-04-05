@@ -508,6 +508,7 @@ and compile_stmt c stmt : ctxt * stream =
           let (c,u) =  Ctxt.alloc id (Some(TRef(RClass(cid)))) c in
           let str = str >::I(Il.BinArith ((Slot u), Il.Move,  op)) in
           let (c,temp_2) = alloc (mk_tmp()) None c in
+          let (c,temp_3) = alloc (mk_tmp()) None c in
           let (c,temp_1) = alloc (mk_tmp()) None c in
           let (c,an) = alloc (mk_tmp()) None c in
           let (c, cstmt1) = compile_stmt c stmt1 in
@@ -520,31 +521,39 @@ and compile_stmt c stmt : ctxt * stream =
             end) in
            
           let str = str >@
-          [I(Il.BinArith((Slot temp_2,Move, Arg 0)))]>@
-          [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
           [I(Il.AddrOf(Slot temp_1, Global {Cunit.link=false;
-            Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
-          [I(Il.Store(Slot temp_2, Slot temp_1))] in
+            Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))] in
       	  let lpre = X86.mk_lbl_hint "pre" in
 	        let lbody = X86.mk_lbl_hint "body" in
 	        let lpost = X86.mk_lbl_hint "post" in 
           let lzero = X86.mk_lbl_hint "zero" in 
           let lcont = X86.mk_lbl_hint "cont" in 
-          let ldone = X86.mk_lbl_hint "done" in 
-	        let n = Ctxt.lookup_cdecl cid c in
-          let disp = n.cd_dispatch_lbl in
+          let ldone = X86.mk_lbl_hint "done" in
+          (*check zero, if zero fail. compare against goal, if equal ifnish if not continue*)
           (c, str >@ 
-            [I(Il.AddrOf(Slot an, Global {Cunit.link=false;
-              Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
+            [I(Il.BinArith((Slot temp_2,Move, op)))]>@
             [L lpre] >@
-            [J (If (Slot an, Neq, Slot temp_2, lbody, lpost))] >@
-            [L lbody] >@
             [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
-            [I(Il.Load(Slot temp_1, Slot temp_2))] >@
-            [J(Il.If(Slot temp_1, Eq, Imm 0l, lzero, lcont))]>@
+            [I(Il.Load(Slot temp_2, Slot temp_2))]>@
+            [J (If (Slot temp_2, Eq, Imm 0l, lzero, lbody))] >@
+            [L lbody] >@
+            [J(Il.If(Slot temp_2, Eq, Slot temp_1, lpost, lcont))]>@
             [L lcont] 
             >:: (J (Jump lpre)) >::(L lpost) >@ cstmt1 >@[J(Jump ldone)] >::
             (L lzero)>@ cstmt2 >@[L ldone])
+          
+          
+         (* (c, str >@ 
+            [I(Il.BinArith((Slot temp_2,Move, op)))]>@
+            [L lpre] >@
+            [J (If (Slot temp_2, Neq, Slot temp_1, lbody, lpost))] >@
+            [L lbody] >@
+            [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
+            [I(Il.Load(Slot temp_3, Slot temp_2))] >@
+            [J(Il.If(Slot temp_3, Eq, Imm 0l, lzero, lcont))]>@
+            [L lcont] 
+            >:: (J (Jump lpre)) >::(L lpost) >@ cstmt1 >@[J(Jump ldone)] >::
+            (L lzero)>@ cstmt2 >@[L ldone]) *)
           
        
       | While(e, s) ->
