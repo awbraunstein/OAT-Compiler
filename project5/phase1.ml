@@ -521,8 +521,28 @@ and compile_stmt c stmt : ctxt * stream =
               | Some x -> compile_stmt c x 
               | None -> (c,[])
             end) in
-           
+          
           let str = str >@
+          [I(Il.AddrOf(Slot temp_1, Global {Cunit.link=false;
+            Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))] in
+          let lpre = X86.mk_lbl_hint "pre" in
+          let lbody = X86.mk_lbl_hint "body" in
+          let lpost = X86.mk_lbl_hint "post" in 
+          let lzero = X86.mk_lbl_hint "zero" in 
+          let ldone = X86.mk_lbl_hint "done" in
+          (*check zero, if zero fail. compare against goal, if equal ifnish if not continue*)
+          (c, str >@ 
+            [I(Il.BinArith((Slot temp_2,Move, op)))]>@
+            [L lpre] >@
+            [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
+            [I(Il.Load(Slot temp_2, Slot temp_2))]>@
+            [J (If (Slot temp_2, Eq, Imm 0l, lzero, lbody))] >@
+            [L lbody] >@
+            [J(Il.If(Slot temp_2, Eq, Slot temp_1, lpost, lpre))]
+            >::(L lpost) >@ cstmt1 >@[J(Jump ldone)] >::
+            (L lzero)>@ cstmt2 >@[L ldone])
+             
+          (*let str = str >@
           [I(Il.AddrOf(Slot temp_1, Global {Cunit.link=false;
             Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
             [I(Il.BinArith((Slot temp_2,Move, op)))]>@
@@ -540,7 +560,7 @@ and compile_stmt c stmt : ctxt * stream =
             [I(Il.Load(Slot temp_2, Slot temp_2))]>@
             [J(Il.If(Slot temp_1, Eq, Slot temp_2, lpost, lpre))]
             >::(L lpost) >@ cstmt1 >@[J(Jump ldone)] >::
-            (L lzero)>@ cstmt2 >@[L ldone])
+            (L lzero)>@ cstmt2 >@[L ldone]) *)
             
       | While(e, s) ->
 	  let lpre = X86.mk_lbl_hint "pre" in

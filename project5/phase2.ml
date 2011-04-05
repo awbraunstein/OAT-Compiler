@@ -136,17 +136,16 @@ let compile_insn slu i : X86.insn list =
         let ao1 = compile_op slu a1 in
         let l = List.rev l in
         let code = push_args slu l [] in
-        let code = code@[Push(ao1)]in 
         let ind2 = {i_base = Some Edx; i_iscl = None; i_disp = None} in
-        let code = code@[Sub(ao1,Imm 4l)]@[Mov (edx,ao1)]@[Mov (edx,Ind ind2)]  in
-        let ind = {i_base = Some Edx; i_iscl = None; i_disp = Some (DImm (Int32.of_int (i2)))} in
+        let code = code@[Mov(edx,ao1)]@[Sub(edx, Imm 4l)]@[Mov (edx,Ind ind2)]  in
+        let ind = {i_base = Some Edx; i_iscl = None; i_disp = Some (DImm (Int32.of_int (4*i2)))} in
         let code = code@[Call(Ind ind)] in
         let code = code@(
           begin match opa0 with
             | Some x -> [Mov((compile_op slu x),eax)]
             | None -> []
           end) in
-        code@[Sub(esp, Imm (Int32.of_int (4*((List.length l)))))]
+        code@[Sub(esp, Imm (Int32.of_int (4*(List.length l))))]
   end
 
 let compile_cfinsn slu epilogue i = 
