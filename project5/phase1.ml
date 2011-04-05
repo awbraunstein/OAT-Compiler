@@ -722,10 +722,12 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
   let (c, mycode) =
     compile_cinits c cis in
   let (c, block_stream) = compile_block c b true in
-  let code = [L (l)] >@ (mycode >@ block_stream >@ call) >:: J (Ret None) in
+  let code = [L (l)] >@ (call >@ mycode >@ block_stream) >:: J (Ret None) in
   let c = leave_scope c in
   let (n, c) = clear_args c in
-  fdecl_of_code c cidopt (mk_ctor_name "_this") n l code
+  fdecl_of_code c cidopt (mk_ctor_name cid) n l code
+
+
 
 let compile_cdecl c ((cid, cidopt, fds, ctor, fdls):Range.t Ast.cdecl)
   : ctxt * Il.cdecl * Il.fdecl list =
