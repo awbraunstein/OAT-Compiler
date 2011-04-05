@@ -507,21 +507,24 @@ and compile_stmt c stmt : ctxt * stream =
           let (c, op, str) = compile_exp c e in
           let (c,u) =  Ctxt.alloc id (Some(TRef(RClass(cid)))) c in
           let str = str >::I(Il.BinArith ((Slot u), Il.Move,  op)) in
-          let (c,us) = alloc (mk_tmp()) None c in
+          let (c,temp_2) = alloc (mk_tmp()) None c in
+          let (c,temp_1) = alloc (mk_tmp()) None c in
           let (c,an) = alloc (mk_tmp()) None c in
-          let (c,ans) = alloc (mk_tmp()) None c in
-          let (c,good) = alloc (mk_tmp()) None c in
-          let (c,bad) = alloc (mk_tmp()) None c in
           let (c, cstmt1) = compile_stmt c stmt1 in
+          let d = Ctxt.lookup_cdecl cid c in
+          let disp = d.cd_dispatch_lbl in
           let (c, cstmt2) = (
             begin match ostmt2 with
               | Some x -> compile_stmt c x 
               | None -> (c,[])
             end) in
            
-          let str = str >@[I(Il.BinArith(op, Il.Move, Slot us))]>@
-                          [I(Il.BinArith(Slot us,Il.Minus, Imm 4l))]>@
-                          [I(Il.Load(Slot ans, Slot us))] in
+          let str = str >@
+          [I(Il.BinArith((Slot temp_2,Move, Arg 0)))]>@
+          [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
+          [I(Il.AddrOf(Slot temp_1, Global {Cunit.link=false;
+            Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
+          [I(Il.Store(Slot temp_2, Slot temp_1))] in
       	  let lpre = X86.mk_lbl_hint "pre" in
 	        let lbody = X86.mk_lbl_hint "body" in
 	        let lpost = X86.mk_lbl_hint "post" in 
@@ -531,12 +534,15 @@ and compile_stmt c stmt : ctxt * stream =
 	        let n = Ctxt.lookup_cdecl cid c in
           let disp = n.cd_dispatch_lbl in
           (c, str >@ 
-            [I(Il.AddrOf(Slot an, Global {Cunit.link=false; Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
+            [I(Il.AddrOf(Slot an, Global {Cunit.link=false;
+              Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
             [L lpre] >@
-            [J (If (Slot an, Neq, Slot ans, lbody, lpost))] >@
-            [L lbody] >@[I(Il.BinArith(Slot ans,Il.Minus, Imm 4l))]>@
-            [I(Il.Load(Slot ans, Slot ans))] >@
-            [J(Il.If(Slot ans, Eq, Imm 0l, lzero, lcont))]>@[L lcont] 
+            [J (If (Slot an, Neq, Slot temp_2, lbody, lpost))] >@
+            [L lbody] >@
+            [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
+            [I(Il.Load(Slot temp_1, Slot temp_2))] >@
+            [J(Il.If(Slot temp_1, Eq, Imm 0l, lzero, lcont))]>@
+            [L lcont] 
             >:: (J (Jump lpre)) >::(L lpost) >@ cstmt1 >@[J(Jump ldone)] >::
             (L lzero)>@ cstmt2 >@[L ldone])
           
@@ -758,7 +764,7 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
     fieid_stream >@disp_stream >@ block_stream) >:: J (Ret (Some (Arg 0))) in
   let c = leave_scope c in
   let (n, c) = clear_args c in
-  fdecl_of_code c cidopt (mk_ctor_name cid) n l code
+  fdecl_of_code c None (mk_ctor_name cid) n l code
 
 
 
