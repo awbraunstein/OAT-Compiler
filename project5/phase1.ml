@@ -599,8 +599,8 @@ let fdecl_of_code c cidopt fid n l code =
         (match cidopt with 
           | Some _ ->
               (match lookup_this_cmethod fid c with
-		 | Some {cm_entry=n} -> X86.string_of_lbl n
-	         | None -> failwith (sprintf "Cmethod %s is not defined." fid))
+		            | Some {cm_entry=n} -> X86.string_of_lbl n
+	              | None -> failwith (sprintf "Cmethod %s is not defined." fid))
           | _ -> fid);
       fd_entry = l;
       fd_num_of_args = n;
@@ -680,6 +680,25 @@ let compile_cinits c cis : ctxt * stream =
   in
     List.fold_left compile_cinit (c, []) cis
 
+
+let rec check_fields f =
+    begin match f with
+      | (t,_)::tl ->
+        begin match t with
+          | TNullable r ->
+            begin match r with
+              | RArray t ->
+                begin match t with
+                  | TBot -> I(Call(None, "oat_abort", []))
+                  | _ -> I(Call(None, "oat_abort", []))
+                end
+              | RClass c -> if (c = "") then I(Call(None, "oat_abort", []))
+                else I(Call(None, "oat_abort", []))
+            end
+        end
+    end
+    
+    
 (* 1) add an additional arg named "_this" as the first args, which is the
  *    this pointer, and with type class [cid].
  * 2) add [args] into context
@@ -703,6 +722,7 @@ let rec ctor_exp c exps ops str : ctxt * operand list * stream =
     | [] -> (c, ops,str)
   end
 
+
 let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor) 
   : Il.fdecl =
   let (l, _) = lookup_fdecl (mk_ctor_name cid) c in 
@@ -710,27 +730,33 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
   let c = 
     List.fold_left 
       (fun c -> fun (t, (_,id)) -> add_args id t c)
-      (match cidopt with
-         | None -> c
-         | Some cid -> add_args "_this" (TRef (RClass cid)) c)
+        (add_args "_this" (TRef (RClass cid)) c)
       args 
-  in
-  let (c, operands, str) = ctor_exp c es [] [] in
-  let call = [I (Call (None, mk_ctor_name "_this", operands)) ] in
-  let cis = [((Range.norange, "_name"),
-    Iexp (Const (Cstring( Range.norange, cid))))]@cis in
-  let (c, mycode) =
+  in let (c,call) =
+  match cidopt with
+    | None -> (c,[])
+    | Some cid_o -> compile_stmt c (Assign(Var(Range.norange, "_this"),
+      LhsOrCall(Ast.Call(Func((Range.norange, mk_ctor_name cid_o),
+        ([(LhsOrCall (Lhs (Var (Range.norange, "_this"))))]@es)))))) in
+   let cis = [((Range.norange, "_name"),
+      Iexp (Const (Cstring(Range.norange, cid))))]@cis in
+  let (c, cis_stream) =
     compile_cinits c cis in
   let (c, block_stream) = compile_block c b true in
   let (c,temp_1) = alloc (mk_tmp()) None c in
   let (c,temp_2) = alloc (mk_tmp()) None c in
   let d = Ctxt.lookup_cdecl cid c in
+  let fieid_stream = [] in
   let disp = d.cd_dispatch_lbl in
-  let disp_stream = 
-        [I(Il.BinArith(Slot temp_1, Il.Move, Slot temp_1))]>@
-        [I(Il.BinArith(Slot temp_1,Il.Minus, Imm 4l))]>@
-        [I(Il.BinArith(Global {Cunit.link=false; Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Il.Move, Slot temp_1))] in
-  let code = [L (l)] >@ (call >@ mycode >@ disp_stream >@ block_stream) >:: J (Ret None) in
+  let disp_stream =
+        [I(Il.BinArith((Slot temp_2,Move, Arg 0)))]>@
+        [I(Il.BinArith(Slot temp_2,Il.Minus, Imm 4l))]>@
+        [I(Il.AddrOf(Slot temp_1, Global {Cunit.link=false;
+        Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))]>@
+        [I(Il.Store(Slot temp_2, Slot temp_1))] in
+  let code = [L (l)] >@ (call >@ cis_stream >@
+    fieid_stream >@disp_stream >@ block_stream) >:: J (Ret (Some (Arg 0))) in
+  let c = leave_scope c in
   let (n, c) = clear_args c in
   fdecl_of_code c cidopt (mk_ctor_name cid) n l code
 

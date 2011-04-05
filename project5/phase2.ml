@@ -208,12 +208,12 @@ let compile_cdecl
   (begin match super_opt with
     | Some x -> 
       let n = GLabelOffset(x, 4l) in
-      [Data({link=true; label=this; value=n;})]
-    | None -> [Data({link=true; label=this; value=GZero(4);})]
+      [Data({link=false; label=this; value=n;})]
+    | None -> [Data({link=false; label=this; value=GInt32(0l);})]
   end
-  @[Data({link=true; label=decorate_lbl tbl_lbl; value=GLabels(tbl);})])
-  
-  
+  @[Data({link=false; label=tbl_lbl; value=GLabels(List.map decorate_lbl tbl);})])
+
+
 let compile_prog (prog:Il.prog) : Cunit.cunit =
   let cu = List.fold_left 
     (fun cu -> fun fdecl -> (compile_fdecl fdecl)@cu) [] prog.il_fdecls in
