@@ -44,11 +44,9 @@ and wellformed_ref (sigs:signature) (r:ref) : bool =
  *)
 let rec find_parent (sigs:signature) (cid:Ast.cid) : cid option * signature = 
   begin match sigs with
-    | (s,(Some st, fc, tl, mc))::tail ->
-      if cid = s then (Some st, tail) else
+    | (s,(x, _, _, _))::tail ->
+      if cid = s then (x, tail) else
         find_parent tail cid
-    | (s,(None, fc, tl, mc))::tail ->
-       if cid = s then (None, tail) else find_parent tail cid
     | [] -> failwith "parent of class id not found"
   end
 

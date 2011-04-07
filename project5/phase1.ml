@@ -725,12 +725,25 @@ let rec ctor_exp c exps ops str : ctxt * operand list * stream =
     | [] -> (c, ops,str)
   end
 
-let rec check_fields s f =
+let rec check_fields s f c =
   begin match f with
     | h::tl -> 
       let (st,(i,ty)) = h in
-      check_fields (s>@[]) tl
-    |[] -> s
+      let (c,temp) = alloc (mk_tmp()) None c in
+      let ltrue = X86.mk_lbl_hint "true" in
+      let lfalse = X86.mk_lbl_hint "false" in
+      check_fields (s>@
+      begin match ty with
+        | TRef x -> []
+                (*[I(Il.BinArith((Slot temp,Move, Arg 0)))]>@
+                [I(Il.BinArith(Slot temp,Il.Minus, Imm 4l))]>@
+                [I(Il.Load(Slot temp, Slot temp))]>@
+                [J(Il.If(Slot temp, Eq, Imm 0l, ltrue, lfalse))]>@
+                [L lfalse]>@[I (Call (None, "oat_abort", [Imm 0l]))]>@[L ltrue]*)
+        | _ -> []
+      end
+      ) tl c
+    |[] -> (c, s)
   end
 
 let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor) 
@@ -756,7 +769,7 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
   let (c,temp_1) = alloc (mk_tmp()) None c in
   let (c,temp_2) = alloc (mk_tmp()) None c in
   let d = Ctxt.lookup_cdecl cid c in
-  let fieid_stream = check_fields [] d.cd_fields in
+  let (c,fieid_stream) = check_fields [] d.cd_fields c in
   let disp = d.cd_dispatch_lbl in
   let disp_stream =
         [I(Il.BinArith((Slot temp_2,Move, Arg 0)))]>@
