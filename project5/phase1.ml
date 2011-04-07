@@ -319,7 +319,7 @@ and compile_exp (c:ctxt) (e:Range.t exp) : ctxt * operand * stream =
       in
         (leave_scope c, Slot up, code1 >@ (code2 >@ code_s))
 
-  | Ctor ((i, cid), es) ->
+  | Ctor ((i, cid), es) -> 
       (* 1) allocate a this pointer
        * 2) compile Call cid(this::es) 
       *)
@@ -518,10 +518,10 @@ and compile_stmt c stmt : ctxt * stream =
           let disp = d.cd_dispatch_lbl in
           let (c, cstmt2) = (
             begin match ostmt2 with
-              | Some x -> compile_stmt c x 
+              | Some x -> compile_stmt c x
               | None -> (c,[])
             end) in
-          
+
           let str = str >@
           [I(Il.AddrOf(Slot temp_1, Global {Cunit.link=false;
             Cunit.label=disp; Cunit.value=Cunit.GZero(0);}, Imm 0l))] in
@@ -549,8 +549,8 @@ and compile_stmt c stmt : ctxt * stream =
             [I(Il.Load(Slot temp_1, Slot temp_1))] in
       	  let lpre = X86.mk_lbl_hint "pre" in
 	        let lbody = X86.mk_lbl_hint "body" in
-	        let lpost = X86.mk_lbl_hint "post" in 
-          let lzero = X86.mk_lbl_hint "zero" in 
+	        let lpost = X86.mk_lbl_hint "post" in
+          let lzero = X86.mk_lbl_hint "zero" in
           let ldone = X86.mk_lbl_hint "done" in
           (c, str >@
             [L lpre] >@
@@ -725,8 +725,13 @@ let rec ctor_exp c exps ops str : ctxt * operand list * stream =
     | [] -> (c, ops,str)
   end
 
-let rec check_fields f =
-[]
+let rec check_fields s f =
+  begin match f with
+    | h::tl -> 
+      let (st,(i,ty)) = h in
+      check_fields (s>@[]) tl
+    |[] -> s
+  end
 
 let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor) 
   : Il.fdecl =
@@ -751,7 +756,7 @@ let compile_ctor c cid cidopt ((args, es, cis, b):Range.t Ast.ctor)
   let (c,temp_1) = alloc (mk_tmp()) None c in
   let (c,temp_2) = alloc (mk_tmp()) None c in
   let d = Ctxt.lookup_cdecl cid c in
-  let fieid_stream = check_fields d.cd_fields in
+  let fieid_stream = check_fields [] d.cd_fields in
   let disp = d.cd_dispatch_lbl in
   let disp_stream =
         [I(Il.BinArith((Slot temp_2,Move, Arg 0)))]>@

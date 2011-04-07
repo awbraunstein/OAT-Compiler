@@ -49,7 +49,7 @@ let rec find_parent (sigs:signature) (cid:Ast.cid) : cid option * signature =
         find_parent tail cid
     | (s,(None, fc, tl, mc))::tail ->
        if cid = s then (None, tail) else find_parent tail cid
-    | [] -> (None, [])
+    | [] -> failwith "parent of class id not found"
   end
 
 (*
@@ -70,6 +70,11 @@ let rec subclass (sigs:signature) (cid1:Ast.cid) (cid2:Ast.cid) : bool =
 let subref (sigs:signature) (r1:Ast.ref) (r2:Ast.ref) : bool =
   if r1 = r2 then true else 
     begin match r1 with
+      | RString -> 
+        begin match r2 with
+          | RString -> true
+          |  _ -> false
+        end
       | RClass c ->
         begin match r2 with 
           | RClass c2 -> subclass sigs c c2
@@ -103,6 +108,16 @@ let subtyping (sigs:signature) (t1:Ast.typ) (t2:Ast.typ) : bool =
     | TBot ->
       begin match t2 with
         | TNullable _ -> true
+        | _ -> false
+      end
+    | TInt -> 
+      begin match t2 with
+        | TInt -> true
+        | _ -> false
+      end
+    | TBool -> 
+      begin match t2 with
+        | TBool -> true
         | _ -> false
       end
     | _ -> false
