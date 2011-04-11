@@ -1,9 +1,8 @@
 
 int program (int argc, string[] argv) {
-  int i = 0;
   int j = 2;
   int k = 4;
   int a = 4 + j;
-  int i = 2;
   return a;
+  int b = k;
 }
