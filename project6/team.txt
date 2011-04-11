@@ -1,5 +1,6 @@
 Team Members:
   <pennkey>	<name>		<email>
+  mnico	Nico Mihalich	mnico@seas.upenn.edu
 
 
 Known issues with your implementation:
