@@ -1,0 +1,6 @@
+class A <: Object { new()() {} };
+class B <: Object { new()() {} };
+
+A[][] arr = {new [3]( fun i -> new B() ),  
+             new [3]( fun i -> new A() )};
+
