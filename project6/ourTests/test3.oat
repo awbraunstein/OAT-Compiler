@@ -1,0 +1,7 @@
+int program (int argc, string[] argv) {
+	int i=0;
+	if?(false){
+		return 4;
+	}
+	return i;
+}
