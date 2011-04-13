@@ -4,5 +4,4 @@ int program (int argc, string[] argv) {
   int k = 4;
   int a = 4 + j;
   return a;
-  int b = k;
 }

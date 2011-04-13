@@ -1,20 +1,4 @@
-
 int program (int argc, string[] argv) {
   int z = 0;
   return i;
-  int a = 4;
-  int b = 4;
-  int c = 4;
-  int d = 4;
-  int e = 4;
-  int f = 4;
-  int g = 4;
-  int h = 4;
-  int i = 4;
-  int j = 4;
-  int k = 4;
-  int l = 4;
-  int m = 4;
-  int n = 4;
-  
 }
