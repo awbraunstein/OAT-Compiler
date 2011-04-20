@@ -29,7 +29,7 @@ let fold_exp (e:Range.t exp) : (Range.t exp) =
     | _ -> e
   end
 
-let fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
+and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
   begin match v with
     | {v_ty = TInt; v_id = _; v_init = init;} ->
       begin match init with
@@ -38,15 +38,30 @@ let fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
       end
     | _ -> v
   end
+    
 
-let fold_block(block : Range.t Ast.block) : (Range.t Ast.block) =
-  block
+and fold_vdecls (v:Range.t Ast.vdecls) : (Range.t Ast.vdecls) =
+  let rec vdecls_aux (vdecls : Range.t Ast.vdecls)(vbuff : Range.t Ast.vdecls): Range.t Ast.vdecls =
+    begin match vdecls with
+      | h::tl -> vdecls_aux tl (vbuff@[fold_vdecl h])
+      | [] -> vbuff
+    end in vdecls_aux v []
+
+and fold_block(block : Range.t Ast.block) : Range.t Ast.block =
+  let (v,stmts) = block in 
+  let n = fold_vdecls v in
+  let rec stmt_aux stmts stmtbuff : Range.t Ast.stmt list =
+    begin match stmts with
+      | h::tl -> stmt_aux tl stmtbuff@[fold_stmt h]
+      | [] -> stmt_buff
+    end in (n, stmt_aux stmts [])
+  
 
 
-let rec fold_stmt (stmt : Range.t Ast.stmt) : (Range.t Ast.stmt) =
+and fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
   begin match stmt with
     | Assign (l,e) -> Assign(l,fold_exp e)
-    | Scall (c) -> stmt
+    | Scall (c) -> Scall (c)
     | Fail (e) -> Fail(fold_exp e)
     | If (e, s, os) -> 
       begin match os with
