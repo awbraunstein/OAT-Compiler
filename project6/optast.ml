@@ -4,7 +4,7 @@ open Range
 
 let prog_new = []
 
-let fold_exp (e:Range.t exp) : (Range.t exp) =
+let fold_exp_2 (e:Range.t exp) : (Range.t exp) =
   begin match e with
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
       begin match bop with
@@ -25,7 +25,25 @@ let fold_exp (e:Range.t exp) : (Range.t exp) =
         | Shr _ -> let c = Int32.shift_right c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
         | Sar _ -> let c = Int32.shift_right_logical c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
       end
-    | Unop (unop,e1) -> e
+    | _ -> e
+  end
+      
+let rec fold_exp (e:Range.t exp) : (Range.t exp) =
+  begin match e with
+    | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
+      let e = Binop(bop,Const (Cint (Range.norange,c1)), Const (Cint (Range.norange,c2))) in fold_exp_2 e
+    | Binop(bop,Const (Cint (_,c1)), e1) ->
+       Binop(bop,Const (Cint (Range.norange,c1)), fold_exp e1)
+    | Binop(bop, e1,Const (Cint (_,c1))) ->
+      Binop(bop,fold_exp e1, Const (Cint (Range.norange,c1)))
+    | Binop(bop, e1, e2) ->
+      Binop(bop,fold_exp e1, fold_exp e2)
+    | Unop (unop,Const(Cint(_,c1))) ->
+      begin match unop with
+        | Neg _ -> let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
+        | Lognot _ ->let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
+        | Not _ ->let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
+      end
     | _ -> e
   end
 
