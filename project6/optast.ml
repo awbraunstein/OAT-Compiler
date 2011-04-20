@@ -4,11 +4,13 @@ let prog_new = []
 
 let fold_exp e =
   begin match e with
-    | Binop(bop,e1,e2) ->
+    (*| Binop(bop,e1,e2) ->
       begin match bop with
         | Ast.Plus _ -> e
         | _ -> e
-      end
+      end*)
+    | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
+      let c = Int32.add c1 c2 in Const (Cint ((),c))
     | Unop (unop,e1) -> e
     | _ -> e
   end
