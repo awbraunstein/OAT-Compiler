@@ -29,16 +29,28 @@ let fold_block(block : Range.t Ast.block) : Range.t Ast.block =
   block
 
 
-let fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
+let rec fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
   begin match stmt with
-    | Assign (l,e) -> stmt
+    | Assign (l,e) -> Assign(l,fold_exp e)
     | Scall (c) -> stmt
-    | Fail (e) -> stmt
-    | If (e, s, os) -> stmt
-    | IfNull (ref, id, exp, stmt, opt_stmt) -> stmt
-    | Cast (cid,id, exp, stmt, opt_stmt) -> stmt
-    | While (exp, stmt) -> stmt
-    | For (vdecls, opt_exp, opt_stmt, stmt) -> stmt
+    | Fail (e) -> Fail(fold_exp e)
+    | If (e, s, os) -> 
+      begin match os with
+        | Some x -> If(fold_exp e, fold_stmt s, Some (fold_stmt x))
+        | None -> If(fold_exp e, fold_stmt s, os)
+      end
+    | IfNull (ref, id, exp, stmt, os) -> 
+      begin match os with
+        | Some x -> IfNull(ref, id, fold_exp exp, fold_stmt stmt, Some(fold_stmt x))
+        | None -> IfNull(ref, id, fold_exp exp, fold_stmt stmt, os)
+      end
+    | Cast (cid,id, exp, stmt, os) -> 
+      begin match os with
+        | Some x -> Cast (cid,id, fold_exp exp, fold_stmt stmt, Some(fold_stmt x))
+        | None -> Cast (cid,id, fold_exp exp, fold_stmt stmt, os)
+      end
+    | While (exp, stmt) -> While(fold_exp exp, fold_stmt stmt)
+    | For (vdecls, opt_exp, opt_stmt, stmt) -> For(vdecls, opt_exp, opt_stmt, fold_stmt stmt)
     | Block (block) -> Block(fold_block block)
   end
 
