@@ -56,23 +56,26 @@ and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
       end
     | _ -> v
   end
-    
-
-and fold_vdecls (v:Range.t Ast.vdecls) : (Range.t Ast.vdecls) =
-  let rec vdecls_aux (vdecls : Range.t Ast.vdecls)(vbuff : Range.t Ast.vdecls): Range.t Ast.vdecls =
-    begin match vdecls with
-      | h::tl -> vdecls_aux tl (vbuff@[fold_vdecl h])
-      | [] -> vbuff
-    end in vdecls_aux v []
+  
+let rec vdecls_aux (vdecls : Range.t Ast.vdecls)(vbuff : Range.t Ast.vdecls): Range.t Ast.vdecls =
+  begin match vdecls with
+    | h::tl -> vdecls_aux tl (vbuff@[fold_vdecl h])
+    | [] -> vbuff
+  end 
+  
+let rec fold_vdecls (v:Range.t Ast.vdecls) : (Range.t Ast.vdecls) =
+  vdecls_aux v []
+  
+let rec stmt_aux stmts stmtbuff : Range.t Ast.stmt list =
+  begin match stmts with
+    | h::tl -> stmt_aux tl (stmtbuff@[fold_stmt h])
+    | [] -> stmtbuff
+  end 
 
 and fold_block(block : Range.t Ast.block) : Range.t Ast.block =
   let (v,stmts) = block in 
   let n = fold_vdecls v in
-  let rec stmt_aux stmts stmtbuff : Range.t Ast.stmt list =
-    begin match stmts with
-      | h::tl -> stmt_aux tl stmtbuff@[fold_stmt h]
-      | [] -> stmt_buff
-    end in (n, stmt_aux stmts [])
+  (n, stmt_aux stmts [])
   
 
 
