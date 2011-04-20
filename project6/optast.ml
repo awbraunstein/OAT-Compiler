@@ -115,8 +115,9 @@ let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t A
       begin match h with
         | Ast.Gvdecl vdecl-> parse_prog tl (new_prog@[Ast.Gvdecl(fold_vdecl vdecl)])
         | Ast.Gfdecl fdecl-> parse_prog tl (new_prog@[Ast.Gfdecl(fold_fdecl fdecl)])
-        | _ -> parse_prog tl new_prog
-      end; 
+        | Ast.Gefdecl efdecl -> parse_prog tl (new_prog@[Ast.Gefdecl efdecl])
+        | Ast.Gcdecl cdecl -> parse_prog tl (new_prog@[Ast.Gcdecl cdecl])
+      end
     | [] -> new_prog
   end
   
