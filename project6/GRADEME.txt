@@ -6,8 +6,7 @@ optimizations.
 
 
 1.Remove conditionals with a "false" initializer
-2.Remove code after a return in same scope
-3.Remove unused variables
+2.Remove unused variables
 
 Our Tests:
 Test1 -
