@@ -72,7 +72,7 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
     | Const c -> Const c 
     | This t -> This t
     | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
-
+    | Ctor (cid, el) -> Ctor (cid, el)
     | LhsOrCall lhsc ->
       begin match lhsc with
         | Lhs lhs ->
@@ -180,4 +180,4 @@ let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t A
   end
   
 let opt_ast (prog:Range.t Ast.prog) : (Range.t Ast.prog) = 
-  print_prog prog; let p = parse_prog prog prog_new in print_prog prog; p
+  print_prog prog; let p = parse_prog prog prog_new in print_prog p; p
