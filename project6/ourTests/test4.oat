@@ -1,7 +1,0 @@
-
-int program (int argc, string[] argv) {
-  int j = 2;
-  int k = 4;
-  int a = 4 + j;
-  return a;
-}

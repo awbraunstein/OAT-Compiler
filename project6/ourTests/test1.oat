@@ -1,4 +1,5 @@
 int program (int argc, string[] argv) {
-  int z = 0;
-  return i;
+  int x = 5;
+  int z = 2 + 3 + x;
+  return z;
 }
