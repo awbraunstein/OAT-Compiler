@@ -61,11 +61,12 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
           let c = Int32.shift_right_logical c1 (Int32.to_int c2) in 
           (Const (Cint (Range.norange,c)))
       end
-    | Binop(bop, LhsOrCall(Lhs(Var id)),Const _) -> e
+    | Binop(bop, LhsOrCall(Lhs(Var id)),Const c) -> e
+    | Binop(bop, Const c,LhsOrCall(Lhs(Var id))) -> e
     | Binop(bop, LhsOrCall(Lhs(Var id)),e1) ->
       fold_exp (Binop(bop, LhsOrCall(Lhs(Var id)),fold_exp e1))
-    | Binop(bop, e1, Const c) -> fold_exp (Binop(bop, fold_exp e1, Const c))
-    | Binop(bop, Const c, e2) -> fold_exp (Binop(bop, Const c, fold_exp e2))
+    | Binop(bop,e1, LhsOrCall(Lhs(Var id))) ->
+      fold_exp (Binop(bop,fold_exp e1,LhsOrCall(Lhs(Var id))))
     | Binop(bop, e1, e2) -> fold_exp (Binop(bop, fold_exp e1, fold_exp e2))
     | Unop(unop,LhsOrCall(Lhs(Var id))) -> e
     | Unop (unop,Const(Cint(_,c1))) ->
