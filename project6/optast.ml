@@ -77,15 +77,15 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
       begin match lhsc with
         | Lhs lhs ->
           begin match lhs with
-            | Var id -> Var id
-            | Path p -> Path p
-            | Index (lhs_or_call, exp) -> Index(lhs_or_call,fold_exp exp)
+            | Var id -> LhsOrCall(Lhs(Var id))
+            | Path p -> LhsOrCall(Lhs(Path p))
+            | Index (lhs_or_call, exp) -> LhsOrCall(Lhs(Index(lhs_or_call,fold_exp exp)))
           end
         | Call call ->
           begin match call with
-            | Func (id,el) ->Func (id,el)
-            | SuperMethod (id, el) ->SuperMethod (id, el)
-            | PathMethod (path, el) ->PathMethod (path, el)
+            | Func (id,el) ->LhsOrCall(Call(Func (id,el)))
+            | SuperMethod (id, el) ->LhsOrCall(Call(SuperMethod (id, el)))
+            | PathMethod (path, el) ->LhsOrCall(Call(PathMethod (path, el)))
           end
       end
   end
