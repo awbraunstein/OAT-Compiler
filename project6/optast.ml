@@ -1,11 +1,27 @@
+open Ast
+open Astlib
 let prog_new = []
 
+let fold_block(block : Range.t Ast.block) : Range.t Ast.block =
+  block
 
-let fold_fdecl ((_, (_,fid), args, block, reto):Range.t Ast.fdecl) : Range.t Ast.fdecl =
+let fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
+  begin match stmt with
+    | Assign (l,e) -> stmt
+    | Scall (c) -> stmt
+    | Fail (e) -> stmt
+    | If (e, s, os) -> stmt
+    | IfNull (ref, id, exp, stmt, opt_stmt) -> stmt
+    | Cast (cid,id, exp, stmt, opt_stmt) -> stmt
+    | While (exp, stmt) -> stmt
+    | For (vdecls, opt_exp, opt_stmt, stmt) -> stmt
+    | Block (block) -> stmt
+  end
+
+
+let fold_fdecl ((a, (b,c), d, block, e):Range.t Ast.fdecl) : Range.t Ast.fdecl =
+  (a,(b,c), d, fold_block block, e)
   
-  
-
-
 
 let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t Ast.prog) =  
   begin match prog with
