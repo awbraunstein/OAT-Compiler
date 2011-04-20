@@ -57,16 +57,25 @@ and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
     | _ -> v
   end
   
-let rec vdecls_aux (vdecls : Range.t Ast.vdecls)(vbuff : Range.t Ast.vdecls): Range.t Ast.vdecls =
+and vdecls_aux (vdecls : Range.t Ast.vdecls)(vbuff : Range.t Ast.vdecls): Range.t Ast.vdecls =
   begin match vdecls with
     | h::tl -> vdecls_aux tl (vbuff@[fold_vdecl h])
     | [] -> vbuff
   end 
   
-let rec fold_vdecls (v:Range.t Ast.vdecls) : (Range.t Ast.vdecls) =
+and fold_vdecls (v:Range.t Ast.vdecls) : (Range.t Ast.vdecls) =
   vdecls_aux v []
   
-let rec stmt_aux stmts stmtbuff : Range.t Ast.stmt list =
+and fdecls_aux (fdecls : Range.t Ast.fdecls)(fbuff : Range.t Ast.fdecls): Range.t Ast.fdecls =
+  begin match fdecls with
+    | h::tl -> fdecls_aux tl (fbuff@[fold_fdecl h])
+    | [] -> fbuff
+  end 
+  
+and fold_fdecls (v:Range.t Ast.fdecls) : (Range.t Ast.fdecls) =
+  fdecls_aux v []
+  
+and stmt_aux stmts stmtbuff : Range.t Ast.stmt list =
   begin match stmts with
     | h::tl -> stmt_aux tl (stmtbuff@[fold_stmt h])
     | [] -> stmtbuff
@@ -104,8 +113,11 @@ and fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
     | Block (block) -> Block(fold_block block)
   end
 
+and fold_cdecl ((a,b,f,c,fdecls):Range.t Ast.cdecl) : Range.t Ast.cdecl =
+  (a,b,f,c,fold_fdecls fdecls)
 
-let fold_fdecl ((a, (b,c), d, block, e):Range.t Ast.fdecl) : Range.t Ast.fdecl =
+
+and fold_fdecl ((a, (b,c), d, block, e):Range.t Ast.fdecl) : Range.t Ast.fdecl =
   (a,(b,c), d, fold_block block, e)
   
 
