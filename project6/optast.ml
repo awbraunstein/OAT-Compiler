@@ -145,9 +145,18 @@ and fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
     | Scall (c) -> Scall (c)
     | Fail (e) -> Fail(fold_exp e)
     | If (e, s, os) -> 
-      begin match os with
-        | Some x -> If(fold_exp e, fold_stmt s, Some (fold_stmt x))
-        | None -> If(fold_exp e, fold_stmt s, os)
+      let e = fold_exp e in
+      begin match e with
+        | Const(Cbool (_,n)) -> 
+          begin match os with
+            | Some x -> if n= true then fold_stmt s else fold_stmt x
+            | None -> if n = true then fold_stmt s else Block([],[])
+          end
+        | _ -> 
+          begin match os with
+            | Some x -> If(e, fold_stmt s, Some (fold_stmt x))
+            | None -> If(e, fold_stmt s, os)
+          end
       end
     | IfNull (ref, id, exp, stmt, os) -> 
       begin match os with
