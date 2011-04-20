@@ -6,13 +6,25 @@ let prog_new = []
 
 let fold_exp (e:Range.t exp) : (Range.t exp) =
   begin match e with
-    (*| Binop(bop,e1,e2) ->
-      begin match bop with
-        | Ast.Plus _ -> e
-        | _ -> e
-      end*)
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
-      let c = Int32.add c1 c2 in (Const (Cint (Range.norange,c)))
+      begin match bop with
+        | Ast.Plus _ -> let c = Int32.add c1 c2 in (Const (Cint (Range.norange,c)))
+        | Ast.Minus _ ->let c = Int32.sub c1 c2 in (Const (Cint (Range.norange,c)))
+        | Times _ -> let c = Int32.mul c1 c2 in (Const (Cint (Range.norange,c)))
+        | Eq _ -> let c = (c1 = c2) in (Const (Cbool (Range.norange,c)))
+        | Neq _ -> let c = (c1 != c2) in (Const (Cbool (Range.norange,c)))
+        | Lt _ -> let c = (c1 < c2) in (Const (Cbool (Range.norange,c)))
+        | Lte _ -> let c = (c1 <= c2) in (Const (Cbool (Range.norange,c)))
+        | Gt _ -> let c = (c1 > c2) in (Const (Cbool (Range.norange,c)))
+        | Gte _ -> let c = (c1 >= c2) in (Const (Cbool (Range.norange,c)))
+        | And _ -> let c = Int32.logand c1 c2 in (Const (Cint (Range.norange,c)))
+        | Or _ -> let c = Int32.logor c1 c2 in (Const (Cint (Range.norange,c)))
+        | IAnd _ -> let c = Int32.logand c1 c2 in (Const (Cint (Range.norange,c)))
+        | IOr _ -> let c = Int32.logor c1 c2 in (Const (Cint (Range.norange,c)))
+        | Shl _ -> let c = Int32.shift_left c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
+        | Shr _ -> let c = Int32.shift_right c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
+        | Sar _ -> let c = Int32.shift_right_logical c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
+      end
     | Unop (unop,e1) -> e
     | _ -> e
   end
