@@ -2,13 +2,11 @@ open Ast
 open Astlib
 open Range
 
-let prog_new = []
-
 let rec fold_exp (e:Range.t exp) : (Range.t exp) =
   begin match e with
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
       begin match bop with
-        | Plus _ -> 
+        | Plus _ ->
           let c = Int32.add c1 c2 in 
           (Const (Cint (Range.norange,c)))
         | Minus _ ->
@@ -58,7 +56,7 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
           (Const (Cint (Range.norange,c)))
       end
     | Binop(bop,Const (Cint (_,c1)), e1) ->
-       Binop(bop,Const (Cint (Range.norange,c1)), fold_exp e1)
+       (Binop(bop,Const (Cint (Range.norange,c1)), fold_exp e1))
     | Binop(bop, e1,Const (Cint (_,c1))) ->
       Binop(bop,fold_exp e1, Const (Cint (Range.norange,c1)))
     | Binop(bop, e1, e2) ->
@@ -88,6 +86,8 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
             | PathMethod (path, el) ->LhsOrCall(Call(PathMethod (path, el)))
           end
       end
+     | _ -> e
+
   end
 
 and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
@@ -180,4 +180,4 @@ let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t A
   end
   
 let opt_ast (prog:Range.t Ast.prog) : (Range.t Ast.prog) = 
-  print_prog prog; let p = parse_prog prog prog_new in print_prog p; p
+  print_prog prog; let p = parse_prog prog [] in print_prog p; p
