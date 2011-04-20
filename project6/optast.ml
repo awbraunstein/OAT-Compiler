@@ -1,8 +1,10 @@
 open Ast
 open Astlib
+open Range
+
 let prog_new = []
 
-let fold_exp e =
+let fold_exp (e:Range.t exp) : (Range.t exp) =
   begin match e with
     (*| Binop(bop,e1,e2) ->
       begin match bop with
@@ -10,7 +12,7 @@ let fold_exp e =
         | _ -> e
       end*)
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
-      let c = Int32.add c1 c2 in Const (Cint ((),c))
+      let c = Int32.add c1 c2 in (Const (Cint (Range.norange,c)))
     | Unop (unop,e1) -> e
     | _ -> e
   end
@@ -25,11 +27,11 @@ let fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
     | _ -> v
   end
 
-let fold_block(block : Range.t Ast.block) : Range.t Ast.block =
+let fold_block(block : Range.t Ast.block) : (Range.t Ast.block) =
   block
 
 
-let rec fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
+let rec fold_stmt (stmt : Range.t Ast.stmt) : (Range.t Ast.stmt) =
   begin match stmt with
     | Assign (l,e) -> Assign(l,fold_exp e)
     | Scall (c) -> stmt
