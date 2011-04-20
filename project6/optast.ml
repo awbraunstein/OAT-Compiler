@@ -3,15 +3,22 @@ open Ast
 open Astlib
 let prog_new = []
 
+let fold_exp e =
+  begin match e with
+    | Binop(bop,e1,e2) ->
+      begin match bop with
+        | Ast.Plus _ -> e
+        | _ -> e
+      end
+    | Unop (unop,e1) -> e
+    | _ -> e
+  end
+
 let fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
   begin match v with
     | {v_ty = TInt; v_id = _; v_init = init;} ->
       begin match init with
-        | Ast.Iexp e ->
-          begin match e with
-            | Binop(bop,e1,e2) -> v
-            | _ -> v
-          end
+        | Ast.Iexp e -> v
         | _ -> v
       end
     | _ -> v
