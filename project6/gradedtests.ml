@@ -446,7 +446,7 @@ let manual_tests : suite = [
   GradedTest ("StyleManual", 10, [
   
   ]);
-    Test("Out tests", [
+    Test("Our tests", [
     ("Test1", file_test "OURTEST1.oat" "" "5");
     ("Test2", file_test "OURTEST2.oat" "" "14");
     ("Test3", file_test "OURTEST3.oat" "" "11");

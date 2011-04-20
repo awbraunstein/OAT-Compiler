@@ -2,8 +2,8 @@ open Ast
 open Astlib
 open Range
 
-let rec fold_exp (e:Range.t exp) : (Range.t exp) =
-  begin match e with
+let rec fold_exp_2 (e:Range.t exp) :(Range.t exp) =
+begin match e with
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
       begin match bop with
         | Plus _ ->
@@ -55,22 +55,31 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
           let c = Int32.shift_right_logical c1 (Int32.to_int c2) in 
           (Const (Cint (Range.norange,c)))
       end
-    | Binop(bop,Const (Cint (_,c1)), e1) ->
-       (Binop(bop,Const (Cint (Range.norange,c1)), fold_exp e1))
-    | Binop(bop, e1,Const (Cint (_,c1))) ->
-      Binop(bop,fold_exp e1, Const (Cint (Range.norange,c1)))
-    | Binop(bop, e1, e2) ->
-      Binop(bop,fold_exp e1, fold_exp e2)
+    | _ -> e
+  end
+  
+  
+let rec fold_list (e:Range.t exp list) (el:Range.t exp list) : (Range.t exp list) =
+  begin match e with
+    | h::tl -> fold_list tl (el@[fold_exp h])
+    | [] -> el
+  end 
+  
+and fold_exp (e:Range.t exp) : (Range.t exp) =
+  begin match e with
+    | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) -> fold_exp_2 e
+    | Binop(bop, e1, e2) -> (Binop(bop,fold_exp e1, fold_exp e2))
     | Unop (unop,Const(Cint(_,c1))) ->
       begin match unop with
         | Neg _ -> let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
         | Lognot _ ->let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
         | Not _ ->let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
       end
+    | Unop (unop, e1) -> Unop(unop, fold_exp e1)
     | Const c -> Const c 
     | This t -> This t
     | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
-    | Ctor (cid, el) -> Ctor (cid, el)
+    | Ctor (cid, el) -> Ctor (cid, fold_list el [])
     | LhsOrCall lhsc ->
       begin match lhsc with
         | Lhs lhs ->
@@ -81,12 +90,11 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
           end
         | Call call ->
           begin match call with
-            | Func (id,el) ->LhsOrCall(Call(Func (id,el)))
-            | SuperMethod (id, el) ->LhsOrCall(Call(SuperMethod (id, el)))
-            | PathMethod (path, el) ->LhsOrCall(Call(PathMethod (path, el)))
+            | Func (id,el) ->LhsOrCall(Call(Func (id,fold_list el [])))
+            | SuperMethod (id, el) ->LhsOrCall(Call(SuperMethod (id, fold_list el [])))
+            | PathMethod (path, el) ->LhsOrCall(Call(PathMethod (path, fold_list el [])))
           end
       end
-     | _ -> e
 
   end
 
