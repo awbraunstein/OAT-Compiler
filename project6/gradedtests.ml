@@ -448,15 +448,15 @@ let manual_tests : suite = [
   ]);
     Test("Our tests", [
     ("Test1", file_test "OURTEST1.oat" "" "5");
-    ("Test2", file_test "OURTEST2.oat" "" "14");
-    ("Test3", file_test "OURTEST3.oat" "" "11");
-    ("Test3", file_test "OURTEST4.oat" "" "2");
-    ("Test3", file_test "OURTEST5.oat" "" "0");
+    ("Test2", file_test "OURTEST2.oat" "" "3314");
+    ("HUGE ADD TEST", file_test "OURTEST3.oat" "" "24");
+    ("Test4", file_test "OURTEST4.oat" "" "2");
+    ("Test5", file_test "OURTEST5.oat" "" "0");
   ]);
 ]
 
 let graded_tests : suite = 
-  parsing_tests @
+  (*parsing_tests @
   typechecking_tests @
-  file_tests @
+  file_tests @ *)
   manual_tests

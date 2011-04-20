@@ -1,15 +1,11 @@
-Add instructions that the TA can follow to grade your project. 
+We did constant folding at the Ast level.  We also did code removal
 
-Your instructions should describe the steps needed to reproduce the
-performance measurements you use to demonstrate the impacts of your
-optimizations. 
+We folded arithmetic expressions and removed useless if statements, and while loops.
 
+We modified optast.ml to fold constants to make the output program shorter.
 
-Our Tests:
-Test1 -
+We modified the file to print the program before and after.  You can see the
+output code is shorter, therefore we have smaller file sizes and make the code
+more space efficient.
 
-Test2 -
-
-Test3 -
-
-Test4 -
+None of the optimizations break any of the test suite.

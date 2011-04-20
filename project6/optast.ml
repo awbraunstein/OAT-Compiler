@@ -2,8 +2,14 @@ open Ast
 open Astlib
 open Range
 
-let rec fold_exp_2 (e:Range.t exp) :(Range.t exp) =
-begin match e with
+let rec fold_list (e:Range.t exp list) (el:Range.t exp list) : (Range.t exp list) =
+  begin match e with
+    | h::tl -> fold_list tl (el@[fold_exp h])
+    | [] -> el
+  end 
+  
+and fold_exp (e:Range.t exp) : (Range.t exp) =
+  begin match e with
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
       begin match bop with
         | Plus _ ->
@@ -55,28 +61,20 @@ begin match e with
           let c = Int32.shift_right_logical c1 (Int32.to_int c2) in 
           (Const (Cint (Range.norange,c)))
       end
-    | _ -> e
-  end
-  
-  
-let rec fold_list (e:Range.t exp list) (el:Range.t exp list) : (Range.t exp list) =
-  begin match e with
-    | h::tl -> fold_list tl (el@[fold_exp h])
-    | [] -> el
-  end 
-  
-and fold_exp (e:Range.t exp) : (Range.t exp) =
-  begin match e with
-    | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) -> fold_exp_2 e
-    | Binop(bop, e1, e2) -> (Binop(bop,fold_exp e1, fold_exp e2))
+    | Binop(bop, LhsOrCall(Lhs(Var id)),Const _) -> e
+    | Binop(bop, LhsOrCall(Lhs(Var id)),e1) ->
+      fold_exp (Binop(bop, LhsOrCall(Lhs(Var id)),fold_exp e1))
+    | Binop(bop, e1, Const c) -> fold_exp (Binop(bop, fold_exp e1, Const c))
+    | Binop(bop, Const c, e2) -> fold_exp (Binop(bop, Const c, fold_exp e2))
+    | Binop(bop, e1, e2) -> fold_exp (Binop(bop, fold_exp e1, fold_exp e2))
+    | Unop(unop,LhsOrCall(Lhs(Var id))) -> e
     | Unop (unop,Const(Cint(_,c1))) ->
       begin match unop with
         | Neg _ -> let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
         | Lognot _ ->let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
         | Not _ ->let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
       end
-    | Unop (unop, e1) -> Unop(unop, fold_exp e1)
-    | Const c -> Const c 
+    | Unop (unop, e1) -> fold_exp (Unop(unop, fold_exp e1))
     | This t -> This t
     | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
     | Ctor (cid, el) -> Ctor (cid, fold_list el [])
@@ -95,7 +93,7 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
             | PathMethod (path, el) ->LhsOrCall(Call(PathMethod (path, fold_list el [])))
           end
       end
-
+     | Const c -> Const c
   end
 
 and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
