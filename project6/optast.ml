@@ -4,12 +4,12 @@ open Range
 
 let prog_new = []
 
-let fold_exp_2 (e:Range.t exp) : (Range.t exp) =
+let rec fold_exp (e:Range.t exp) : (Range.t exp) =
   begin match e with
     | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
       begin match bop with
-        | Ast.Plus _ -> let c = Int32.add c1 c2 in (Const (Cint (Range.norange,c)))
-        | Ast.Minus _ ->let c = Int32.sub c1 c2 in (Const (Cint (Range.norange,c)))
+        | Plus _ -> let c = Int32.add c1 c2 in (Const (Cint (Range.norange,c)))
+        | Minus _ ->let c = Int32.sub c1 c2 in (Const (Cint (Range.norange,c)))
         | Times _ -> let c = Int32.mul c1 c2 in (Const (Cint (Range.norange,c)))
         | Eq _ -> let c = (c1 = c2) in (Const (Cbool (Range.norange,c)))
         | Neq _ -> let c = (c1 != c2) in (Const (Cbool (Range.norange,c)))
@@ -25,13 +25,6 @@ let fold_exp_2 (e:Range.t exp) : (Range.t exp) =
         | Shr _ -> let c = Int32.shift_right c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
         | Sar _ -> let c = Int32.shift_right_logical c1 (Int32.to_int c2) in (Const (Cint (Range.norange,c)))
       end
-    | _ -> e
-  end
-      
-let rec fold_exp (e:Range.t exp) : (Range.t exp) =
-  begin match e with
-    | Binop(bop,Const (Cint (_,c1)), Const (Cint (_,c2))) ->
-      let e = Binop(bop,Const (Cint (Range.norange,c1)), Const (Cint (Range.norange,c2))) in fold_exp_2 e
     | Binop(bop,Const (Cint (_,c1)), e1) ->
        Binop(bop,Const (Cint (Range.norange,c1)), fold_exp e1)
     | Binop(bop, e1,Const (Cint (_,c1))) ->
@@ -134,4 +127,4 @@ let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t A
   end
   
 let opt_ast (prog:Range.t Ast.prog) : (Range.t Ast.prog) = 
-  parse_prog prog prog_new
+  print_prog prog; let p = parse_prog prog prog_new in print_prog prog; p
