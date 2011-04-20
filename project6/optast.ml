@@ -1,9 +1,25 @@
+
 open Ast
 open Astlib
 let prog_new = []
 
+let fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
+  begin match v with
+    | {v_ty = TInt; v_id = _; v_init = init;} ->
+      begin match init with
+        | Ast.Iexp e ->
+          begin match e with
+            | Binop(bop,e1,e2) -> v
+            | _ -> v
+          end
+        | _ -> v
+      end
+    | _ -> v
+  end
+
 let fold_block(block : Range.t Ast.block) : Range.t Ast.block =
   block
+
 
 let fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
   begin match stmt with
@@ -36,5 +52,3 @@ let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t A
   
 let opt_ast (prog:Range.t Ast.prog) : (Range.t Ast.prog) = 
   parse_prog prog prog_new
-  
-
