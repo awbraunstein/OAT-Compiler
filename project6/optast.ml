@@ -168,7 +168,15 @@ and fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
         | Some x -> Cast (cid,id, fold_exp exp, fold_stmt stmt, Some(fold_stmt x))
         | None -> Cast (cid,id, fold_exp exp, fold_stmt stmt, os)
       end
-    | While (exp, stmt) -> While(fold_exp exp, fold_stmt stmt)
+    | While (exp, stmt) -> 
+      let e = fold_exp exp in
+      begin match e with
+        | Const(Cbool (_,n)) -> 
+          if n = true then 
+            While(e, fold_stmt stmt) else
+              Block([],[])
+        | _ -> While(e, fold_stmt stmt)
+      end
     | For (vdecls, opt_exp, opt_stmt, stmt) -> For(vdecls, opt_exp, opt_stmt, fold_stmt stmt)
     | Block (block) -> Block(fold_block block)
   end

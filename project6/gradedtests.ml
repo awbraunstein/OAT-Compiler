@@ -450,6 +450,8 @@ let manual_tests : suite = [
     ("Test1", file_test "OURTEST1.oat" "" "5");
     ("Test2", file_test "OURTEST2.oat" "" "14");
     ("Test3", file_test "OURTEST3.oat" "" "11");
+    ("Test3", file_test "OURTEST4.oat" "" "2");
+    ("Test3", file_test "OURTEST5.oat" "" "0");
   ]);
 ]
 
