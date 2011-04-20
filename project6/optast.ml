@@ -37,7 +37,25 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
         | Lognot _ ->let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
         | Not _ ->let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
       end
-    | _ -> e
+    | Const _ -> e 
+    | This _ -> e
+    | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
+
+    | LhsOrCall lhsc ->
+      begin match lhsc with
+        | Lhs lhs ->
+          begin match lhs with
+            | Var id -> Var id
+            | Path p -> Path p
+            | Index (lhs_or_call, exp) -> Index(lhs_or_call,fold_exp exp)
+          end
+        | Call c ->
+          begin match c with
+            | Func (id,el) ->Func (id,el)
+            | SuperMethod (id, el) ->SuperMethod (id, el)
+            | PathMethod (path, el) ->PathMethod (path, el)
+          end
+      end
   end
 
 and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
@@ -111,7 +129,10 @@ and fold_cdecl ((a,b,f,c,fdecls):Range.t Ast.cdecl) : Range.t Ast.cdecl =
 
 
 and fold_fdecl ((a, (b,c), d, block, e):Range.t Ast.fdecl) : Range.t Ast.fdecl =
-  (a,(b,c), d, fold_block block, e)
+  begin match e with
+    | Some exp -> (a,(b,c), d, fold_block block, Some (fold_exp exp))
+    | None ->  (a,(b,c), d, fold_block block, e)
+  end
   
 
 let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t Ast.prog) =  
