@@ -180,7 +180,7 @@ let _ =
 	   if !compile_only then () 
 	   else
 	     let dot_o_files = List.map (fun p -> root_to_dot_o (path_to_root_source p)) !worklist in
-	       Platform.link dot_o_files !Platform.executable_name
+	       Platform.link dot_o_files (Platform.full_executable_name ())
   with Ran_tests -> ()
 
 

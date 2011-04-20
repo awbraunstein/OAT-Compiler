@@ -16,9 +16,10 @@ let lib_paths = ref []
 let include_paths = ref []
 let obj_path = ref (if os = "Unix" then "c_obj/" else "c_obj\\")
 let bin_path = ref (if os = "Unix" then "c_bin/" else "c_bin\\")
-let executable_name = ref ((!bin_path) ^ (if os = "Unix" then "a.out" else "a.exe"))
+let executable_name = ref (if os = "Unix" then "a.out" else "a.exe")
 let executable_exn = if os = "Unix" then "" else ".exe" 
 let path_sep = if (os = "Unix") then "/" else "\\"
+let full_executable_name () = !bin_path ^ path_sep ^ !executable_name
 let linux = ref false
 
 let as_cmd = if os = "Unix" then "gcc -mstackrealign -c -m32 -o " else "as -o "

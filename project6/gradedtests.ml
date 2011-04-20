@@ -425,7 +425,7 @@ let file_tests : suite = [
     ("provided_description_demo", file_test "provided_description_demo.oat" "" "arfmooThis dog is stray!0");
     ("selectionsort", file_test "selectionsort.oat" "" "0");
   ]);
-
+  
   Test("Runtime error tests", [
 
     (* parent *)
@@ -446,10 +446,15 @@ let manual_tests : suite = [
   GradedTest ("StyleManual", 10, [
   
   ]);
+    Test("Out tests", [
+    ("Test1", file_test "OURTEST1.oat" "" "10");
+    (*("Test2", file_test "OURTEST2.oat" "" "14");
+    ("Test3", file_test "OURTEST3.oat" "" "11");*)
+  ]);
 ]
 
 let graded_tests : suite = 
-  parsing_tests @
+  (*parsing_tests @
   typechecking_tests @
-  file_tests @
+  file_tests @*)
   manual_tests

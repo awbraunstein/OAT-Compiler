@@ -5,9 +5,6 @@ performance measurements you use to demonstrate the impacts of your
 optimizations. 
 
 
-1.Remove conditionals with a "false" initializer
-2.Remove unused variables
-
 Our Tests:
 Test1 -
 

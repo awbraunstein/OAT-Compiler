@@ -10,6 +10,7 @@ val bin_path : string ref
 val executable_name : string ref
 val executable_exn : string
 val path_sep : string
+val full_executable_name : unit -> string
 val linux : bool ref
 
 val verbose_on : bool ref
