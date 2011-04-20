@@ -1,4 +1,3 @@
-
 open Ast
 open Astlib
 let prog_new = []
@@ -38,7 +37,7 @@ let fold_stmt (stmt : Range.t Ast.stmt) : Range.t Ast.stmt =
     | Cast (cid,id, exp, stmt, opt_stmt) -> stmt
     | While (exp, stmt) -> stmt
     | For (vdecls, opt_exp, opt_stmt, stmt) -> stmt
-    | Block (block) -> stmt
+    | Block (block) -> Block(fold_block block)
   end
 
 
@@ -50,8 +49,8 @@ let rec parse_prog (prog:Range.t Ast.prog)(new_prog:Range.t Ast.prog):(Range.t A
   begin match prog with
     | h::tl ->
       begin match h with
-        | Ast.Gvdecl vdecl-> new_prog
-        | Ast.Gfdecl fdecl-> new_prog
+        | Ast.Gvdecl vdecl-> parse_prog tl (new_prog@[Ast.Gvdecl(fold_vdecl vdecl)])
+        | Ast.Gfdecl fdecl-> parse_prog tl (new_prog@[Ast.Gfdecl(fold_fdecl fdecl)])
         | _ -> parse_prog tl new_prog
       end; 
     | [] -> new_prog
