@@ -69,8 +69,8 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
         | Lognot _ ->let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
         | Not _ ->let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
       end
-    | Const _ -> e 
-    | This _ -> e
+    | Const c -> Const c 
+    | This t -> This t
     | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
 
     | LhsOrCall lhsc ->
@@ -92,9 +92,9 @@ let rec fold_exp (e:Range.t exp) : (Range.t exp) =
 
 and fold_vdecl (v:Range.t Ast.vdecl) : (Range.t Ast.vdecl) =
   begin match v with
-    | {v_ty = TInt; v_id = _; v_init = init;} ->
+    | {v_ty = TInt; v_id = id; v_init = init;} ->
       begin match init with
-        | Ast.Iexp e -> v
+        | Ast.Iexp e -> let i = fold_exp e in {v_ty = TInt; v_id = id; v_init = (Ast.Iexp i);}
         | _ -> v
       end
     | _ -> v
