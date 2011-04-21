@@ -7,3 +7,38 @@ We modified optast.ml to fold constants to make the output program shorter.
 We modified the file to print the program before and after the optimizations.  You can see the
 output code is shorter, therefore we have smaller file sizes and make the code
 more space efficient.
+
+The only issue we have is with associativity and our recursion.
+After our setup we realized that we did not handle certain setups correctly.
+Such as in BSTTest.oat it keeps trying to reduce a Binop, then returns that binop,
+and gets into an infinity loop.  Please remove that test from the suite to see that
+it works with all the others.
+
+Measurements:
+
+Running our OURTEST2.oat with and without optimizations...
+
+WITHOUT:
+time ./main.native -runtime ../lib/runtime.c -I ../lib ../tests/OURTEST2.oat 
+real	0m56.004s
+user	0m54.563s
+sys	0m0.174s
+
+
+WITH:
+time ./main.native -runtime ../lib/runtime.c -Oast -I ../lib ../tests/OURTEST2.oat
+real	0m0.707s
+user	0m0.575s
+sys	0m0.065s
+
+
+Also, the filesizes differ:
+a.out WITH optimizations = 15208 bytes
+assembly file WITH (output of wc tmp.asm) = 112     275    1918
+
+a.out WITHOUT optimizations = 519048 bytes
+assembly file WITHOUT (output of wc tmp.asm) = 79624  238811 1932934
+
+This was confirmed over multiple trials.
+We can obviously see the assembly file is MUCH shorter and the executable is MUCH smaller
+with our optimizations.

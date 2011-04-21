@@ -84,10 +84,6 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
     | Binop(_, Binop((_, _,LhsOrCall(_))), _) -> e
     | Binop(bop, LhsOrCall(_),LhsOrCall(_)) -> e
     | Binop(bop, Const c,LhsOrCall(_)) -> e
-    | Binop(bop, (Binop(bap, LhsOrCall(n),Const c)) , e1) -> 
-       (Binop(bop, (Binop(bap, LhsOrCall(n),Const c)) , fold_exp e1)) 
-    | Binop(bop, e1, (Binop(bap, LhsOrCall(n),Const c))) -> 
-       (Binop(bop, fold_exp e1, (Binop(bap, LhsOrCall(n),Const c))))     
     | Binop(bop, e1, e2) -> 
        fold_exp(Binop(bop, fold_exp e1, fold_exp e2))
     | Unop(unop,LhsOrCall(a)) -> e
