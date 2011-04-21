@@ -61,22 +61,24 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
           let c = Int32.shift_right_logical c1 (Int32.to_int c2) in 
           (Const (Cint (Range.norange,c)))
       end
-    | Binop(bop, LhsOrCall(Lhs(Var id)),Const c) -> e
-    | Binop(bop, Const c,LhsOrCall(Lhs(Var id))) -> e
-    | Binop(bop, LhsOrCall(Lhs(Var id)),e1) ->
-      fold_exp (Binop(bop, LhsOrCall(Lhs(Var id)),fold_exp e1))
-    | Binop(bop,e1, LhsOrCall(Lhs(Var id))) ->
-      fold_exp (Binop(bop,fold_exp e1,LhsOrCall(Lhs(Var id))))
-    | Binop(bop, e1, e2) -> fold_exp (Binop(bop, fold_exp e1, fold_exp e2))
-    | Unop(unop,LhsOrCall(Lhs(Var id))) -> e
+    | Binop(bop, LhsOrCall(_),Const c) -> e
+    | Binop(bop, LhsOrCall(_),LhsOrCall(_)) -> e
+    | Binop(bop, Const c,LhsOrCall(_)) -> e
+    | Binop(bop, LhsOrCall(a),e1) ->
+      fold_exp (Binop(bop, LhsOrCall(a),fold_exp e1))
+    | Binop(bop,e1, LhsOrCall(a)) ->
+      fold_exp (Binop(bop,fold_exp e1,LhsOrCall(a)))
+    | Binop(bop, e1, e2) ->
+      fold_exp (Binop(bop, fold_exp e1, fold_exp e2))
+    | Unop(unop,LhsOrCall(a)) -> e
     | Unop (unop,Const(Cint(_,c1))) ->
       begin match unop with
         | Neg _ -> let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
-        | Lognot _ ->let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
-        | Not _ ->let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
+        | Lognot _ -> let c = (Int32.lognot c1) in (Const (Cint (Range.norange,c)))
+        | Not _ -> let c = (Int32.neg c1) in (Const (Cint (Range.norange,c)))
       end
     | Unop (unop, e1) -> fold_exp (Unop(unop, fold_exp e1))
-    | This t -> This t
+    | This this -> This this
     | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
     | Ctor (cid, el) -> Ctor (cid, fold_list el [])
     | LhsOrCall lhsc ->
