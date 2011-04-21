@@ -449,7 +449,7 @@ let manual_tests : suite = [
     Test("Our tests", [
     ("Test1", file_test "OURTEST1.oat" "" "5");
     ("Test2", file_test "OURTEST2.oat" "" "3314");
-    ("HUGE ADD TEST", file_test "OURTEST3.oat" "" "25");
+    ("HUGE ADD TEST", file_test "OURTEST3.oat" "" "26");
     ("Test4", file_test "OURTEST4.oat" "" "2");
     ("Test5", file_test "OURTEST5.oat" "" "0");
   ]);
