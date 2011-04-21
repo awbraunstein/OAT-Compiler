@@ -1,11 +1,9 @@
-We did constant folding at the Ast level.  We also did code removal
+We did constant folding at the Ast level.  We also did code removal.
 
 We folded arithmetic expressions and removed useless if statements, and while loops.
 
 We modified optast.ml to fold constants to make the output program shorter.
 
-We modified the file to print the program before and after.  You can see the
+We modified the file to print the program before and after the optimizations.  You can see the
 output code is shorter, therefore we have smaller file sizes and make the code
 more space efficient.
-
-None of the optimizations break any of the test suite.

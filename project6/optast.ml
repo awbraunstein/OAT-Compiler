@@ -78,14 +78,14 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
         | _ -> e
       end
     | Binop(bop, LhsOrCall(_),Const c) -> e
+    | Binop(_, _,Binop((_, LhsOrCall(_), _))) -> e
+    | Binop(_, _,Binop((_, _,LhsOrCall(_)))) -> e
+    | Binop(_, Binop((_, LhsOrCall(_), _)), _) -> e
+    | Binop(_, Binop((_, _,LhsOrCall(_))), _) -> e
     | Binop(bop, LhsOrCall(_),LhsOrCall(_)) -> e
     | Binop(bop, Const c,LhsOrCall(_)) -> e
-    | Binop(bop, LhsOrCall(a),e1) ->
-      fold_exp (Binop(bop, LhsOrCall(a),fold_exp e1))
-    | Binop(bop,e1, LhsOrCall(a)) ->
-      fold_exp (Binop(bop,fold_exp e1,LhsOrCall(a)))
     | Binop(bop, e1, e2) ->
-      fold_exp (Binop(bop, fold_exp e1, fold_exp e2))
+       fold_exp(Binop(bop, fold_exp e1, fold_exp e2))
     | Unop(unop,LhsOrCall(a)) -> e
     | Unop (unop,Const(Cint(_,c1))) ->
       begin match unop with
@@ -98,7 +98,7 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
     | New (e1, i, e2) -> New(fold_exp e1,i,fold_exp e2)
     | Ctor (cid, el) -> Ctor (cid, fold_list el [])
     | LhsOrCall lhsc ->
-      begin match lhsc with
+     begin match lhsc with
         | Lhs lhs ->
           begin match lhs with
             | Var id -> LhsOrCall(Lhs(Var id))
