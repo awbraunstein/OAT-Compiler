@@ -4,7 +4,8 @@ Team Members:
   bandrew Andrew Braunstein	bandrew@seas.upenn.edu
 
 Known issues with your implementation:
-
+We do not handle associativity correctly.
+testBST.oat goes into an infinite loop.
 
 
 ------------------------
@@ -12,19 +13,19 @@ Course Project Feedback:
 ------------------------
 
 1.  How much time did it take to complete this project?
+10 hours
 
-
-2. How effective was this project? [0-10]: 
+2. How effective was this project? [0-10]: 9
 
     0 = learned nothing
    10 = highly educational
 
-3. How engaging was this project? [0-10]:
+3. How engaging was this project? [0-10]: 8
 
     0 = tedious and boring
    10 = fun and engaging
 
-4. How difficult was this project? [0-10]:
+4. How difficult was this project? [0-10]: 6
 
     0 = piece of cake
    10 = extremely hard
