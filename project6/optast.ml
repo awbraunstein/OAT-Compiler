@@ -61,6 +61,22 @@ and fold_exp (e:Range.t exp) : (Range.t exp) =
           let c = Int32.shift_right_logical c1 (Int32.to_int c2) in 
           (Const (Cint (Range.norange,c)))
       end
+    | Binop(bop,Const (Cbool (_,c1)), Const (Cbool (_,c2))) ->
+      begin match bop with
+        | Eq _ -> 
+          let c = (c1 = c2) in 
+          (Const (Cbool (Range.norange,c)))
+        | Neq _ -> 
+          let c = (c1 != c2) in 
+          (Const (Cbool (Range.norange,c)))
+        | And _ -> 
+          let c = c1 && c2 in 
+          (Const (Cbool (Range.norange,c)))
+        | Or _ -> 
+          let c = c1 || c2 in 
+          (Const (Cbool (Range.norange,c)))
+        | _ -> e
+      end
     | Binop(bop, LhsOrCall(_),Const c) -> e
     | Binop(bop, LhsOrCall(_),LhsOrCall(_)) -> e
     | Binop(bop, Const c,LhsOrCall(_)) -> e
