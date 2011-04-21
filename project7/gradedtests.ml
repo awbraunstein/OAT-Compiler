@@ -443,13 +443,14 @@ let file_tests : suite = [
 ]
 
 let manual_tests : suite = [
-  GradedTest ("StyleManual", 10, [
-  
-  ]);
+  Test("OurSoftware", [
+    ("maintest", file_test "main.oat" "" "0");
+    ]);
+
 ]
 
 let graded_tests : suite = 
-  parsing_tests @
+  (*parsing_tests @
   typechecking_tests @
-  file_tests @
+  file_tests @*)
   manual_tests
