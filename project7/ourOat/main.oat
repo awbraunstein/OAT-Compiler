@@ -41,7 +41,7 @@ class State <: Object {
   Player player2;
 
   new ()() 
-    this.player1 = new Player("player1", false, false, 1);
+    this.player1 = new Player("player1", true, false, 1);
     this.player2 = new Player("player2", false, false, 2);
   {  }
 
@@ -49,8 +49,21 @@ class State <: Object {
     return;
   }
   
-  unit update (Player player) {
-  	board.pieces[1][1] = player.num;
+  unit update (Player player, int move) {
+  	int move2;
+  	for (int i = 0; i < 6; i++) {
+  		if(while board.pieces[move][i] == 0) {
+  		move2 = board.pieces[move][i+1];
+  		}
+  	board.pieces[move][move2] = player.num;
+  	if (player1.turn) {
+  		player1.turn = false;
+  		player2.turn = true;
+  	}
+  	if (player2.turn) {
+  		player2.turn = false;
+  		player1.turn = true;
+  	}
   }
 
   unit display() {
