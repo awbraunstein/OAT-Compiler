@@ -1,0 +1,96 @@
+#include "console.oat"`
+
+class Piece <: Object{
+	int team;
+	
+	new (int team)() {
+		this.team = team;
+	}
+	
+	unit init() { return; }
+};
+
+class Board <: Object {
+	int[][] board;
+	
+	new (Piece[][] board, string winner)() {
+		winner = "";
+	}
+	
+	/*int update()() {return;}*/
+	
+	/*int checkWinner()() {return;}*/
+
+};
+
+class Player <: Object{
+	string name;
+	bool turn;
+	bool winner;
+	new (string name, bool turn, bool winner)(){
+		this.name = name;
+		this.turn = false;
+		this.winner = false;
+		}
+};
+	
+class State <: Object {
+  Board board;
+  Player player1;
+  Player player2;
+
+  new ()() 
+    this.player1 = new Player("player1", false, false);
+    this.player2 = new Player("player1", false, false);
+  {  }
+
+  unit init() {
+    return;
+  }
+
+  unit display() {
+    con_clear();
+    con_refresh();
+    return;
+  }
+};
+
+unit instructions() {
+  con_move(0,0);
+  con_print("
+    \\Connect4! \n
+    \\  Press the number over the column where you want to place your piece. \n
+    \\  # - Place piece \n
+    \\  First to get 4 pieces in a row wins! \n
+    \\  Esc - quit \n\n
+    \\  [Press any key to begin]\n");
+  return;
+}
+
+unit lose() {
+  return;
+}
+
+int program(int argc, string[] argv) {
+  int minx = 100;
+  int miny = 50;
+  con_init();
+  instructions();
+  if ((con_width() >= minx) & (con_height() >= miny) ) {
+    State state = new State(); 
+    int lost = 0;
+    int k = 0;
+    int something = 0;
+    state.init();
+    something = con_halfdelay(1); 
+    while ((k != 27) & !lost) {
+      state.display();
+      k = con_getch();
+    }
+    lose();
+  } else {
+    print_string("Minimum size of the console is 80x25!\n");
+  }
+  con_cleanup();
+  return 0;
+}
