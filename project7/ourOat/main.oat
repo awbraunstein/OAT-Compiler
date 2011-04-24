@@ -11,27 +11,28 @@ class Piece <: Object{
 };
 
 class Board <: Object {
-	int[][] board;
+	Piece[][] pieces;
 	
-	new (Piece[][] board, string winner)() {
-		winner = "";
+	new (Piece[][] pieces)() {
 	}
 	
 	/*int update()() {return;}*/
 	
-	/*int checkWinner()() {return;}*/
-
 };
 
 class Player <: Object{
 	string name;
+	int num;
 	bool turn;
 	bool winner;
-	new (string name, bool turn, bool winner)(){
+	new (string name, bool turn, bool winner, int num)(){
 		this.name = name;
 		this.turn = false;
 		this.winner = false;
+		this.num = num;
 		}
+	bool checkWinner() {return this.winner;}
+
 };
 	
 class State <: Object {
@@ -40,16 +41,21 @@ class State <: Object {
   Player player2;
 
   new ()() 
-    this.player1 = new Player("player1", false, false);
-    this.player2 = new Player("player1", false, false);
+    this.player1 = new Player("player1", false, false, 1);
+    this.player2 = new Player("player2", false, false, 2);
   {  }
 
   unit init() {
     return;
   }
+  
+  unit update (Player player) {
+  	board.pieces[1][1] = player.num;
+  }
 
   unit display() {
     con_clear();
+    con_print("Updating display!\n")
     con_refresh();
     return;
   }
