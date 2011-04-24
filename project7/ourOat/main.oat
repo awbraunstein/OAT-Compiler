@@ -2,9 +2,15 @@
 
 class Piece <: Object{
 	int team;
-	
+	string pic0;
+	string pic1;
+	strping pic2;
 	new (int team)() {
 		this.team = team;
+		this.pic0 = "     \n     \n     \n     \n     \n";
+		this.pic1 = "XXXXX\nXXXXX\nXXXXX\nXXXXX\nXXXXX\n";
+		this.pic2 = "OOOOO\nOOOOO\nOOOOO\nOOOOO\nOOOOO\n";
+	
 	}
 	
 	unit init() { return; }
@@ -91,8 +97,8 @@ unit lose() {
 }
 
 int program(int argc, string[] argv) {
-  int minx = 100;
-  int miny = 50;
+  int minx = 80;
+  int miny = 80;
   con_init();
   instructions();
   if ((con_width() >= minx) & (con_height() >= miny) ) {
