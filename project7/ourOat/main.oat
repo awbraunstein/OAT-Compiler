@@ -4,13 +4,26 @@ class Piece <: Object{
 	int team;
 	string pic0;
 	string pic1;
-	strping pic2;
+	string pic2;
 	new (int team)() {
-		this.team = team;
+		this.team = 0;
 		this.pic0 = "     \n     \n     \n     \n     \n";
 		this.pic1 = "XXXXX\nXXXXX\nXXXXX\nXXXXX\nXXXXX\n";
 		this.pic2 = "OOOOO\nOOOOO\nOOOOO\nOOOOO\nOOOOO\n";
 	
+	}
+	
+	unit draw(){
+		if(this.team==0){
+			con_print(this.pic0);
+		}
+		if(this.team==1){
+			con_print(this.pic1);
+		}
+		if(this.team==2){
+			con_print(this.pic2);
+		}
+                return;
 	}
 	
 	unit init() { return; }
@@ -56,25 +69,27 @@ class State <: Object {
   }
   
   unit update (Player player, int move) {
-  	int move2;
-  	for (int i = 0; i < 6; i++) {
-  		if(while board.pieces[move][i] == 0) {
-  		move2 = board.pieces[move][i+1];
-  		}
-  	board.pieces[move][move2] = player.num;
-  	if (player1.turn) {
-  		player1.turn = false;
-  		player2.turn = true;
-  	}
-  	if (player2.turn) {
-  		player2.turn = false;
-  		player1.turn = true;
-  	}
+  	int move2=0;
+  	for (int i = 0; i < 6; i=i+1;) {
+          if(this.board.pieces[move][i].team == 0) {
+            move2 = this.board.pieces[move][i+1].team;
+          }
+        }
+        this.board.pieces[move][move2].team = player.num;
+        if (this.player1.turn) {
+          this.player1.turn = false;
+          this.player2.turn = true;
+        }
+        if (this.player2.turn) {
+          this.player2.turn = false;
+          this.player1.turn = true;
+        }
+        return;
   }
-
+  
   unit display() {
     con_clear();
-    con_print("Updating display!\n")
+    con_print("Updating display!\n");
     con_refresh();
     return;
   }
@@ -100,6 +115,7 @@ int program(int argc, string[] argv) {
   int minx = 80;
   int miny = 80;
   con_init();
+  con_print("this is a test");
   instructions();
   if ((con_width() >= minx) & (con_height() >= miny) ) {
     State state = new State(); 
@@ -117,5 +133,5 @@ int program(int argc, string[] argv) {
     print_string("Minimum size of the console is 80x25!\n");
   }
   con_cleanup();
-  return 0;
+  return 1;
 }
