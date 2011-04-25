@@ -83,7 +83,9 @@ class Board <: Object {
     /*Print pieces*/
     for (int r = 0; r<6; r=r+1;){
       for(int c = 0; c<7; c=c+1;){
+      	con_attrset(con_color(this.pieces[r][c].team));
         this.pieces[r][c].draw();
+        con_attrset(con_color(0));
       }
     }
     return;
