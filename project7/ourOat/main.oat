@@ -2,36 +2,48 @@
 
 class Piece <: Object{
 	int team;
-	string pic0;
-	string pic1;
-	string pic2;
-	int x;
-	int y;
-	new (int team,int x, int y)()
-		this.pic0 = "     |\n     |\n     |\n     |\n     |\n";
-		this.pic1 = "XXXXX|\nXXXXX|\nXXXXX|\nXXXXX|\nXXXXX|\n";
-		this.pic2 = "OOOOO|\nOOOOO|\nOOOOO|\nOOOOO|\nOOOOO|\n";
+        int row;
+        int col;
+
+	new (int team)()
 	{
-		this.team = 0;
+		this.team = team;
+
 		this.x = y;
 		this.y = y;
 	}
 	
-	unit init(){
-		return;
+	unit init(int r, int c){
+          this.row = r;
+          this.col = c;
+          return;
 	}
 	
 	unit draw(){
-		if(this.team==0){
-			con_print(this.pic0);
-		}
-		if(this.team==1){
-			con_print(this.pic1);
-		}
-		if(this.team==2){
-			con_print(this.pic2);
-		}
-    return;
+          int x = 1+this.col*6;
+          int y = this.row*6;
+          if(this.team==0){
+            for(int i = 0; i<5; i=i+1;){
+              con_move(x,y);
+              con_print("     ");
+              y=y+1;
+            } 
+          }
+          if(this.team==1){
+            for(int i = 0; i<5; i=i+1;){
+              con_move(x,y);
+              con_print("XXXXX");
+              y=y+1;
+            }
+          }
+          if(this.team==2){
+            for(int i = 0; i<5; i=i+1;){
+              con_move(x,y);
+              con_print("OOOOO");
+              y=y+1;
+            }
+          }
+          return;
 	}
 	
 };
@@ -40,30 +52,28 @@ class Board <: Object {
   Piece[][] pieces;
   
   new ()()
-    this.pieces = new [7](fun i -> new [6](fun i -> new Piece(0)));
+    this.pieces = new [6](fun i -> new [7](fun i -> new Piece(1)));
   {
   }
     
+
+  unit init(){
+    for (int r = 0; r<6; r=r+1;){
+      for (int c = 0; c<7; c=c+1;){
+        this.pieces[r][c].init(r,c);
+      }
+    }
+    return;
+  }
   unit draw(){
     int x = 0;
     int y = 0;
     con_move(x,y);
-    for (int i=0; i<30;i=i+1;){
-      	con_print("|\n");
-    }
-	for (int r = 0; r<6; r=r+1;){
-      x=0;
-      con_move(x,y);
+    /*Print pieces*/
+    for (int r = 0; r<6; r=r+1;){
       for(int c = 0; c<7; c=c+1;){
-        con_move(x,y);
         this.pieces[r][c].draw();
-        x=x+5;
-        con_move(x,y);
       }
-      x=0;
-      y=y+6;
-      con_move(x,y);
-      con_print("___________________________________________");
     }
     return;
   }	
@@ -150,13 +160,15 @@ int program(int argc, string[] argv) {
   int miny = 80;
   int input = 0;
   Board s = new Board();
+  b.init();
   con_init();
   con_move(0,0);
   instructions();
+  con_clear();
   while ((input != 27)) {
+    s.draw();
+    input = con_getch();
     con_clear();
-  	s.draw();
-  	input = con_getch();
   	con_refresh();
   }
   con_cleanup();
