@@ -33,24 +33,39 @@ class Piece <: Object{
 };
 
 class Board <: Object {
-	Piece[][] pieces;
-	
-	new ()()
-  	this.pieces = new [7](fun i -> new [6](fun i -> new Piece(0)));
-	{
-	}
-	
-	/*int update()() {return;}*/
-	
-    unit draw(){
-      con_move(0,0);
-      for (int i = 0; i<7; i=i+1;){
-        for(int j = 0; j<6; j=j+1;){
-          
-        }
+  Piece[][] pieces;
+  
+  new ()()
+    this.pieces = new [7](fun i -> new [6](fun i -> new Piece(0)));
+  {
+  }
+  
+  /*int update()() {return;}*/
+  
+  unit draw(){
+    int x = 0;
+    int y = 0;
+    con_move(x,y);
+    for (int r = 0; r<6; r=r+1;){
+      x=0;
+      con_move(x,y);
+      con_print("|\n|\n|\n|\n|");
+      x=1;
+      for(int c = 0; c<7; c=c+1;){
+        con_move(x,y);
+        this.pieces[r][c].draw();
+        x=x+5;
+        con_move(x,y);
+        con_print("|\n|\n|\n|\n|");
+        x=x+1;
       }
-      return;
-   }	
+      x=0;
+      y=y+6;
+      con_move(x,y);
+      con_print("___________________________________________");
+    }
+    return;
+  }	
           
 	
 };
