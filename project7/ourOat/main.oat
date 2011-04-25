@@ -8,7 +8,9 @@ class Piece <: Object{
 	new (int team)()
 	{
 		this.team = team;
-}
+
+	}
+	
 	unit init(int r, int c){
           this.row = r;
           this.col = c;
@@ -50,6 +52,7 @@ class Board <: Object {
   new ()()
     this.pieces = new [6](fun i -> new [7](fun i -> new Piece(1)));
   {
+    this.init();
   }
     
 
@@ -65,9 +68,9 @@ class Board <: Object {
     int x = 0;
     int y = 0;
     con_move(x,y);
-    for (int i=0; i<30;i=i+1;){
-      	con_print("|\n");
-    }
+    /*Print board graphics*/
+
+
     /*Print pieces*/
     for (int r = 0; r<6; r=r+1;){
       for(int c = 0; c<7; c=c+1;){
