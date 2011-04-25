@@ -99,12 +99,12 @@ unit instructions() {
   int k = 0;
   con_move(0,0);
   con_print("
-    \\Connect4! \n
-    \\  Press the number over the column where you want to place your piece. \n
-    \\  # - Place piece \n
-    \\  First to get 4 pieces in a row wins! \n
-    \\  Esc - quit \n\n
-    \\  [Press any key to begin]\n");
+    Connect4! \n
+      Press the number over the column where you want to place your piece. \n
+      Number keys - Place piece \n
+      First to get 4 pieces in a row wins! \n
+      Esc - quit \n\n
+      [Press any key to begin]\n");
     k = con_getch();
   return;
 }
