@@ -5,12 +5,16 @@ class Piece <: Object{
 	string pic0;
 	string pic1;
 	string pic2;
-	new (int team)() {
-		this.team = 0;
-		this.pic0 = "     \n     \n     \n     \n     \n";
+	new (int team)()
+			this.pic0 = "     \n     \n     \n     \n     \n";
 		this.pic1 = "XXXXX\nXXXXX\nXXXXX\nXXXXX\nXXXXX\n";
 		this.pic2 = "OOOOO\nOOOOO\nOOOOO\nOOOOO\nOOOOO\n";
+	{
+		this.team = 0;
+	}
 	
+	unit init(){
+		return;
 	}
 	
 	unit draw(){
@@ -26,28 +30,21 @@ class Piece <: Object{
                 return;
 	}
 	
-	unit init() { return; }
 };
 
 class Board <: Object {
 	Piece[][] pieces;
 	
-	new (Piece[][] pieces)() {
-          this.pieces = new [7](fun i -> new [6](fun i -> new Piece(0)));
+	new ()()
+  	this.pieces = new [7](fun i -> new [6](fun i -> new Piece(0)));
+	{
 	}
 	
-	/*int update()() {return;}*/
-        unit draw(){
-          con_move(0,0);
-          for (int i = 0; i<7; i=i+1;){
-            for(int j = 0; i<6; j=j+1;){
-              
-            }
-          }
-          
+	unit draw() {
+		con_print("Here be a board\n");
+		return;
+	}
 
-          return;
-        }
 	
 };
 
@@ -74,6 +71,7 @@ class State <: Object {
   new ()() 
     this.player1 = new Player("player1", true, false, 1);
     this.player2 = new Player("player2", false, false, 2);
+    this.board = new Board();
   {  }
 
   unit init() {
@@ -116,7 +114,7 @@ unit instructions() {
       Number keys - Place piece \n
       First to get 4 pieces in a row wins! \n
       Esc - quit \n\n
-      [Press any key to begin]\n");
+      [Press any key to play!]\n");
     k = con_getch();
   return;
 }
@@ -128,9 +126,15 @@ unit lose() {
 int program(int argc, string[] argv) {
   int minx = 80;
   int miny = 80;
+  int input = 0;
+  Board b = new Board();
   con_init();
   con_move(0,0);
   instructions();
+  while ((input != 27)) {
+  	b.draw();
+  	input = con_getch();
+  }
   con_cleanup();
   return 1;
 }
