@@ -96,6 +96,7 @@ class State <: Object {
 };
 
 unit instructions() {
+  int k = 0;
   con_move(0,0);
   con_print("
     \\Connect4! \n
@@ -104,6 +105,7 @@ unit instructions() {
     \\  First to get 4 pieces in a row wins! \n
     \\  Esc - quit \n\n
     \\  [Press any key to begin]\n");
+    k = con_getch();
   return;
 }
 
@@ -115,23 +117,8 @@ int program(int argc, string[] argv) {
   int minx = 80;
   int miny = 80;
   con_init();
-  con_print("this is a test");
+  con_move(0,0);
   instructions();
-  if ((con_width() >= minx) & (con_height() >= miny) ) {
-    State state = new State(); 
-    int lost = 0;
-    int k = 0;
-    int something = 0;
-    state.init();
-    something = con_halfdelay(1); 
-    while ((k != 27) & !lost) {
-      state.display();
-      k = con_getch();
-    }
-    lose();
-  } else {
-    print_string("Minimum size of the console is 80x25!\n");
-  }
   con_cleanup();
   return 1;
 }
