@@ -68,9 +68,18 @@ class Board <: Object {
     int x = 0;
     int y = 0;
     con_move(x,y);
-    /*Print board graphics*/
-
-
+    /*Print | */
+    for (int i = 0; i<8; i=i+1;){
+      for(int j = 0; j<36; j=j+1;){
+        con_move(i*6,j);
+        con_print("|");
+      }
+    }
+    /*Print - */
+    for(int i = 0; i<6; i=i+1;){
+      con_move(0,5+i*6);
+      con_print("|-----|-----|-----|-----|-----|-----|-----|");
+    }
     /*Print pieces*/
     for (int r = 0; r<6; r=r+1;){
       for(int c = 0; c<7; c=c+1;){
@@ -83,14 +92,14 @@ class Board <: Object {
 };
 
 class Player <: Object{
-	string name;
-	int num;
-	new (string name, int num)()
-			this.name = name;
-		{
-		this.num = num;
-		}
-
+  string name;
+  int num;
+  new (string name, int num)()
+    this.name = name;
+  {
+    this.num = num;
+  }
+  
 };
 	
 class State <: Object {
