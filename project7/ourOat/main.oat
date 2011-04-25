@@ -5,12 +5,16 @@ class Piece <: Object{
 	string pic0;
 	string pic1;
 	string pic2;
-	new (int team)()
-		this.pic0 = "     \n     \n     \n     \n     \n";
-		this.pic1 = "XXXXX\nXXXXX\nXXXXX\nXXXXX\nXXXXX\n";
-		this.pic2 = "OOOOO\nOOOOO\nOOOOO\nOOOOO\nOOOOO\n";
+	int x;
+	int y;
+	new (int team,int x, int y)()
+		this.pic0 = "     |\n     |\n     |\n     |\n     |\n";
+		this.pic1 = "XXXXX|\nXXXXX|\nXXXXX|\nXXXXX|\nXXXXX|\n";
+		this.pic2 = "OOOOO|\nOOOOO|\nOOOOO|\nOOOOO|\nOOOOO|\n";
 	{
 		this.team = 0;
+		this.x = y;
+		this.y = y;
 	}
 	
 	unit init(){
@@ -39,25 +43,22 @@ class Board <: Object {
     this.pieces = new [7](fun i -> new [6](fun i -> new Piece(0)));
   {
   }
-  
-  /*int update()() {return;}*/
-  
+    
   unit draw(){
     int x = 0;
     int y = 0;
     con_move(x,y);
-    for (int r = 0; r<6; r=r+1;){
+    for (int i=0; i<30;i=i+1;){
+      	con_print("|\n");
+    }
+	for (int r = 0; r<6; r=r+1;){
       x=0;
       con_move(x,y);
-      con_print("|\n|\n|\n|\n|");
-      x=1;
       for(int c = 0; c<7; c=c+1;){
         con_move(x,y);
         this.pieces[r][c].draw();
         x=x+5;
         con_move(x,y);
-        con_print("|\n|\n|\n|\n|");
-        x=x+1;
       }
       x=0;
       y=y+6;
@@ -120,7 +121,7 @@ class State <: Object {
   
   unit display() {
     con_clear();
-    con_print("Updating display!\n");
+    this.board.draw();
     con_refresh();
     return;
   }
@@ -148,16 +149,16 @@ int program(int argc, string[] argv) {
   int minx = 80;
   int miny = 80;
   int input = 0;
-  Board b = new Board();
+  Board s = new Board();
   con_init();
   con_move(0,0);
   instructions();
   while ((input != 27)) {
     con_clear();
-  	b.draw();
+  	s.draw();
   	input = con_getch();
   	con_refresh();
   }
   con_cleanup();
-  return 1;
+  return 0;
 }
