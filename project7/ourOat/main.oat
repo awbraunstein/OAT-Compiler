@@ -127,18 +127,97 @@ class Player <: Object{
 };
 
 class AI <: Object{
-	int num;
 	bool enabled;
 	new(int num, bool enabled)(){
-		this.num = num;
 		this.enabled = enabled;
 	}
 	
-					
-	int move(State s){
-		return 1;
+  
+	int findmove(State s,int r, int c){
+		bool found = false;
+		int move = -1; 
+		if(r<3){
+	      if(s.board.pieces[r+1][c].team == 1
+	      	& s.board.pieces[r+2][c].team == 1
+	      		& s.board.pieces[r+3][c].team ==0 & found == false)
+	      		found = true;
+	        move = c;
+	    }
+	    if(c<4){
+	      if(s.board.pieces[r][c+1].team == 1
+	      	& s.board.pieces[r][c+2].team == 1
+	      		& s.board.pieces[r][c+3].team ==0 & found == false)
+	      		found = true;
+	        move = c+3;
+	    }
+	    if(c<4 & r<3){
+	      if(s.board.pieces[r+1][c+1].team == 1
+	      	& s.board.pieces[r+2][c+2].team ==1
+	      		& s.board.pieces[r+3][c+3].team == 0 & found == false)
+	      		found = true;
+	        move = c+3;
+	    }
+	    if(c>2 & r<3){
+	      if(s.board.pieces[r+1][c-1].team == 1
+	      	& s.board.pieces[r+2][c-2].team == 1
+	      		& s.board.pieces[r+3][c-3].team == 0 & found == false)
+	      		found = true;
+	        move = c-3;
+	    } 
+		if(r<3){
+	      if(s.board.pieces[r+1][c].team == 2
+	      	& s.board.pieces[r+2][c].team == 2
+	      		& s.board.pieces[r+3][c].team ==0 & found == false)
+	      		found = true;
+	        move = c;
+	    }
+	    if(c<4){
+	      if(s.board.pieces[r][c+1].team == 2
+	      	& s.board.pieces[r][c+2].team == 2
+	      		& s.board.pieces[r][c+3].team ==0 & found == false)
+	      		found = true;
+	        move = c+3;
+	    }
+	    if(c<4 & r<3){
+	      if(s.board.pieces[r+1][c+1].team == 2
+	      	& s.board.pieces[r+2][c+2].team ==2
+	      		& s.board.pieces[r+3][c+3].team == 0 & found == false)
+	      		found = true;
+	        move = c+3;
+	    }
+	    if(c>2 & r<3){
+	      if(s.board.pieces[r+1][c-1].team == 2
+	      	& s.board.pieces[r+2][c-2].team == 2
+	      		& s.board.pieces[r+3][c-3].team == 0 & found == false)
+	      		found = true;
+	        move = c-3;
+	    }
+		return move+49;
 	}
-	
+
+
+	int move(State s){
+		int i = 0;
+		bool found = false;
+		for(int r = 0; r<6; r=r+1;){
+      for(int c = 0; c<7; c=c+1;){
+      	if (i==48) {
+      		i = this.findmove(s,r,c);
+      		found = true;
+      	}
+      }
+    }
+    if (found == false) {
+	    	for (int k =0; k<7; k=k+1;) {
+	    		if (s.board.pieces[0][i].team==0 & found == false){
+	    			found = true;
+	    			i=k;
+	    		}
+	    	}
+	    }
+    return i;
+  }
+  
 };
 
 class State <: Object {
@@ -330,7 +409,13 @@ int program(int argc, string[] argv) {
     	input = s.ai.move(s);
     }
     else {
+        	input = con_getch();
+    
+    while( input<49 | input>55){
+    	s.msg = "Make a valid move.\n";
+    	s.display();
     	input = con_getch();
+    	}
     }
     gameStat = s.update(input);
     s.move = false;
