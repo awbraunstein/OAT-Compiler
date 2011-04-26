@@ -296,9 +296,16 @@ unit intro() {
 unit gametype(){
 	con_clear();
 	con_move(0,0);
-	con_print("
-	      Press 1 for Player vs Player
-	      Press 2 for Player vs Computer");
+	con_print("\n
+		 .o88b.  .d88b.  d8b   db d8b   db d88888b  .o88b. d888888b        j88D  
+		d8P  Y8 .8P  Y8. 888o  88 888o  88 88'     d8P  Y8 `~~88~~'       j8 88  
+		8P      88    88 88V8o 88 88V8o 88 88ooooo 8P         88         j8' 88  
+		8b      88    88 88 V8o88 88 V8o88 88~~~~~ 8b         88         V88888D 
+		Y8b  d8 `8b  d8' 88  V888 88  V888 88.     Y8b  d8    88             88  
+		 `Y88P'  `Y88P'  VP   V8P VP   V8P Y88888P  `Y88P'    YP             VP  \n
+    Connect4! \n
+      Press 1 for Player vs Player. \n
+      Press 2 for Player vs AI. \n");
 	return;
 }
 
@@ -341,19 +348,16 @@ int program(int argc, string[] argv) {
     	s.msg = "Player 1 wins!! Press 1 for a new game";
       gameStat = newgame(s);
       input = con_getch();
-  		con_clear();
     }
     if(gameStat == 2){
       s.msg = "Player 2 wins!! Press 1 for a new game";
       gameStat = newgame(s);
       input = con_getch();
- 			 con_clear();
     }
     if(gameStat == 3) {
     	s.msg = "Draw! No more moves! Press 1 for a new game";
     	gameStat = newgame(s);
     	input = con_getch();
-  		con_clear();
     }
     if(gameStat == 4) {
 			s.msg = "\n\n\n\n    Thanks for playing!    Goodbye!\n
@@ -362,6 +366,7 @@ int program(int argc, string[] argv) {
   		input = con_getch();
   		s.move = true;
   	}
+  	con_clear();
   }
   con_cleanup();
   return 0;
