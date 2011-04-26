@@ -174,7 +174,7 @@ class State <: Object {
     else if (col == 53){move = 4;}
     else if (col == 54){move = 5;}
     else if (col == 55){move = 6;}
-    else if (col == 27){flag = false; this.move = true; this.gameOver = 3;}
+    else if (col == 27){flag = false; this.move = true; this.gameOver = 4;}
     else 							 {move = 0;}
     
     i=5;
@@ -236,7 +236,6 @@ class State <: Object {
 };
 
 unit instructions() {
-  int k = 0;
   con_move(0,0);
   con_print("\n
 		 .o88b.  .d88b.  d8b   db d8b   db d88888b  .o88b. d888888b        j88D  
@@ -246,12 +245,11 @@ unit instructions() {
 		Y8b  d8 `8b  d8' 88  V888 88  V888 88.     Y8b  d8    88             88  
 		 `Y88P'  `Y88P'  VP   V8P VP   V8P Y88888P  `Y88P'    YP             VP  \n
     Connect4! \n
-      Press the number over the column where you want to place your piece. \n
+      Press the number (1-7) over the column where you want to place your piece. \n
       Number keys - Place piece \n
-      First to get 4 pieces in a row wins! \n
-      Esc - quit \n\n
-      [Press [Enter] twice to play!]\n");
-    k = con_getch();
+      First to get 4 pieces in a row/column/diagonal wins! \n
+      Press Esc to end game \n\n
+      [Press [Enter] to play!]\n");
   return;
 }
 
@@ -264,47 +262,56 @@ unit intro() {
   return;
 }
 
+
 int program(int argc, string[] argv) {
   int input = 0;
   State s = new State();
   int gameStat = 0;
   intro();
   s.board.init();
-  if(input == 0 | input == 49){
-    con_clear();
+  con_clear();
+  input = 49;
+  while ((s.move != true & gameStat==0 & input==49)) {
+    s.display();
+    input = con_getch();
+    gameStat = s.update(input);
+    s.move = false;
     input = 49;
-    while ((s.move != true & gameStat==0 & input==49)) {
+    if(gameStat == 1){
+      s.msg = "Player 1 wins!! Press 1 for a new game";
       s.display();
       input = con_getch();
-      gameStat = s.update(input);
-      s.move = false;
-      input = 49;
-      if(gameStat == 1){
-        con_move(40,0);
-        con_print("Player 1 wins!! Press 1 for a new game");
-        input = con_getch();
-        gameStat = 0;
-        s = new State();
-        s.board.init();
-        con_clear();
-      }
-      if(gameStat == 2){
-        con_move(40,0);
-        con_print("Player 2 wins!! Press 1 for a new game");
-        input = con_getch();
-        gameStat = 0;
-        s = new State();
-        s.board.init();
-        con_clear();
-      }   
+      gameStat = 0;
+      s = new State();
+      s.board.init();
+      con_clear();
     }
+    if(gameStat == 2){
+      s.msg = "Player 2 wins!! Press 1 for a new game";
+      s.display();
+      input = con_getch();
+      gameStat = 0;
+      s = new State();
+      s.board.init();
+      con_clear();
+    }
+    if(gameStat == 3) {
+    	s.msg = "Draw! No more moves! Press 1 for a new game";
+    	s.display();
+    	input = con_getch();
+    	gameStat = 0;
+      s = new State();
+      s.board.init();
+      con_clear();
+    }
+    if(gameStat == 4) {
+			s.msg = "\n\n\n\n    Thanks for playing!    Goodbye!\n
+			       Press any key to quit.";
+  		s.display();
+  		input = con_getch();
+  		s.move = true;
+  	}
   }
-  else{
-    input = 27;
-  }
-  con_clear();
-  con_print("\n\n\n\n    Thanks for playing!    Goodbye!\n\n Press any key to exit.");
-  input = con_getch();
   con_cleanup();
   return 0;
 }
