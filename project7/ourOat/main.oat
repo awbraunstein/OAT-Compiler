@@ -141,7 +141,19 @@ class Player <: Object{
   }
   
 };
+
+class AI <: Object{
+	int num;
+	new(int num)(){
+	this.num = num;
+	}
 	
+	int move(State s){
+		return 1;
+	}
+	
+};
+
 class State <: Object {
   Board board;
   Player player1;
@@ -221,6 +233,7 @@ class State <: Object {
       }
   	return draw;
   }
+  
   bool checkWinner() {
     bool won = false;
     for(int r = 0; r<6; r=r+1;){
