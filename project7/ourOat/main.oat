@@ -244,7 +244,7 @@ unit instructions() {
       Number keys - Place piece \n
       First to get 4 pieces in a row wins! \n
       Esc - quit \n\n
-      [Press any key to play!]\n");
+      [Press [Enter] twice to play!]\n");
     k = con_getch();
   return;
 }
@@ -257,7 +257,6 @@ unit intro() {
   i = con_getch();
   return;
 }
-
 
 int program(int argc, string[] argv) {
   int input = 0;
@@ -297,7 +296,9 @@ int program(int argc, string[] argv) {
   else{
     input = 27;
   }
-  s.msg = "Goodbye!";
+  con_clear();
+  con_print("\n\n\n\n    Thanks for playing!    Goodbye!");
   input = con_getch();
+  con_cleanup();
   return 0;
 }
