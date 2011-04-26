@@ -93,25 +93,33 @@ class Board <: Object {
 
   bool checkPiece(int r, int c, int p){
     bool found = false;
-    if((r>3)&(c>3)){
+    if (r>3){
+      if((this.pieces[r-1][c].team == p) & (this.pieces[r-2][c].team == p) & (this.pieces[r-3][c].team == p)){
+        found =true;
+      }
+    }
+    if(c>3){
       if((this.pieces[r][c-1].team == p) & (this.pieces[r][c-2].team == p) & (this.pieces[r][c-3].team == p)){
         found =true;
       }
-      else if((this.pieces[r-1][c].team == p) & (this.pieces[r-2][c].team == p) & (this.pieces[r-3][c].team == p)){
+    }
+    if((r>3)&(c>3)){
+      if((this.pieces[r-1][c-1].team == p) & (this.pieces[r-3][c-2].team == p) & (this.pieces[r-3][c-3].team == p)){
         found =true;
       }
-      else if((this.pieces[r-1][c-1].team == p) & (this.pieces[r-3][c-2].team == p) & (this.pieces[r-3][c-3].team == p)){
+    }
+    if(r<3){
+      if((this.pieces[r+1][c].team == p) & (this.pieces[r+2][c].team == p) & (this.pieces[r+3][c].team == p)){
+        found =true;
+      }
+    }
+    if(c<4){
+      if((this.pieces[r][c+1].team == p) & (this.pieces[r][c+2].team == p) & (this.pieces[r][c+3].team == p)){
         found =true;
       }
     }
     if((r<3) & (c<4)){
-      if((this.pieces[r][c+1].team == p) & (this.pieces[r][c+2].team == p) & (this.pieces[r][c+3].team == p)){
-        found =true;
-      }
-      else if((this.pieces[r+1][c].team == p) & (this.pieces[r+2][c].team == p) & (this.pieces[r+3][c].team == p)){
-        found =true;
-      }
-      else if((this.pieces[r+1][c+1].team == p) & (this.pieces[r+3][c+2].team == p) & (this.pieces[r+3][c+3].team == p)){
+      if((this.pieces[r+1][c+1].team == p) & (this.pieces[r+3][c+2].team == p) & (this.pieces[r+3][c+3].team == p)){
         found =true;
       }
     }
