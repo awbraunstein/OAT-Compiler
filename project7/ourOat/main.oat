@@ -302,6 +302,16 @@ unit gametype(){
 	return;
 }
 
+int newgame(State s){
+	int input = 0;
+  s.display();
+  input = con_getch();
+  s = new State();
+  s.board.init();
+  gametype();
+  return 0;
+}
+
 int program(int argc, string[] argv) {
   int input = 0;
   State s = new State();
@@ -328,37 +338,22 @@ int program(int argc, string[] argv) {
     s.move = false;
     input = 49;
     if(gameStat == 1){
-      s.msg = "Player 1 wins!! Press 1 for a new game";
-      s.display();
+    	s.msg = "Player 1 wins!! Press 1 for a new game";
+      gameStat = newgame(s);
       input = con_getch();
-      gameStat = 0;
-      s = new State();
-      s.board.init();
-      gametype();
-      input = con_getch();
-      con_clear();
+  		con_clear();
     }
     if(gameStat == 2){
       s.msg = "Player 2 wins!! Press 1 for a new game";
-      s.display();
+      gameStat = newgame(s);
       input = con_getch();
-      gameStat = 0;
-      s = new State();
-      s.board.init();
-      gametype();
-      input = con_getch();
-      con_clear();
+ 			 con_clear();
     }
     if(gameStat == 3) {
     	s.msg = "Draw! No more moves! Press 1 for a new game";
-    	s.display();
+    	gameStat = newgame(s);
     	input = con_getch();
-    	gameStat = 0;
-      s = new State();
-      s.board.init();
-      gametype();
-      input = con_getch();
-      con_clear();
+  		con_clear();
     }
     if(gameStat == 4) {
 			s.msg = "\n\n\n\n    Thanks for playing!    Goodbye!\n
