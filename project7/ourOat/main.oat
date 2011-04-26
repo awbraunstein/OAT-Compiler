@@ -147,10 +147,10 @@ class State <: Object {
   Player player1;
   Player player2;
   int turn;
-
   bool move;
   string msg;
-
+	int gameOver;
+	
   new ()() 
   	this.msg = "";
   	this.player1 = new Player("player1", 1);
@@ -159,13 +159,12 @@ class State <: Object {
   {
     this.turn = 1;
     this.move = false;
+    this.gameOver = 0;
    }
 
   int update (int col) {
     int move = 0;
-    int move2 = 0;
     bool flag = true;
-    int gameOver = 0;
     int i = 0;
     
     if 			(col == 49){move = 0;}
@@ -175,16 +174,16 @@ class State <: Object {
     else if (col == 53){move = 4;}
     else if (col == 54){move = 5;}
     else if (col == 55){move = 6;}
+    else if (col == 27){flag = false; this.move = true; this.gameOver = 3;}
     else 							 {move = 0;}
     
     i=5;
     
     while (flag) {
       if(this.board.pieces[i][move].team == 0) {
-      	move2 = i;
-      	this.board.pieces[move2][move].team = this.turn;
+      	this.board.pieces[i][move].team = this.turn;
         if(this.checkWinner()){
-          gameOver = this.turn;
+          this.gameOver = this.turn;
     	}
       	flag = false;
       	this.move = true;
@@ -204,7 +203,7 @@ class State <: Object {
       	this.move = false;
       }
     }
-    return gameOver;
+    return this.gameOver;
   }
   
   bool checkWinner() {
@@ -220,13 +219,17 @@ class State <: Object {
   }
     
     
-  unit display() {
-    con_clear();
-    this.board.draw();
-    con_move(0,37);
+  unit print_msg() {
+  con_move(0,37);
     con_print(this.msg);
     con_refresh();
     this.msg = "";
+    return;
+  }
+  unit display() {
+    con_clear();
+    this.board.draw();
+    this.print_msg();
     return;
   }
 };
@@ -254,7 +257,7 @@ int program(int argc, string[] argv) {
   int input = 0;
   State s = new State();
   int gameStat = 0;
-  while ((input != 27)) {
+  while (s.gameOver == 0) {
     s.board.init();
     con_init();
     if(input == 0 | input == 110){
@@ -285,5 +288,7 @@ int program(int argc, string[] argv) {
       input = 27;
     }
   }
+  s.msg = "Goodbye!";
+  input = con_getch();
   return 0;
 }
