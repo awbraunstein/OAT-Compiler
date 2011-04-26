@@ -89,7 +89,45 @@ class Board <: Object {
       }
     }
     return;
-  }	
+  }
+
+  bool checkPiece(int r, int c, int p){
+    bool found = false;
+    if((r>3)&(c>3)){
+      if((this.pieces[r][c-1].team == p) & (this.pieces[r][c-2].team == p) & (this.pieces[r][c-3].team == p)){
+        found =true;
+      }
+      else if((this.pieces[r-1][c].team == p) & (this.pieces[r-2][c].team == p) & (this.pieces[r-3][c].team == p)){
+        found =true;
+      }
+      else if((this.pieces[r-1][c-1].team == p) & (this.pieces[r-3][c-2].team == p) & (this.pieces[r-3][c-3].team == p)){
+        found =true;
+      }
+    }
+    if((r<3) & (c<4)){
+      if((this.pieces[r][c+1].team == p) & (this.pieces[r][c+2].team == p) & (this.pieces[r][c+3].team == p)){
+        found =true;
+      }
+      else if((this.pieces[r+1][c].team == p) & (this.pieces[r+2][c].team == p) & (this.pieces[r+3][c].team == p)){
+        found =true;
+      }
+      else if((this.pieces[r+1][c+1].team == p) & (this.pieces[r+3][c+2].team == p) & (this.pieces[r+3][c+3].team == p)){
+        found =true;
+      }
+    }
+    if((r>3) & (c<4)){
+      if((this.pieces[r-1][c+1].team == p) & (this.pieces[r-2][c+2].team == p) & (this.pieces[r-3][c+3].team == p)){
+        found =true;
+      }
+    }
+    if(r<3 & c>3){
+      if((this.pieces[r+1][c-1].team == p) & (this.pieces[r+3][c-2].team == p) & (this.pieces[r+3][c-3].team == p)){
+        found =true;
+      }
+    }
+    return found;
+      
+  }
 	unit clear(){return;}
 };
 
@@ -109,6 +147,7 @@ class State <: Object {
   Player player1;
   Player player2;
   int turn;
+
   bool move;
   string msg;
 
@@ -122,50 +161,65 @@ class State <: Object {
     this.move = false;
    }
 
-  unit update (int col) {
-	  int move = 0;
-	  int move2 = 0;
-	  bool flag = true;
-	  int i = 0;
-  
-	  if 			(col == 49){move = 0;}
-	  else if (col == 50){move = 1;}
-	  else if (col == 51){move = 2;}
-	  else if (col == 52){move = 3;}
-	  else if (col == 53){move = 4;}
-	  else if (col == 54){move = 5;}
-	  else if (col == 55){move = 6;}
-	  else 							 {move = 0;}
-	  
-	  i=5;
-	  
-	 	while (flag) {
+  int update (int col) {
+    int move = 0;
+    int move2 = 0;
+    bool flag = true;
+    int gameOver = 0;
+    int i = 0;
+    
+    if 			(col == 49){move = 0;}
+    else if (col == 50){move = 1;}
+    else if (col == 51){move = 2;}
+    else if (col == 52){move = 3;}
+    else if (col == 53){move = 4;}
+    else if (col == 54){move = 5;}
+    else if (col == 55){move = 6;}
+    else 							 {move = 0;}
+    
+    i=5;
+    
+    while (flag) {
       if(this.board.pieces[i][move].team == 0) {
       	move2 = i;
       	this.board.pieces[move2][move].team = this.turn;
+        if(this.checkWinner()){
+          gameOver = this.turn;
+    	}
       	flag = false;
       	this.move = true;
-	    	if (this.turn == 1) {
-						this.turn = this.turn + 1;
-					  this.msg = "Player 2's turn!";
-					}
-					else {
-						this.turn = 1;
-					  this.msg = "Player 1's turn!";
-					}
-    	}
-	 		i=i-1;
+        if (this.turn == 1) {
+          this.turn = this.turn + 1;
+          this.msg = "Player 2's turn!";
+        }
+        else {
+          this.turn = 1;
+          this.msg = "Player 1's turn!";
+        }
+      }
+      i=i-1;
       if (i<0){
       	this.msg = "Can't move there!\n";
       	flag = false;
       	this.move = false;
       }
-	  }
-  	return;
+    }
+    return gameOver;
   }
   
-  bool checkWinner() {return true;}
-  
+  bool checkWinner() {
+    bool won = false;
+    for(int r = 0; r<6; r=r+1;){
+      for(int c = 0; c<7; c=c+1;){
+        if((this.board.pieces[r][c].team==this.turn) & (won == false)){
+          won=this.board.checkPiece(r,c,this.turn); 
+        }
+      }
+    }
+    return won;
+  }
+    
+    
   unit display() {
     con_clear();
     this.board.draw();
@@ -199,18 +253,37 @@ int program(int argc, string[] argv) {
 	bool flag = true;
   int input = 0;
   State s = new State();
-  s.board.init();
-  con_init();
-  con_move(0,0);
-  instructions();
-  con_clear();
+  int gameStat = 0;
   while ((input != 27)) {
-  	while(s.move != true) {
-  	  s.display();
-	  	input = con_getch();
-	 		s.update(input);
-	 		s.move = false;
-	  }
+    s.board.init();
+    con_init();
+    if(input == 0 | input == 110){
+      if(input == 0){
+        con_move(0,0);
+        instructions();
+      }
+      con_clear();
+      while ((s.move != true & gameStat==0)) {
+        s.display();
+        input = con_getch();
+        gameStat = s.update(input);
+        s.move = false;
+        if(gameStat == 1){
+          con_move(40,0);
+          con_print("Player 1 wins!! press n for a new game");
+          input = con_getch();
+        }
+        if(gameStat == 2){
+          con_move(40,0);
+          con_print("Player 2 wins!! press n for a new game");
+          input = con_getch();
+        }        
+        
+      }
+    }
+    else{
+      input = 27;
+    }
   }
   return 0;
 }
