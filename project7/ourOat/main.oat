@@ -185,7 +185,10 @@ class State <: Object {
         this.board.draw();
         if(this.checkWinner()){
           this.gameOver = this.turn;
-    	}
+    		}
+    		if(this.checkDraw()){
+    			this.gameOver = 3;
+    		}
       	flag = false;
       	this.move = true;
         if (this.turn == 1) {
@@ -207,6 +210,17 @@ class State <: Object {
     return this.gameOver;
   }
   
+  bool checkDraw(){
+  	bool draw = true;
+  	for(int r = 0; r<6; r=r+1;){
+      for(int c = 0; c<7; c=c+1;){
+      	if((this.board.pieces[r][c].team==0) & (draw == true)){
+      		draw = false;
+      		}
+      	}
+      }
+  	return draw;
+  }
   bool checkWinner() {
     bool won = false;
     for(int r = 0; r<6; r=r+1;){
