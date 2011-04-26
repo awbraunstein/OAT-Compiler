@@ -182,6 +182,7 @@ class State <: Object {
     while (flag) {
       if(this.board.pieces[i][move].team == 0) {
       	this.board.pieces[i][move].team = this.turn;
+        this.board.draw();
         if(this.checkWinner()){
           this.gameOver = this.turn;
     	}
@@ -253,7 +254,7 @@ unit lose() {
 }
 
 int program(int argc, string[] argv) {
-	bool flag = true;
+  bool flag = true;
   int input = 0;
   State s = new State();
   int gameStat = 0;
