@@ -93,33 +93,25 @@ class Board <: Object {
 
   bool checkPiece(int r, int c, int p){
     bool found = false;
-    if (r>3){
-      if((this.pieces[r-1][c].team == p) & (this.pieces[r-2][c].team == p) & (this.pieces[r-3][c].team == p)){
-        found =true;
-      }
-    }
-    if(c>3){
+    if((r>3)&(c>3)){
       if((this.pieces[r][c-1].team == p) & (this.pieces[r][c-2].team == p) & (this.pieces[r][c-3].team == p)){
         found =true;
       }
-    }
-    if((r>3)&(c>3)){
-      if((this.pieces[r-1][c-1].team == p) & (this.pieces[r-3][c-2].team == p) & (this.pieces[r-3][c-3].team == p)){
+      else if((this.pieces[r-1][c].team == p) & (this.pieces[r-2][c].team == p) & (this.pieces[r-3][c].team == p)){
         found =true;
       }
-    }
-    if(r<3){
-      if((this.pieces[r+1][c].team == p) & (this.pieces[r+2][c].team == p) & (this.pieces[r+3][c].team == p)){
-        found =true;
-      }
-    }
-    if(c<4){
-      if((this.pieces[r][c+1].team == p) & (this.pieces[r][c+2].team == p) & (this.pieces[r][c+3].team == p)){
+      else if((this.pieces[r-1][c-1].team == p) & (this.pieces[r-3][c-2].team == p) & (this.pieces[r-3][c-3].team == p)){
         found =true;
       }
     }
     if((r<3) & (c<4)){
-      if((this.pieces[r+1][c+1].team == p) & (this.pieces[r+3][c+2].team == p) & (this.pieces[r+3][c+3].team == p)){
+      if((this.pieces[r][c+1].team == p) & (this.pieces[r][c+2].team == p) & (this.pieces[r][c+3].team == p)){
+        found =true;
+      }
+      else if((this.pieces[r+1][c].team == p) & (this.pieces[r+2][c].team == p) & (this.pieces[r+3][c].team == p)){
+        found =true;
+      }
+      else if((this.pieces[r+1][c+1].team == p) & (this.pieces[r+3][c+2].team == p) & (this.pieces[r+3][c+3].team == p)){
         found =true;
       }
     }
@@ -257,45 +249,53 @@ unit instructions() {
   return;
 }
 
-unit lose() {
+unit intro() {
+	int i = 0;
+	con_init();
+  con_move(0,0);
+  instructions();
+  i = con_getch();
   return;
 }
 
+
 int program(int argc, string[] argv) {
-  bool flag = true;
   int input = 0;
   State s = new State();
   int gameStat = 0;
-  while (s.gameOver == 0) {
-    s.board.init();
-    con_init();
-    if(input == 0 | input == 110){
-      if(input == 0){
-        con_move(0,0);
-        instructions();
-      }
-      con_clear();
-      while ((s.move != true & gameStat==0)) {
-        s.display();
+  intro();
+  s.board.init();
+  if(input == 0 | input == 49){
+    con_clear();
+    input = 49;
+    while ((s.move != true & gameStat==0 & input==49)) {
+      s.display();
+      input = con_getch();
+      gameStat = s.update(input);
+      s.move = false;
+      input = 49;
+      if(gameStat == 1){
+        con_move(40,0);
+        con_print("Player 1 wins!! Press 1 for a new game");
         input = con_getch();
-        gameStat = s.update(input);
-        s.move = false;
-        if(gameStat == 1){
-          con_move(40,0);
-          con_print("Player 1 wins!! press n for a new game");
-          input = con_getch();
-        }
-        if(gameStat == 2){
-          con_move(40,0);
-          con_print("Player 2 wins!! press n for a new game");
-          input = con_getch();
-        }        
-        
+        gameStat = 0;
+        s = new State();
+        s.board.init();
+        con_clear();
       }
+      if(gameStat == 2){
+        con_move(40,0);
+        con_print("Player 2 wins!! Press 1 for a new game");
+        input = con_getch();
+        gameStat = 0;
+        s = new State();
+        s.board.init();
+        con_clear();
+      }   
     }
-    else{
-      input = 27;
-    }
+  }
+  else{
+    input = 27;
   }
   s.msg = "Goodbye!";
   input = con_getch();
