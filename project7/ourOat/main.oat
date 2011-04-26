@@ -18,26 +18,26 @@ class Piece <: Object{
 	}
 	
 	unit draw(){
-          int x = 1+this.col*6;
+          int x = 1+this.col*11;
           int y = this.row*6;
           if(this.team==0){
             for(int i = 0; i<5; i=i+1;){
               con_move(x,y);
-              con_print("     ");
+              con_print("          ");
               y=y+1;
             } 
           }
           if(this.team==1){
             for(int i = 0; i<5; i=i+1;){
               con_move(x,y);
-              con_print("XXXXX");
+              con_print("XXXXXXXXXX");
               y=y+1;
             }
           }
           if(this.team==2){
             for(int i = 0; i<5; i=i+1;){
               con_move(x,y);
-              con_print("OOOOO");
+              con_print("OOOOOOOOOO");
               y=y+1;
             }
           }
@@ -71,14 +71,14 @@ class Board <: Object {
     /*Print | */
     for (int i = 0; i<8; i=i+1;){
       for(int j = 0; j<36; j=j+1;){
-        con_move(i*6,j);
+        con_move(i*11,j);
         con_print("|");
       }
     }
     /*Print - */
     for(int i = 0; i<6; i=i+1;){
       con_move(0,5+i*6);
-      con_print("|-----|-----|-----|-----|-----|-----|-----|");
+      con_print("|----------|----------|----------|----------|----------|----------|----------|");
     }
     /*Print pieces*/
     for (int r = 0; r<6; r=r+1;){
@@ -145,9 +145,10 @@ class Player <: Object{
 class AI <: Object{
 	int num;
 	bool enabled;
+	
 	new(int num, bool enabled)(){
-	this.num = num;
-	this.enabled = enabled;
+		this.num = num;
+		this.enabled = enabled;
 	}
 	
 	int move(State s){
