@@ -144,8 +144,10 @@ class Player <: Object{
 
 class AI <: Object{
 	int num;
-	new(int num)(){
+	bool enabled;
+	new(int num, bool enabled)(){
 	this.num = num;
+	this.enabled = enabled;
 	}
 	
 	int move(State s){
@@ -158,6 +160,7 @@ class State <: Object {
   Board board;
   Player player1;
   Player player2;
+  AI ai;
   int turn;
   bool move;
   string msg;
@@ -167,6 +170,7 @@ class State <: Object {
   	this.msg = "";
   	this.player1 = new Player("player1", 1);
     this.player2 = new Player("player2", 2);
+    this.ai = new AI(2,false);
     this.board = new Board();
   {
     this.turn = 1;
@@ -289,18 +293,35 @@ unit intro() {
   return;
 }
 
+unit gametype(){
+	con_clear();
+	con_move(0,0);
+	con_print("
+	      Press 1 for Player vs Player
+	      Press 2 for Player vs Computer");
+	return;
+}
 
 int program(int argc, string[] argv) {
   int input = 0;
   State s = new State();
   int gameStat = 0;
   intro();
+  gametype();
+  input = con_getch();
   s.board.init();
   con_clear();
-  input = 49;
-  while ((s.move != true & gameStat==0 & input==49)) {
+  while ((s.move != true & gameStat==0 & (input==49 | input == 50))) {
+  if (input == 50){
+  	s.ai.enabled = true;
+  }
     s.display();
-    input = con_getch();
+    if (s.ai.enabled & s.turn == 2) {
+    	input = s.ai.move(s);
+    }
+    else {
+    	input = con_getch();
+    }
     gameStat = s.update(input);
     s.move = false;
     input = 49;
@@ -311,6 +332,8 @@ int program(int argc, string[] argv) {
       gameStat = 0;
       s = new State();
       s.board.init();
+      gametype();
+      input = con_getch();
       con_clear();
     }
     if(gameStat == 2){
@@ -320,6 +343,8 @@ int program(int argc, string[] argv) {
       gameStat = 0;
       s = new State();
       s.board.init();
+      gametype();
+      input = con_getch();
       con_clear();
     }
     if(gameStat == 3) {
@@ -329,6 +354,8 @@ int program(int argc, string[] argv) {
     	gameStat = 0;
       s = new State();
       s.board.init();
+      gametype();
+      input = con_getch();
       con_clear();
     }
     if(gameStat == 4) {
