@@ -307,8 +307,10 @@ int program(int argc, string[] argv) {
   State s = new State();
   int gameStat = 0;
   intro();
-  gametype();
-  input = con_getch();
+  while (input != 49 & input != 50){
+  	gametype();
+  	input = con_getch();
+  }
   s.board.init();
   con_clear();
   while ((s.move != true & gameStat==0 & (input==49 | input == 50))) {
