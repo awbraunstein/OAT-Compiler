@@ -11,9 +11,10 @@ class Piece <: Object{
 
 	}
 	
-	unit init(int r, int c){
+	unit init(int r, int c, int team){
           this.row = r;
           this.col = c;
+          this.team = team;
           return;
 	}
 	
@@ -59,7 +60,7 @@ class Board <: Object {
   unit init(){
     for (int r = 0; r<6; r=r+1;){
       for (int c = 0; c<7; c=c+1;){
-        this.pieces[r][c].init(r,c);
+        this.pieces[r][c].init(r,c,0);
       }
     }
     return;
@@ -128,12 +129,12 @@ class Player <: Object{
 class AI <: Object{
 	int num;
 	bool enabled;
-	
 	new(int num, bool enabled)(){
 		this.num = num;
 		this.enabled = enabled;
 	}
 	
+					
 	int move(State s){
 		return 1;
 	}
@@ -305,8 +306,6 @@ int newgame(State s){
 	int input = 0;
   s.display();
   input = con_getch();
-  s = new State();
-  s.board.init();
   gametype();
   return 0;
 }
@@ -339,22 +338,30 @@ int program(int argc, string[] argv) {
     if(gameStat == 1){
     	s.msg = "Player 1 wins!! Press 1 for a new game";
       gameStat = newgame(s);
+      s = new State();
+      s.board.init();
       input = con_getch();
     }
     if(gameStat == 2){
       s.msg = "Player 2 wins!! Press 1 for a new game";
       gameStat = newgame(s);
+      s = new State();
+      s.board.init();
       input = con_getch();
     }
     if(gameStat == 3) {
     	s.msg = "Draw! No more moves! Press 1 for a new game";
     	gameStat = newgame(s);
+    	s = new State();
+      s.board.init();
     	input = con_getch();
     }
     if(gameStat == 4) {
 			s.msg = "\n\n\n\n    Thanks for playing!    Goodbye!\n
 			       Press any key to quit.";
   		s.display();
+  		s = new State();
+      s.board.init();
   		input = con_getch();
   		s.move = true;
   	}
