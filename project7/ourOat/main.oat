@@ -228,8 +228,8 @@ class AI <: Object{
 	 
 	int findmove(State s,int r, int c){
 		int move = -1;
-	  move = this.checkmove(s,r,c,2, move);
 		move = this.checkmove(s,r,c,1, move);
+	  move = this.checkmove(s,r,c,2, move);
 		return move+49;
 	}
 
