@@ -1,4 +1,5 @@
-#include "console.oat"`
+#include "console.oat"
+#include "math.oat"
 
 class Piece <: Object{
 	int team;
@@ -134,55 +135,71 @@ class AI <: Object{
 	
   
 	int findmove(State s,int r, int c){
-		int move = -1; 
+		int move = -1;
 		if(r<3){
-	      if(s.board.pieces[r+1][c].team == 2
+	      if(s.board.pieces[r][c].team == 2 &
+	      	s.board.pieces[r+1][c].team == 2
 	      	& s.board.pieces[r+2][c].team == 2
 	      		& s.board.pieces[r+3][c].team ==0)
 	        move = c;
+	        
 	    }
 	    if(c<4){
-	      if(s.board.pieces[r][c+1].team == 2
-	      	& s.board.pieces[r][c+2].team == 2
-	      		& s.board.pieces[r][c+3].team ==0)
+	      if(s.board.pieces[r][c].team == 2 &
+	      		s.board.pieces[r][c+1].team == 2
+	      		& s.board.pieces[r][c+2].team == 2
+	      			& s.board.pieces[r][c+3].team ==0)
 	        move = c+3;
 	    }
 	    if(c<4 & r<3){
-	      if(s.board.pieces[r+1][c+1].team == 2
+	      if(s.board.pieces[r][c].team == 2 &
+	      	s.board.pieces[r+1][c+1].team == 2
 	      	& s.board.pieces[r+2][c+2].team ==2
 	      		& s.board.pieces[r+3][c+3].team == 0)
 	        move = c+3;
 	    }
 	    if(c>2 & r<3){
-	      if(s.board.pieces[r+1][c-1].team == 2
+	      if(s.board.pieces[r][c].team == 2 &
+	      s.board.pieces[r+1][c-1].team == 2
 	      	& s.board.pieces[r+2][c-2].team == 2
 	      		& s.board.pieces[r+3][c-3].team == 0)
 	        move = c-3;
 	    }
-	    		if(r<3){
-	      if(s.board.pieces[r+1][c].team == 1
-	      	& s.board.pieces[r+2][c].team == 1
-	      		& s.board.pieces[r+3][c].team ==0)
-	        move = c;
-	    }
-	    if(c<4){
-	      if(s.board.pieces[r][c+1].team == 1
-	      	& s.board.pieces[r][c+2].team == 1
-	      		& s.board.pieces[r][c+3].team ==0)
-	        move = c+3;
-	    }
-	    if(c<4 & r<3){
-	      if(s.board.pieces[r+1][c+1].team == 1
-	      	& s.board.pieces[r+2][c+2].team ==1
-	      		& s.board.pieces[r+3][c+3].team == 0)
-	        move = c+3;
-	    }
-	    if(c>2 & r<3){
-	      if(s.board.pieces[r+1][c-1].team == 1
-	      	& s.board.pieces[r+2][c-2].team == 1
-	      		& s.board.pieces[r+3][c-3].team == 0)
-	        move = c-3;
-	    } 
+    if(r<3){
+      if(s.board.pieces[r][c].team == 1 &
+      	s.board.pieces[r+1][c].team == 1
+      	& s.board.pieces[r+2][c].team == 1
+      		& s.board.pieces[r+3][c].team ==0)
+        move = c;
+    }
+    if(c<4){
+      if(s.board.pieces[r][c].team == 1 &
+      	s.board.pieces[r][c+1].team == 1
+      	& s.board.pieces[r][c+2].team == 1
+      		& s.board.pieces[r][c+3].team ==0)
+        move = c+3;
+    }
+    if(c<4 & r<3){
+      if(s.board.pieces[r][c].team == 1 &
+      s.board.pieces[r+1][c+1].team == 1
+      	& s.board.pieces[r+2][c+2].team ==1
+      		& s.board.pieces[r+3][c+3].team == 0)
+        move = c+3;
+    }
+    if(c>2 & r<3){
+      if(s.board.pieces[r][c].team == 1 &
+      s.board.pieces[r+1][c-1].team == 1
+      	& s.board.pieces[r+2][c-2].team == 1
+      		& s.board.pieces[r+3][c-3].team == 0)
+        move = c-3;
+    }
+    if (r>3){
+    	if(s.board.pieces[r][c].team == 1 & 
+    			s.board.pieces[r-1][c].team == 1 &
+    				s.board.pieces[r-2][c].team == 1 &
+    				s.board.pieces[r-3][c].team == 0)
+    				move = c;
+     }
 		return move+49;
 	}
 
@@ -197,11 +214,7 @@ class AI <: Object{
       }
     }
     if (i==48) {
-	    	for (int k=0; k<7; k=k+1;) {
-	    		if (s.board.pieces[0][k].team==0){
-	    			i=k+49;
-	    		}
-	    	}
+	    	i = oat_mod(random_int(), 7) + 49;
 	    }
     return i;
   }
@@ -270,7 +283,6 @@ class State <: Object {
       }
       i=i-1;
       if (i<0){
-      	this.msg = "Can't move there!\n";
       	flag = false;
       	this.move = false;
       }
@@ -398,7 +410,6 @@ int program(int argc, string[] argv) {
     }
     else {
         	input = con_getch();
-    
     while( (input != 27) & (input<49 | input>55)){
     	s.msg = "Make a valid move.\n";
     	s.display();
