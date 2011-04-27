@@ -133,73 +133,103 @@ class AI <: Object{
 		this.enabled = enabled;
 	}
 	
-  
+	int checkmove(State s, int r, int c, int p, int mov) {
+		int move = mov;
+  	if(r<3){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r+1][c].team == p
+	      		& s.board.pieces[r+2][c].team ==p
+	      			& s.board.pieces[r+3][c].team ==0)
+	        			move = c;
+	    }
+	   if (r>3){
+    	if(s.board.pieces[r][c].team == p
+    		& s.board.pieces[r-1][c].team == p
+    			& s.board.pieces[r-2][c].team == p
+    				& s.board.pieces[r-3][c].team == 0)
+    					move = c;
+     }
+	    if(c<4){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r][c+1].team == p
+	      		& s.board.pieces[r][c+2].team == p
+	      			& s.board.pieces[r][c+3].team ==0)
+	        			move = c+3;
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r][c+1].team == 0
+	      		& s.board.pieces[r][c+2].team == p
+	      			& s.board.pieces[r][c+3].team ==p)
+	        			move = c+1;
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r][c+1].team == p
+	      		& s.board.pieces[r][c+2].team == 0
+	      			& s.board.pieces[r][c+3].team ==p)
+	        			move = c+2;
+	    }
+	    if(c>4){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r][c-1].team == p
+	      		& s.board.pieces[r][c-2].team == p
+	      			& s.board.pieces[r][c-3].team ==0)
+	        			move = c-3;
+	    }
+	    
+	    if(c<4 & r<3){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r+1][c+1].team == p
+	      		& s.board.pieces[r+2][c+2].team ==p
+	      			& s.board.pieces[r+3][c+3].team == 0)
+	        			move = c+3;
+        if(s.board.pieces[r][c].team == p
+      		& s.board.pieces[r+1][c+1].team == p
+      			& s.board.pieces[r+2][c+2].team ==0
+      				& s.board.pieces[r+3][c+3].team == p)
+        				move = c+2;
+        if(s.board.pieces[r][c].team == p
+      		& s.board.pieces[r+1][c+1].team == 0
+      			& s.board.pieces[r+2][c+2].team == p
+      				& s.board.pieces[r+3][c+3].team == p)
+        				move = c+1;
+	    }
+	    if(c>4 & r>3){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r-1][c-1].team == p
+	      		& s.board.pieces[r-2][c-2].team ==p
+	      			& s.board.pieces[r-3][c-3].team == 0)
+	        			move = c-3;
+	    }
+	    
+	    if(c>2 & r<3){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r+1][c-1].team == p
+	      		& s.board.pieces[r+2][c-2].team == p
+	      			& s.board.pieces[r+3][c-3].team == 0)
+	       				move = c-3;
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r+1][c-1].team == p
+	      		& s.board.pieces[r+2][c-2].team == 0
+	      			& s.board.pieces[r+3][c-3].team == p)
+	        			move = c-2;
+        if(s.board.pieces[r][c].team == p
+      	  & s.board.pieces[r+1][c-1].team == 0
+      		  & s.board.pieces[r+2][c-2].team == p
+      				& s.board.pieces[r+3][c-3].team == p)
+       				  move = c-1;
+	    }
+	    if(c<2 & r>3){
+	      if(s.board.pieces[r][c].team == p
+	      	& s.board.pieces[r-1][c+1].team == p
+	      		& s.board.pieces[r-2][c+2].team == p
+	      			& s.board.pieces[r-3][c+3].team == 0)
+	        		move = c+3;
+	    }
+	    return move;
+	 }
+	 
 	int findmove(State s,int r, int c){
 		int move = -1;
-		if(r<3){
-	      if(s.board.pieces[r][c].team == 2 &
-	      	s.board.pieces[r+1][c].team == 2
-	      	& s.board.pieces[r+2][c].team == 2
-	      		& s.board.pieces[r+3][c].team ==0)
-	        move = c;
-	        
-	    }
-	    if(c<4){
-	      if(s.board.pieces[r][c].team == 2 &
-	      		s.board.pieces[r][c+1].team == 2
-	      		& s.board.pieces[r][c+2].team == 2
-	      			& s.board.pieces[r][c+3].team ==0)
-	        move = c+3;
-	    }
-	    if(c<4 & r<3){
-	      if(s.board.pieces[r][c].team == 2 &
-	      	s.board.pieces[r+1][c+1].team == 2
-	      	& s.board.pieces[r+2][c+2].team ==2
-	      		& s.board.pieces[r+3][c+3].team == 0)
-	        move = c+3;
-	    }
-	    if(c>2 & r<3){
-	      if(s.board.pieces[r][c].team == 2 &
-	      s.board.pieces[r+1][c-1].team == 2
-	      	& s.board.pieces[r+2][c-2].team == 2
-	      		& s.board.pieces[r+3][c-3].team == 0)
-	        move = c-3;
-	    }
-    if(r<3){
-      if(s.board.pieces[r][c].team == 1 &
-      	s.board.pieces[r+1][c].team == 1
-      	& s.board.pieces[r+2][c].team == 1
-      		& s.board.pieces[r+3][c].team ==0)
-        move = c;
-    }
-    if(c<4){
-      if(s.board.pieces[r][c].team == 1 &
-      	s.board.pieces[r][c+1].team == 1
-      	& s.board.pieces[r][c+2].team == 1
-      		& s.board.pieces[r][c+3].team ==0)
-        move = c+3;
-    }
-    if(c<4 & r<3){
-      if(s.board.pieces[r][c].team == 1 &
-      s.board.pieces[r+1][c+1].team == 1
-      	& s.board.pieces[r+2][c+2].team ==1
-      		& s.board.pieces[r+3][c+3].team == 0)
-        move = c+3;
-    }
-    if(c>2 & r<3){
-      if(s.board.pieces[r][c].team == 1 &
-      s.board.pieces[r+1][c-1].team == 1
-      	& s.board.pieces[r+2][c-2].team == 1
-      		& s.board.pieces[r+3][c-3].team == 0)
-        move = c-3;
-    }
-    if (r>3){
-    	if(s.board.pieces[r][c].team == 1 & 
-    			s.board.pieces[r-1][c].team == 1 &
-    				s.board.pieces[r-2][c].team == 1 &
-    				s.board.pieces[r-3][c].team == 0)
-    				move = c;
-     }
+	  move = this.checkmove(s,r,c,2, move);
+		move = this.checkmove(s,r,c,1, move);
 		return move+49;
 	}
 
