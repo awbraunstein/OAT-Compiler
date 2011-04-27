@@ -399,7 +399,7 @@ int program(int argc, string[] argv) {
     else {
         	input = con_getch();
     
-    while( input<49 | input>55){
+    while( (input != 27) & (input<49 | input>55)){
     	s.msg = "Make a valid move.\n";
     	s.display();
     	input = con_getch();
